@@ -10,6 +10,8 @@ import CVService from './pages/CVService';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Admin from './pages/Admin';
 import { useEffect } from 'react';
 
 const RequireAuth = ({ children }) => {
@@ -33,6 +35,7 @@ const navItems = [
     { to: '/courses', ar: 'الدورات', en: 'Courses' },
     { to: '/cv-service', ar: 'خدمة السيرة الذاتية', en: 'CV Service' },
     { to: '/dashboard', ar: 'لوحة التحكم', en: 'Dashboard' },
+    { to: '/profile', ar: 'الملف الشخصي', en: 'Profile' },
 ];
 
 const getInitials = (email = 'PN') =>
@@ -72,6 +75,19 @@ const UserMenu = () => {
                 <div className="user-menu__panel">
                     <div className="badge badge--gold">{user.user_metadata?.role || 'youth'}</div>
                     <p className="user-menu__email">{user.email}</p>
+                    <div className="user-menu__links">
+                        <NavLink to="/profile" className="user-menu__link" onClick={() => setOpen(false)}>
+                            {isArabic ? 'الملف الشخصي' : 'Profile'}
+                        </NavLink>
+                        <NavLink to="/dashboard" className="user-menu__link" onClick={() => setOpen(false)}>
+                            {isArabic ? 'لوحة التحكم' : 'Dashboard'}
+                        </NavLink>
+                        {user.user_metadata?.role === 'admin' ? (
+                            <NavLink to="/admin" className="user-menu__link" onClick={() => setOpen(false)}>
+                                {isArabic ? 'الإدارة' : 'Admin'}
+                            </NavLink>
+                        ) : null}
+                    </div>
                     <PremiumButton
                         variant="danger"
                         onClick={async () => {
@@ -156,6 +172,22 @@ function Shell() {
                         element={
                             <RequireAuth>
                                 <div key={location.pathname}><Dashboard /></div>
+                            </RequireAuth>
+                        }
+                    />
+                    <Route
+                        path="/profile"
+                        element={
+                            <RequireAuth>
+                                <div key={location.pathname}><Profile /></div>
+                            </RequireAuth>
+                        }
+                    />
+                    <Route
+                        path="/admin"
+                        element={
+                            <RequireAuth>
+                                <div key={location.pathname}><Admin /></div>
                             </RequireAuth>
                         }
                     />

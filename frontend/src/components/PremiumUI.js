@@ -16,8 +16,36 @@ export const AnimatedBackdrop = () => {
         []
     );
 
+    const risingParticles = useMemo(
+        () =>
+            Array.from({ length: 14 }, (_, index) => ({
+                id: `rise-${index}`,
+                left: `${(index * 7.3 + 3) % 100}%`,
+                delay: `${(index * 1.7) % 12}s`,
+                duration: `${14 + (index % 7) * 2}s`,
+                size: 4 + (index % 4) * 2,
+            })),
+        []
+    );
+
     return (
         <div className="backdrop" aria-hidden="true">
+            <div className="premium-mesh" />
+            <div className="premium-particles">
+                {risingParticles.map((p) => (
+                    <span
+                        key={p.id}
+                        className="premium-particle"
+                        style={{
+                            left: p.left,
+                            width: `${p.size}px`,
+                            height: `${p.size}px`,
+                            animationDelay: p.delay,
+                            animationDuration: p.duration,
+                        }}
+                    />
+                ))}
+            </div>
             <div className="backdrop__mesh backdrop__mesh--blue" />
             <div className="backdrop__mesh backdrop__mesh--gold" />
             <div className="backdrop__mesh backdrop__mesh--ice" />

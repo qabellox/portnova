@@ -23,7 +23,7 @@ const roleContent = {
 };
 
 const Dashboard = () => {
-    const { session, user } = useAuth();
+    const { user } = useAuth();
     const { isArabic } = useLanguage();
     const role = user?.user_metadata?.role || user?.app_metadata?.role || 'youth';
     const fullName = user?.user_metadata?.fullName || user?.email || 'User';
@@ -135,11 +135,6 @@ const Dashboard = () => {
                     </div>
                 </GlassCard>
             </div>
-
-            <GlassCard>
-                <SectionHeading kicker={isArabic ? 'الملف' : 'Profile'} title={isArabic ? 'ذكاء الجلسة' : 'Session intelligence'} subtitle={isArabic ? 'تظهر بيانات المستخدم الموثّق بوضوح مع الدور والبيانات الوصفية.' : 'The authenticated user is surfaced clearly, with role and metadata visible.'} />
-                <pre style={{ whiteSpace: 'pre-wrap', margin: 0, color: 'rgba(226, 232, 240, 0.82)' }}>{JSON.stringify(session?.user, null, 2)}</pre>
-            </GlassCard>
         </div>
     );
 };

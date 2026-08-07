@@ -3,19 +3,22 @@ import { Badge, BilingualLine, GlassCard, PremiumButton, ProgressBar, SectionHea
 
 const featureCards = [
     {
-        title: 'محرك فرص يبدأ بالشباب',
-        copyAr: 'ابحث عن الوظائف، تابع التعلّم، وانتقل من الملف إلى التقديم داخل مساحة عمل واحدة مرتبة.',
-        copyEn: 'Search jobs, track learning, and move from profile to application in a single premium workspace.',
+        icon: '⚓',
+        title: 'ميناء الفرص',
+        copyAr: 'من قلب الميناء، ابحث عن الوظائف وتابع التعلّم وانتقل من ملفك إلى التقديم في مساحة واحدة.',
+        copyEn: 'From the heart of the port, find jobs, track learning, and go from profile to application in one place.',
         tone: 'blue',
     },
     {
-        title: 'لوحة أصحاب العمل بروح مميزة',
-        copyAr: 'ألواح زجاجية، وحجز سلس، ومسارات ذكية لنشر الوظائف ومراجعة المتقدمين.',
-        copyEn: 'Glass panels, smooth claims, and intelligent workflows for job posting and applicant review.',
+        icon: '🧭',
+        title: 'بوصلة أصحاب العمل',
+        copyAr: 'انشر وظائفك وراجع المتقدمين بمسارات ذكية واضحة، تمامًا مثل إدارة سفينة في ميناء.',
+        copyEn: 'Post jobs and review applicants with smart, clear workflows — like steering a ship into harbor.',
         tone: 'gold',
     },
     {
-        title: 'خدمة السيرة الذاتية بتسليم أنيق',
+        icon: '🐟',
+        title: 'سيرة ذاتية تُصطاد وتُسلَّم',
         copyAr: 'ارفع، وأسنِد، ونسّق، وسلّم عبر خط زمني يمنح المستخدم ثقة في كل خطوة.',
         copyEn: 'Upload, assign, format, and deliver with a timeline that gives users confidence at every step.',
         tone: 'success',
@@ -31,17 +34,25 @@ const highlightBars = [
 const Home = () => (
     <div className="page-shell page-shell__grid">
         <section className="hero hero--local">
+            <div className="hero__nautical" aria-hidden="true">
+                <span className="hero__nautical--anchor">⚓</span>
+                <span className="hero__nautical--fish">🐟</span>
+                <span className="hero__nautical--wave" />
+            </div>
             <div className="hero__grid">
                 <div>
-                    <div className="hero__kicker">منصة بورسعيد للشباب</div>
+                    <div className="hero__kicker">
+                        <span className="nautical-tile" aria-hidden="true">🧭</span>
+                        منصة بورسعيد للشباب
+                    </div>
                     <h1 className="hero__title">
                         <span className="gradient-text">منصة PortNova</span> للشباب والوظائف والتعلم.
                     </h1>
                     <BilingualLine
                         as="p"
                         className="hero__lead"
-                        ar="واجهة حيوية ودافئة بروح بورسعيد، تربط الشباب بالوظائف والدورات وخدمة السيرة الذاتية في تجربة واحدة."
-                        en="A warm, lively Port Said interface that connects youth, jobs, courses, and CV support in one flow."
+                        ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
+                        en="Between the sea, the market and the corniche — your gateway to jobs, courses and CV support in Port Said."
                     />
                     <div className="hero__actions">
                         <PremiumButton to="/register" variant="gold">
@@ -96,8 +107,10 @@ const Home = () => (
             <div className="card-grid">
                 {featureCards.map((card) => (
                     <GlassCard key={card.title} interactive>
-                        <Badge tone={card.tone}>{card.title.split(' ')[0]}</Badge>
-                        <h3 className="card-title" style={{ marginTop: '0.85rem' }}>
+                        <div className="nautical-tile" style={{ width: '3rem', height: '3rem', fontSize: '1.6rem', marginBottom: '0.9rem' }} aria-hidden="true">
+                            {card.icon}
+                        </div>
+                        <h3 className="card-title" style={{ marginTop: '0.4rem' }}>
                             {card.title}
                         </h3>
                         <BilingualLine ar={card.copyAr} en={card.copyEn} className="card-copy" />

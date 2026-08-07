@@ -1,0 +1,285 @@
+/* ============================================================
+   MARINE SCENE — live Port Said waterfront background
+   ============================================================ */
+
+.marine-scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 22%, #0ea5e9 42%, #0c4a6e 100%);
+}
+
+.marine-sky {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(186, 230, 253, 0.55) 0%, rgba(56, 189, 248, 0.25) 38%, rgba(12, 74, 110, 0) 62%);
+}
+
+/* Sun */
+.marine-sun {
+    position: absolute;
+    top: 7%;
+    right: 9%;
+    width: 7rem;
+    height: 7rem;
+    animation: marineSunGlow 6s ease-in-out infinite;
+}
+
+.marine-sun__core {
+    position: absolute;
+    inset: 1.6rem;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff7d6 0%, #fde68a 55%, #fcd34d 100%);
+    box-shadow: 0 0 40px 12px rgba(253, 230, 138, 0.55);
+}
+
+.marine-sun__glow {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(254, 240, 138, 0.5) 0%, rgba(254, 240, 138, 0) 70%);
+    animation: marineSunPulse 4s ease-in-out infinite;
+}
+
+@keyframes marineSunGlow {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.06);
+    }
+}
+
+@keyframes marineSunPulse {
+
+    0%,
+    100% {
+        opacity: 0.75;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Seagulls */
+.marine-gulls {
+    position: absolute;
+    inset: 0;
+}
+
+.marine-gull {
+    position: absolute;
+    left: -10%;
+    opacity: 0;
+    animation: gullFly linear infinite;
+    will-change: transform, opacity;
+}
+
+.marine-gull svg {
+    display: block;
+    filter: drop-shadow(0 2px 3px rgba(2, 20, 40, 0.25));
+    animation: gullFlap 1.4s ease-in-out infinite;
+}
+
+@keyframes gullFly {
+    0% {
+        transform: translateX(0) translateY(0);
+        opacity: 0;
+    }
+
+    8% {
+        opacity: 0.9;
+    }
+
+    50% {
+        transform: translateX(55vw) translateY(-4vh);
+        opacity: 0.95;
+    }
+
+    92% {
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: translateX(115vw) translateY(1vh);
+        opacity: 0;
+    }
+}
+
+@keyframes gullFlap {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-5px) rotate(2deg);
+    }
+}
+
+/* Sailing ship — loops across the scene */
+.marine-ship {
+    position: absolute;
+    left: -15%;
+    bottom: 16%;
+    animation: shipSail 46s linear infinite;
+    will-change: transform;
+    filter: drop-shadow(0 14px 22px rgba(2, 20, 40, 0.4));
+}
+
+@keyframes shipSail {
+    0% {
+        transform: translateX(0) translateY(0);
+    }
+
+    25% {
+        transform: translateX(26vw) translateY(-6px);
+    }
+
+    50% {
+        transform: translateX(52vw) translateY(0);
+    }
+
+    75% {
+        transform: translateX(78vw) translateY(-4px);
+    }
+
+    100% {
+        transform: translateX(118vw) translateY(0);
+    }
+}
+
+/* Sunlight shimmer on the water */
+.marine-shimmer {
+    position: absolute;
+    left: 18%;
+    right: 40%;
+    bottom: 24%;
+    height: 30%;
+    background: linear-gradient(115deg, transparent 30%, rgba(254, 240, 138, 0.22) 48%, rgba(254, 240, 138, 0.1) 55%, transparent 72%);
+    animation: marineShimmer 5s ease-in-out infinite;
+    will-change: transform, opacity;
+    mix-blend-mode: screen;
+}
+
+@keyframes marineShimmer {
+
+    0%,
+    100% {
+        transform: translateX(0) skewX(-8deg);
+        opacity: 0.55;
+    }
+
+    50% {
+        transform: translateX(14px) skewX(-8deg);
+        opacity: 0.9;
+    }
+}
+
+/* Wave layers */
+.marine-waves {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 46%;
+}
+
+.marine-wave {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    will-change: transform;
+}
+
+.marine-wave--deep {
+    height: 100%;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='220' viewBox='0 0 1600 220' preserveAspectRatio='none'><path d='M0 90 Q 200 40 400 90 T 800 90 T 1200 90 T 1600 90 L 1600 220 L 0 220 Z' fill='%230c4a6e'/></svg>") repeat-x;
+    background-size: 1600px 100%;
+    animation: marineWaveDeep 26s linear infinite;
+    opacity: 0.95;
+}
+
+.marine-wave--turquoise {
+    height: 78%;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='200' viewBox='0 0 1200 200' preserveAspectRatio='none'><path d='M0 70 Q 150 30 300 70 T 600 70 T 900 70 T 1200 70 L 1200 200 L 0 200 Z' fill='%230d9488'/></svg>") repeat-x;
+    background-size: 1200px 100%;
+    animation: marineWaveTurquoise 17s linear infinite;
+    opacity: 0.85;
+}
+
+.marine-wave--gold {
+    height: 56%;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1000' height='180' viewBox='0 0 1000 180' preserveAspectRatio='none'><path d='M0 55 Q 125 20 250 55 T 500 55 T 750 55 T 1000 55 L 1000 180 L 0 180 Z' fill='%23d97706'/></svg>") repeat-x;
+    background-size: 1000px 100%;
+    animation: marineWaveGold 11s linear infinite;
+    opacity: 0.4;
+}
+
+.marine-wave--foam {
+    height: 34%;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='140' viewBox='0 0 800 140' preserveAspectRatio='none'><path d='M0 40 Q 100 12 200 40 T 400 40 T 600 40 T 800 40 L 800 140 L 0 140 Z' fill='%23f8fafc'/></svg>") repeat-x;
+    background-size: 800px 100%;
+    animation: marineWaveFoam 7s linear infinite;
+    opacity: 0.8;
+}
+
+@keyframes marineWaveDeep {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-1600px);
+    }
+}
+
+@keyframes marineWaveTurquoise {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-1200px);
+    }
+}
+
+@keyframes marineWaveGold {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-1000px);
+    }
+}
+
+@keyframes marineWaveFoam {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-800px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .marine-ship,
+    .marine-gull,
+    .marine-shimmer,
+    .marine-wave,
+    .marine-sun {
+        animation: none !important;
+    }
+}

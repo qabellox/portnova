@@ -186,6 +186,7 @@ img {
 }
 
 .brand__logo-wrap {
+    flex: 0 0 auto;
     width: 3rem;
     height: 3rem;
     border-radius: 1rem;
@@ -206,6 +207,14 @@ img {
     display: flex;
     flex-direction: column;
     line-height: 1.05;
+    min-width: 0;
+}
+
+.brand__name,
+.brand__tag {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .brand__name {

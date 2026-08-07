@@ -1,4 +1,5 @@
 import React from 'react';
+import MarineScene from '../components/MarineScene';
 import { Badge, BilingualLine, GlassCard, PremiumButton, ProgressBar, SectionHeading, StatCounter } from '../components/PremiumUI';
 
 const featureCards = [
@@ -33,11 +34,11 @@ const highlightBars = [
 
 const Home = () => (
     <div className="page-shell page-shell__grid">
-        <section className="hero hero--local">
+        <section className="hero hero--local hero--marine">
+            <MarineScene />
             <div className="hero__nautical" aria-hidden="true">
                 <span className="hero__nautical--anchor">⚓</span>
                 <span className="hero__nautical--fish">🐟</span>
-                <span className="hero__nautical--wave" />
             </div>
             <div className="hero__grid">
                 <div>

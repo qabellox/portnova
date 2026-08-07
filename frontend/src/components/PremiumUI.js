@@ -125,7 +125,7 @@ export const StatCounter = ({ value, suffix = '', decimals = 0, duration = 1400,
         const start = performance.now();
 
         const tick = (now) => {
-            const progress = Math.min((now - start) / duration, 1);
+            const progress = Math.min(Math.max((now - start) / duration, 0), 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             setDisplayValue(value * eased);
 

@@ -1,0 +1,180 @@
+import React, { useState } from 'react';
+import { BrowserRouter as Router, NavLink, Navigate, Routes, Route, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AnimatedBackdrop, LanguageToggle, PremiumButton } from './components/PremiumUI';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
+import Home from './pages/Home';
+import Jobs from './pages/Jobs';
+import Courses from './pages/Courses';
+import CVService from './pages/CVService';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import { useEffect } from 'react';
+
+const RequireAuth = ({ children }) => {
+    const { session, loading } = useAuth();
+    const { isArabic } = useLanguage();
+
+    if (loading) {
+        return <div className="empty-state">{isArabic ? 'جارٍ فحص الجلسة...' : 'Checking session...'}</div>;
+    }
+
+    if (!session) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return children;
+};
+
+const navItems = [
+    { to: '/', ar: 'الرئيسية', en: 'Home', end: true },
+    { to: '/jobs', ar: 'الوظائف', en: 'Jobs' },
+    { to: '/courses', ar: 'الدورات', en: 'Courses' },
+    { to: '/cv-service', ar: 'خدمة السيرة الذاتية', en: 'CV Service' },
+    { to: '/dashboard', ar: 'لوحة التحكم', en: 'Dashboard' },
+];
+
+const getInitials = (email = 'PN') =>
+    email
+        .split('@')[0]
+        .split(/[._-]/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join('') || 'PN';
+
+const UserMenu = () => {
+    const { user, logout } = useAuth();
+    const { isArabic } = useLanguage();
+    const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        const closeMenu = () => setOpen(false);
+        window.addEventListener('scroll', closeMenu, { passive: true });
+        return () => window.removeEventListener('scroll', closeMenu);
+    }, []);
+
+    if (!user) {
+        return null;
+    }
+
+    return (
+        <div className="user-menu">
+            <button className="nav-link user-menu__trigger" type="button" onClick={() => setOpen((current) => !current)}>
+                <span className="avatar">{getInitials(user.email)}</span>
+                <span style={{ textAlign: 'left' }}>
+                    <span style={{ display: 'block', fontWeight: 700, color: '#fff' }}>{isArabic ? 'الحساب' : 'Account'}</span>
+                    <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--muted)' }}>{isArabic ? 'وصول مميز' : 'Premium access'}</span>
+                </span>
+            </button>
+            {open ? (
+                <div className="user-menu__panel">
+                    <div className="badge badge--gold">{user.user_metadata?.role || 'youth'}</div>
+                    <p className="user-menu__email">{user.email}</p>
+                    <PremiumButton
+                        variant="danger"
+                        onClick={async () => {
+                            await logout();
+                            setOpen(false);
+                        }}
+                    >
+                        {isArabic ? 'تسجيل الخروج' : 'Sign out'}
+                    </PremiumButton>
+                </div>
+            ) : null}
+        </div>
+    );
+};
+
+const ShellNav = () => {
+    const { session } = useAuth();
+    const { isArabic } = useLanguage();
+
+    return (
+        <header className="shell-nav">
+            <NavLink className="brand" to="/" style={{ flexDirection: isArabic ? 'row-reverse' : 'row' }}>
+                <div className="brand__logo-wrap">
+                    <img className="brand__logo" src="/images/logo.png" alt="PortNova logo" />
+                </div>
+                <span className="brand__text">
+                    <span className="brand__name">PortNova</span>
+                    <span className="brand__tag">{isArabic ? 'شباب • وظائف • تعلم' : 'Youth, Jobs, Learning'}</span>
+                </span>
+            </NavLink>
+
+            <nav className="nav-links" aria-label="Primary">
+                {navItems.map((item) => (
+                    <NavLink
+                        key={item.to}
+                        to={item.to}
+                        end={item.end}
+                        className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`.trim()}
+                    >
+                        {isArabic ? item.ar : item.en}
+                    </NavLink>
+                ))}
+                <LanguageToggle />
+            </nav>
+
+            <div className="nav-actions">
+                {session ? (
+                    <UserMenu />
+                ) : (
+                    <>
+                        <PremiumButton variant="ghost" to="/login">
+                            {isArabic ? 'تسجيل الدخول' : 'Login'}
+                        </PremiumButton>
+                        <PremiumButton variant="gold" to="/register">
+                            {isArabic ? 'إنشاء حساب' : 'Join PortNova'}
+                        </PremiumButton>
+                    </>
+                )}
+            </div>
+        </header>
+    );
+};
+
+function Shell() {
+    const location = useLocation();
+    const { isArabic } = useLanguage();
+
+    return (
+        <div className="app-shell" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
+            <AnimatedBackdrop />
+            <ShellNav />
+            <main className="app-main">
+                <Routes>
+                    <Route path="/" element={<div key={location.pathname}><Home /></div>} />
+                    <Route path="/jobs" element={<div key={location.pathname}><Jobs /></div>} />
+                    <Route path="/courses" element={<div key={location.pathname}><Courses /></div>} />
+                    <Route path="/cv-service" element={<div key={location.pathname}><CVService /></div>} />
+                    <Route path="/login" element={<div key={location.pathname}><Login /></div>} />
+                    <Route path="/register" element={<div key={location.pathname}><Register /></div>} />
+                    <Route
+                        path="/dashboard"
+                        element={
+                            <RequireAuth>
+                                <div key={location.pathname}><Dashboard /></div>
+                            </RequireAuth>
+                        }
+                    />
+                </Routes>
+            </main>
+        </div>
+    );
+}
+
+function App() {
+    return (
+        <AuthProvider>
+            <LanguageProvider>
+                <Router>
+                    <Shell />
+                </Router>
+            </LanguageProvider>
+        </AuthProvider>
+    );
+}
+
+export default App;

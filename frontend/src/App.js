@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, NavLink, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { AnimatedBackdrop, LanguageToggle, PremiumButton } from './components/PremiumUI';
+import { AnimatedBackdrop, ClickWaves, LanguageToggle, PremiumButton } from './components/PremiumUI';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Home from './pages/Home';
 import Jobs from './pages/Jobs';
@@ -158,6 +158,7 @@ function Shell() {
     return (
         <div className="app-shell" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
             <AnimatedBackdrop />
+            <ClickWaves />
             <ShellNav />
             <main className="app-main">
                 <Routes>

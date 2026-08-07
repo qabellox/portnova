@@ -84,6 +84,7 @@ const Home = () => (
                     <span className="hero__orbital hero__orbital--spotlight" />
                 </div>
             </div>
+            <div className="wave-divider" aria-hidden="true" />
         </section>
 
         <section className="section-block">

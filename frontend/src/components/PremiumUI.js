@@ -69,6 +69,49 @@ export const AnimatedBackdrop = () => {
     );
 };
 
+export const ClickWaves = () => {
+    const layerRef = useRef(null);
+
+    useEffect(() => {
+        const layer = layerRef.current;
+
+        if (!layer) {
+            return undefined;
+        }
+
+        const activeWaves = new Set();
+
+        const spawnWave = (event) => {
+            const waves = [0, 1, 2].map((index) => {
+                const wave = document.createElement('span');
+                wave.className = `click-wave${index === 1 ? ' click-wave--ring2' : ''}${index === 2 ? ' click-wave--ring3' : ''}`;
+                wave.style.left = `${event.clientX}px`;
+                wave.style.top = `${event.clientY}px`;
+                return wave;
+            });
+
+            waves.forEach((wave) => {
+                activeWaves.add(wave);
+                layer.appendChild(wave);
+                window.setTimeout(() => {
+                    wave.remove();
+                    activeWaves.delete(wave);
+                }, 1100);
+            });
+        };
+
+        document.addEventListener('click', spawnWave);
+
+        return () => {
+            document.removeEventListener('click', spawnWave);
+            activeWaves.forEach((wave) => wave.remove());
+            activeWaves.clear();
+        };
+    }, []);
+
+    return <div className="click-wave-layer" ref={layerRef} aria-hidden="true" />;
+};
+
 const createRipple = (event) => {
     const node = event.currentTarget;
     const rect = node.getBoundingClientRect();

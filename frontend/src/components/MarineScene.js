@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 /**
- * MarineScene — front-view shader-style live seascape.
+ * MarineScene: front-view shader-style live seascape.
  *
  * Everything is drawn on a canvas with real perspective: a sky with a soft
  * sun glow and a horizon, and animated waves that roll toward the viewer.
@@ -189,10 +189,10 @@ const MarineScene = ({ className = '' }) => {
 
     return (
         <div className={`marine-scene ${className}`.trim()}>
-            {/* Front-view animated seascape — sky, horizon, rolling waves, interaction */}
+            {/* Front-view animated seascape: sky, horizon, rolling waves, interaction */}
             <canvas ref={canvasRef} className="marine-canvas" aria-hidden="true" />
 
-            {/* Flock of gulls — wings swing with life while gliding */}
+            {/* Flock of gulls: wings swing with life while gliding */}
             <div className="marine-gulls" aria-hidden="true">
                 {gulls.map((g) => (
                     <span key={g.cls} className={`marine-gull ${g.cls}`} style={{ opacity: g.op }}>

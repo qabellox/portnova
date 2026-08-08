@@ -32,7 +32,7 @@ const Home = () => {
 
     return (
         <div className="page-shell page-shell__grid">
-            {/* Full-height marine visual — nothing overlays the sea */}
+            {/* Full-height marine visual: nothing overlays the sea */}
             <section className="hero hero--local hero--marine hero--marine-scene">
                 <MarineScene />
                 <div className="marine-overlay" aria-hidden="true" />
@@ -45,13 +45,13 @@ const Home = () => {
                     {t('homeKicker')}
                 </div>
                 <h1 className="hero__title">
-                    <span className="gradient-text">PortNova</span> — {t('homeTitle')}
+                    <span className="gradient-text">PortNova</span>: {t('homeTitle')}
                 </h1>
                 <BilingualLine
                     as="p"
                     className="hero__lead"
                     ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
-                    en="Between the sea, the market and the corniche — your gateway to jobs, courses and CV support in Port Said."
+                    en="Between the sea, the market and the corniche, your gateway to jobs, courses and CV support in Port Said."
                 />
                 <div className="marine-welcome__row">
                     <div className="hero__actions">

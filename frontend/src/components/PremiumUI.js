@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 export const AnimatedBackdrop = () => {
-    // Rising air bubbles — glassy, slow, drifting like through seawater
+    // Rising air bubbles: glassy, slow, drifting like through seawater
     const bubbles = useMemo(
         () =>
             Array.from({ length: 16 }, (_, index) => ({
@@ -16,7 +16,7 @@ export const AnimatedBackdrop = () => {
         []
     );
 
-    // Tiny marine glints — foam, sea-light, and sun-through-water
+    // Tiny marine glints: foam, sea-light, and sun-through-water
     const glints = useMemo(
         () =>
             Array.from({ length: 12 }, (_, index) => ({
@@ -56,7 +56,7 @@ export const AnimatedBackdrop = () => {
                 ))}
             </div>
 
-            {/* Rolling wave surface along the bottom — layered crests with foam */}
+            {/* Rolling wave surface along the bottom: layered crests with foam */}
             <div className="backdrop__waves" aria-hidden="true">
                 <svg className="backdrop__wave backdrop__wave--b" viewBox="0 0 1440 130" preserveAspectRatio="none">
                     <path
@@ -207,7 +207,7 @@ export const GlassCard = ({ children, className = '', interactive = false, ...re
     </div>
 );
 
-export const SectionHeading = ({ kicker, title, subtitle, align = 'left', className = '' }) => (
+export const SectionHeading = ({ kicker, title, subtitle, align = 'start', className = '' }) => (
     <div className={`section-header ${className}`.trim()} style={{ textAlign: align }}>
         <div>
             {kicker ? <div className="section-kicker">{kicker}</div> : null}

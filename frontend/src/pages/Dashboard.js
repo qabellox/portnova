@@ -119,7 +119,7 @@ const Dashboard = () => {
                 <SectionHeading
                     kicker={t('dashRoleLabel')}
                     title={t('dashRoleHint')}
-                    subtitle={`${info.icon} ${t(info.key)} — ${t(info.tag)}`}
+                    subtitle={`${info.icon} ${t(info.key)}، ${t(info.tag)}`}
                 />
                 <div className="split-grid">
                     <div>
@@ -139,9 +139,9 @@ const Dashboard = () => {
                             </LoaderButton>
                         </div>
                     </div>
-                    <GlassCard>
+                    <GlassCard className="quick-card">
                         <SectionHeading kicker={t('dashQuick')} title={isArabic ? 'ابدأ الآن' : 'Get started'} />
-                        <div className="inline-actions">
+                        <div className="inline-actions quick-card__actions">
                             <PremiumButton variant="primary" to="/jobs">{isArabic ? 'تصفح الوظائف' : 'Browse jobs'}</PremiumButton>
                             <PremiumButton variant="primary" to="/courses">{isArabic ? 'تصفح الدورات' : 'Browse courses'}</PremiumButton>
                             <PremiumButton variant="gold" to="/cv-service">{isArabic ? 'خدمة السيرة الذاتية' : 'CV service'}</PremiumButton>

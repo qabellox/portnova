@@ -691,8 +691,8 @@ body[dir='rtl'] .user-menu__link:hover {
 .section-title {
     margin: 0;
     font-size: clamp(2.5rem, 6vw, 5.5rem);
-    line-height: 0.95;
-    letter-spacing: -0.05em;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
     font-weight: 800;
 }
 
@@ -2037,7 +2037,30 @@ body[dir='rtl'] .metric-card__note {
 /* Wave divider under section headings â€” a calm sea line */
 .section-header {
     position: relative;
-    padding-bottom: 0.9rem;
+    padding-bottom: 1rem;
+}
+
+.section-subtitle {
+    margin-bottom: 0.25rem;
+}
+
+/* Dashboard quick-links card: fit its content, not the full column height */
+.quick-card {
+    align-self: start;
+}
+
+.quick-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.quick-card__actions .btn,
+.quick-card__actions .premium-button {
+    justify-content: center;
+    width: 100%;
+    padding: 0.7rem 1rem;
 }
 
 .section-header::after {

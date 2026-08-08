@@ -2,7 +2,7 @@ import React from 'react';
 import { GlassCard, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
-/* About Us — placeholder page. Content to be filled together later. */
+/* About Us: placeholder page. Content to be filled together later. */
 const About = () => {
     const { t } = useLanguage();
 

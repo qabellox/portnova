@@ -3,7 +3,7 @@
  *
  * Every user-visible string lives here under an `ar` and an `en` entry.
  * Components read it through `useLanguage().t('key')`, so anything new you
- * add to the app just needs a key here — the language toggle then covers it
+ * add to the app just needs a key here, the language toggle then covers it
  * automatically (only "PortNova" stays untranslated by design).
  */
 export const messages = {
@@ -25,7 +25,7 @@ export const messages = {
         statCvs: 'سير ذاتية',
         offerKicker: 'ما نقدمه',
         offerTitle: 'كل ما يحتاجه شاب بورسعيد في مكان واحد',
-        offerSubtitle: 'وظائف، دورات، وخدمة سيرة ذاتية — مصممة لتناسبك.',
+        offerSubtitle: 'وظائف، دورات، وخدمة سيرة ذاتية مصممة لتناسبك.'
         featureJobs: 'وظائف',
         featureCourses: 'دورات',
         featureCv: 'سيرة ذاتية',
@@ -72,10 +72,10 @@ export const messages = {
         cvRequiredTitle: 'السيرة الذاتية إلزامية للتقديم',
         cvRequiredSubtitle: 'أرفق سيرتك الذاتية لتتمكن من التقديم على الوظائف.',
         cvUpload: 'ارفع سيرتك الذاتية',
-        cvFileHint: 'PDF أو DOC — الحد الأقصى 5MB',
+        cvFileHint: 'PDF أو DOC، الحد الأقصى 5MB',
         cvAttached: 'تم إرفاق سيرتك الذاتية',
         cvRemove: 'إزالة',
-        cvNoFile: 'لم تُرفق سيرة ذاتية بعد — ارفع واحدة للمتابعة.',
+        cvNoFile: 'لم تُرفق سيرة ذاتية بعد، ارفع واحدة للمتابعة.',
 
         // Courses
         coursesKicker: 'التعلم',
@@ -197,7 +197,7 @@ export const messages = {
         statCvs: 'CVs',
         offerKicker: 'What we offer',
         offerTitle: 'Everything Port Said youth need in one place',
-        offerSubtitle: 'Jobs, courses, and CV service — made for you.',
+        offerSubtitle: 'Jobs, courses, and CV service made for you.'
         featureJobs: 'Jobs',
         featureCourses: 'Courses',
         featureCv: 'CV',
@@ -244,10 +244,10 @@ export const messages = {
         cvRequiredTitle: 'A CV is required to apply',
         cvRequiredSubtitle: 'Attach your CV so you can apply to jobs.',
         cvUpload: 'Upload your CV',
-        cvFileHint: 'PDF or DOC — max 5MB',
+        cvFileHint: 'PDF or DOC, max 5MB',
         cvAttached: 'Your CV is attached',
         cvRemove: 'Remove',
-        cvNoFile: 'No CV attached yet — upload one to continue.',
+        cvNoFile: 'No CV attached yet, upload one to continue.'
 
         // Courses
         coursesKicker: 'Learning',

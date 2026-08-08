@@ -87,7 +87,7 @@ const Jobs = () => {
                 </div>
             </GlassCard>
 
-            {/* CV — required part of the profile for applying */}
+            {/* CV: required part of the profile for applying */}
             <GlassCard className="cv-card">
                 <SectionHeading kicker={t('cvKicker')} title={t('cvRequiredTitle')} subtitle={t('cvRequiredSubtitle')} />
                 <div className="cv-card__body">

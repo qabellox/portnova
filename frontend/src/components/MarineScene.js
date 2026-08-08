@@ -329,20 +329,25 @@ const MarineScene = ({ className = '' }) => {
 
         const drawSea = (t, dayLight) => {
             const hy = horizonY();
+            const moonAlpha = clamp01((0.55 - dayLight) / 0.22);
             const rows = 44;
-            // Blend day/night sea palettes
-            const horizonC = mix([150, 198, 220], [40, 78, 108], 1 - dayLight);
-            const deepC = mix([8, 36, 68], [3, 12, 28], 1 - dayLight);
-            const crestC = mix([190, 226, 238], [70, 110, 140], 1 - dayLight);
+            const nightAmt = 1 - dayLight;
+
+            const horizonC = mix([150, 198, 220], [44, 82, 112], nightAmt);
+            const deepC = mix([8, 36, 68], [3, 12, 28], nightAmt);
+            // Crests are lit by the sun (day) or the moon (night)
+            const crestDay = [196, 228, 240];
+            const crestNight = [92, 132, 164];
+            const crestC = mix(crestDay, crestNight, nightAmt);
 
             const base = ctx.createLinearGradient(0, hy, 0, height);
-            base.addColorStop(0, rgba(mix([63, 134, 173], [28, 66, 100], 1 - dayLight), 1));
-            base.addColorStop(0.5, rgba(mix([22, 74, 120], [8, 26, 52], 1 - dayLight), 1));
-            base.addColorStop(1, rgba(mix([10, 44, 80], [3, 12, 28], 1 - dayLight), 1));
+            base.addColorStop(0, rgba(mix([63, 134, 173], [30, 70, 104], nightAmt), 1));
+            base.addColorStop(0.5, rgba(mix([22, 74, 120], [9, 28, 54], nightAmt), 1));
+            base.addColorStop(1, rgba(mix([10, 44, 80], [4, 14, 30], nightAmt), 1));
             ctx.fillStyle = base;
             ctx.fillRect(0, hy, width, height - hy);
 
-            // Wave bands with crest relief (lighter at the crest facing us)
+            // Wave bands with a lighter crest facing the viewer (relief)
             for (let i = 0; i < rows; i++) {
                 const d0 = i / rows;
                 const d1 = (i + 1) / rows;
@@ -360,32 +365,51 @@ const MarineScene = ({ className = '' }) => {
                 ctx.closePath();
                 const g = ctx.createLinearGradient(0, waveY(0, d0, t), 0, waveY(0, d1, t) + 2);
                 g.addColorStop(0, rgba(topC, 0.92));
-                g.addColorStop(0.6, rgba(topC, 0.98));
+                g.addColorStop(0.55, rgba(topC, 0.98));
                 g.addColorStop(1, rgba(botC, 1));
                 ctx.fillStyle = g;
                 ctx.fill();
             }
 
-            // Foam crests: broken white caps, more visible up close
+            // Foam crests: persistent broken white caps, moonlit at night too
             ctx.setLineDash([3, 8]);
-            for (let i = 6; i < rows; i++) {
+            for (let i = 5; i < rows; i++) {
                 const d = i / rows;
-                const foamA = (0.05 + d * 0.38) * (0.35 + 0.65 * dayLight);
-                if (foamA < 0.02) continue;
+                const foamA = (0.07 + d * 0.45) * (0.5 + 0.5 * dayLight + 0.25 * moonAlpha);
+                if (foamA < 0.03) continue;
                 ctx.beginPath();
                 for (let x = -8; x <= width + 8; x += 8) {
                     const y = waveY(x, d, t) - 1;
                     if (x === -8) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
                 ctx.strokeStyle = `rgba(240,250,255,${foamA})`;
-                ctx.lineWidth = 0.8 + d * 1.6;
+                ctx.lineWidth = 0.9 + d * 1.8;
                 ctx.stroke();
             }
             ctx.setLineDash([]);
 
-            // Sun/moon glitter: sparkling dashes clustered around the light path
+            // Moonlight path shimmer directly under the moon
+            if (moonAlpha > 0.1) {
+                const moonX = width * 0.24;
+                const pathGrad = ctx.createLinearGradient(0, hy, 0, height);
+                pathGrad.addColorStop(0, `rgba(226,236,252,${0.3 * moonAlpha})`);
+                pathGrad.addColorStop(1, 'rgba(226,236,252,0)');
+                ctx.fillStyle = pathGrad;
+                ctx.beginPath();
+                ctx.moveTo(moonX - 30, hy);
+                for (let y = hy; y <= height; y += 10) {
+                    const w = 34 + (y - hy) * 0.32;
+                    const wob = Math.sin(y * 0.05 + t * 0.001) * 6;
+                    ctx.lineTo(moonX + wob, y);
+                    ctx.lineTo(moonX - w + wob, y + 5);
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Specular glitter: sparkling dashes clustered around the light path
             const lightX = dayLight > 0.5 ? width * 0.72 : width * 0.24;
-            for (let i = 0; i < 180; i++) {
+            for (let i = 0; i < 200; i++) {
                 const rx = rand(i);
                 const ry = rand(i + 90);
                 const x = lightX + (rx - 0.5) * width * 0.55;
@@ -393,7 +417,8 @@ const MarineScene = ({ className = '' }) => {
                 const d = ry;
                 const tw = 0.5 + 0.5 * Math.sin(t * 0.003 + i * 2.3);
                 const len = 5 + d * 26;
-                const a = (0.06 + 0.34 * d) * tw * (0.25 + 0.75 * dayLight);
+                const light = 0.3 + 0.7 * dayLight + 0.25 * moonAlpha;
+                const a = (0.07 + 0.36 * d) * tw * light;
                 if (a < 0.03) continue;
                 ctx.strokeStyle = `rgba(255,255,255,${a})`;
                 ctx.lineWidth = 1 + d;

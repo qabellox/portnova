@@ -197,7 +197,7 @@ export const messages = {
         statCvs: 'CVs',
         offerKicker: 'What we offer',
         offerTitle: 'Everything Port Said youth need in one place',
-        offerSubtitle: 'Jobs, courses, and CV service made for you.'
+        offerSubtitle: 'Jobs, courses, and CV service made for you.',
         featureJobs: 'Jobs',
         featureCourses: 'Courses',
         featureCv: 'CV',

@@ -851,8 +851,10 @@ body[dir='rtl'] .user-menu__link:hover {
     transform: translateX(120%);
 }
 
-/* Focused card reached from a boat deep-link: gold wave ring + soft pulse */
-.data-card--focused {
+/* Focused card reached from a boat deep-link: gold wave ring + soft pulse.
+   Must out-specify .card-grid>* (staggerIn) so the focus animation wins. */
+.card-grid>.data-card--focused,
+.card-grid>.glass-card.data-card--focused {
     border-color: rgba(212, 175, 55, 0.7) !important;
     box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.4), 0 24px 70px rgba(6, 16, 30, 0.55), 0 0 46px rgba(212, 175, 55, 0.28) !important;
     animation: focusWave 2.2s ease-in-out infinite;

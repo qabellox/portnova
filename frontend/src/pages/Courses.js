@@ -12,7 +12,7 @@ const courses = [
 ];
 
 const Courses = () => {
-    const { isArabic } = useLanguage();
+    const { t } = useLanguage();
     const [query, setQuery] = useState('');
     const [level, setLevel] = useState('All');
 
@@ -35,9 +35,9 @@ const Courses = () => {
     return (
         <div className="page-shell">
             <SectionHeading
-                kicker="التعلم / Learning"
-                title="دورات لتطوير مهاراتك"
-                subtitle="تعلّم ما يناسب مستواك واهتمامك."
+                kicker={t('coursesKicker')}
+                title={t('coursesTitle')}
+                subtitle={t('coursesSubtitle')}
             />
 
             <GlassCard className="filter-panel">
@@ -47,13 +47,13 @@ const Courses = () => {
                         <input
                             className="field"
                             type="search"
-                            placeholder={isArabic ? 'ابحث عن دورة أو جهة تدريب...' : 'Search courses or providers...'}
+                            placeholder={t('searchCoursePlaceholder')}
                             value={query}
                             onChange={(event) => setQuery(event.target.value)}
                         />
                     </div>
                     <div className="filter-select">
-                        <label className="filter-label">{isArabic ? 'المستوى' : 'Level'}</label>
+                        <label className="filter-label">{t('levelLabel')}</label>
                         <select className="select" value={level} onChange={(event) => setLevel(event.target.value)}>
                             {levels.map((lv) => (
                                 <option key={lv} value={lv}>{lv}</option>
@@ -63,7 +63,7 @@ const Courses = () => {
                 </div>
                 <div className="filter-meta">
                     <span className="muted">
-                        {isArabic ? `${filtered.length} دورة متاحة` : `${filtered.length} courses available`}
+                        {t('coursesAvailable', { n: filtered.length })}
                     </span>
                 </div>
             </GlassCard>
@@ -84,26 +84,26 @@ const Courses = () => {
                             </div>
 
                             <div className="card-meta">
-                                <Badge tone="blue">{course.level}</Badge>
+                                <Badge tone="blue">{t(`level${course.level}`)}</Badge>
                             </div>
 
                             <div style={{ marginTop: '1rem' }}>
                                 <div className="upload-meter__label">
-                                    <span>الإنجاز / Completion</span>
+                                    <span>{t('completion')}</span>
                                     <strong>{course.progress}%</strong>
                                 </div>
                                 <ProgressBar value={course.progress} />
                             </div>
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                                <PremiumButton variant="primary">سجّل / Enroll</PremiumButton>
+                                <PremiumButton variant="primary">{t('enroll')}</PremiumButton>
                             </div>
                         </GlassCard>
                     ))}
                 </div>
             ) : (
                 <GlassCard className="empty-state">
-                    {isArabic ? 'لا توجد دورات مطابقة لبحثك.' : 'No courses match your search.'}
+                    {t('noCourses')}
                 </GlassCard>
             )}
         </div>

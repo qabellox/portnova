@@ -273,19 +273,17 @@ export const BilingualLine = ({ ar, en, className = '', emphasize = false, as: C
     return (
         <Component className={className}>
             <span className={emphasize ? 'gradient-text' : ''}>{isArabic ? ar : en}</span>
-            <span className="muted" style={{ display: 'block', marginTop: 4, fontSize: '0.9em' }}>
-                {isArabic ? en : ar}
-            </span>
         </Component>
     );
 };
 
 export const LanguageToggle = ({ className = '' }) => {
-    const { language, toggleLanguage, languageLabels } = useLanguage();
+    const { language, toggleLanguage, t } = useLanguage();
 
     return (
-        <button className={`nav-link ${className}`.trim()} type="button" onClick={toggleLanguage} aria-label="Toggle language">
-            {language === 'ar' ? `${languageLabels.ar} | ${languageLabels.en}` : `${languageLabels.en} | ${languageLabels.ar}`}
+        <button className={`nav-link ${className}`.trim()} type="button" onClick={toggleLanguage} aria-label={t('switchTo')}>
+            <span aria-hidden="true" style={{ marginInlineEnd: '0.35rem' }}>🌐</span>
+            {t('switchTo')}
         </button>
     );
 };

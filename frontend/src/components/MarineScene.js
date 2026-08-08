@@ -1,5 +1,6 @@
 ﻿import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 /**
  * MarineScene — front-view shader-style live seascape.
@@ -11,6 +12,7 @@ import { Link } from 'react-router-dom';
  * high in the sky.
  */
 const MarineScene = ({ className = '' }) => {
+    const { t } = useLanguage();
     const canvasRef = useRef(null);
 
     useEffect(() => {
@@ -266,17 +268,17 @@ const MarineScene = ({ className = '' }) => {
                 </svg>
 
                 <nav className="marine-boat__icons" aria-label="Boat shortcuts">
-                    <Link to="/jobs" className="marine-boat__icon" title="Jobs — الوظائف">
+                    <Link to="/jobs" className="marine-boat__icon" title={t('boatJobs')}>
                         <span className="marine-boat__icon-mark">⚓</span>
-                        <span className="marine-boat__icon-label">Jobs</span>
+                        <span className="marine-boat__icon-label">{t('boatJobs')}</span>
                     </Link>
-                    <Link to="/courses" className="marine-boat__icon" title="Courses — الدورات">
+                    <Link to="/courses" className="marine-boat__icon" title={t('boatCourses')}>
                         <span className="marine-boat__icon-mark">🧭</span>
-                        <span className="marine-boat__icon-label">Courses</span>
+                        <span className="marine-boat__icon-label">{t('boatCourses')}</span>
                     </Link>
-                    <Link to="/cv-service" className="marine-boat__icon" title="CV Service — السيرة الذاتية">
+                    <Link to="/cv-service" className="marine-boat__icon" title={t('boatCv')}>
                         <span className="marine-boat__icon-mark">📄</span>
-                        <span className="marine-boat__icon-label">CV</span>
+                        <span className="marine-boat__icon-label">{t('boatCv')}</span>
                     </Link>
                 </nav>
             </div>

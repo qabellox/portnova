@@ -12,7 +12,7 @@ const jobs = [
 ];
 
 const Jobs = () => {
-    const { isArabic } = useLanguage();
+    const { t } = useLanguage();
     const [query, setQuery] = useState('');
     const [location, setLocation] = useState('All');
     const [category, setCategory] = useState('All');
@@ -39,9 +39,9 @@ const Jobs = () => {
     return (
         <div className="page-shell">
             <SectionHeading
-                kicker="الفرص / Opportunities"
-                title="وظائف لشباب بورسعيد"
-                subtitle="ابحث، رشّح، وقدّم على الوظيفة المناسبة."
+                kicker={t('jobsKicker')}
+                title={t('jobsTitle')}
+                subtitle={t('jobsSubtitle')}
             />
 
             <GlassCard className="filter-panel">
@@ -51,13 +51,13 @@ const Jobs = () => {
                         <input
                             className="field"
                             type="search"
-                            placeholder={isArabic ? 'ابحث عن وظيفة أو شركة...' : 'Search jobs or companies...'}
+                            placeholder={t('searchJobPlaceholder')}
                             value={query}
                             onChange={(event) => setQuery(event.target.value)}
                         />
                     </div>
                     <div className="filter-select">
-                        <label className="filter-label">{isArabic ? 'الموقع' : 'Location'}</label>
+                        <label className="filter-label">{t('locationLabel')}</label>
                         <select className="select" value={location} onChange={(event) => setLocation(event.target.value)}>
                             {locations.map((loc) => (
                                 <option key={loc} value={loc}>{loc}</option>
@@ -65,7 +65,7 @@ const Jobs = () => {
                         </select>
                     </div>
                     <div className="filter-select">
-                        <label className="filter-label">{isArabic ? 'المجال' : 'Category'}</label>
+                        <label className="filter-label">{t('categoryLabel')}</label>
                         <select className="select" value={category} onChange={(event) => setCategory(event.target.value)}>
                             {categories.map((cat) => (
                                 <option key={cat} value={cat}>{cat}</option>
@@ -75,7 +75,7 @@ const Jobs = () => {
                 </div>
                 <div className="filter-meta">
                     <span className="muted">
-                        {isArabic ? `${filtered.length} وظيفة متاحة` : `${filtered.length} jobs available`}
+                        {t('jobsAvailable', { n: filtered.length })}
                     </span>
                 </div>
             </GlassCard>
@@ -100,26 +100,26 @@ const Jobs = () => {
                             </div>
 
                             <div className="card-meta">
-                                <Badge tone={job.tone}>{job.category}</Badge>
+                                <Badge tone={job.tone}>{t(`cat${job.category}`)}</Badge>
                             </div>
 
                             <div style={{ marginTop: '1rem' }}>
                                 <div className="upload-meter__label">
-                                    <span>درجة التوافق / Fit score</span>
+                                    <span>{t('fitScore')}</span>
                                     <strong>{job.fit}%</strong>
                                 </div>
                                 <ProgressBar value={job.fit} />
                             </div>
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                                <PremiumButton variant="primary">قدّم الآن / Apply</PremiumButton>
+                                <PremiumButton variant="primary">{t('apply')}</PremiumButton>
                             </div>
                         </GlassCard>
                     ))}
                 </div>
             ) : (
                 <GlassCard className="empty-state">
-                    {isArabic ? 'لا توجد وظائف مطابقة لبحثك. جرّب كلمات مختلفة أو أزل الفلاتر.' : 'No jobs match your search. Try different keywords or clear the filters.'}
+                    {t('noJobs')}
                 </GlassCard>
             )}
         </div>

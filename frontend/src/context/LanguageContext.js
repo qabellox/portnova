@@ -1,11 +1,7 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { messages } from '../i18n';
 
 const LanguageContext = createContext(null);
-
-const languageLabels = {
-    ar: '🇪🇬 عربي',
-    en: '🇬🇧 English',
-};
 
 export const LanguageProvider = ({ children }) => {
     const [language, setLanguage] = useState(() => localStorage.getItem('portnova-language') || 'ar');
@@ -22,14 +18,30 @@ export const LanguageProvider = ({ children }) => {
         setLanguage((current) => (current === 'ar' ? 'en' : 'ar'));
     };
 
+    // Single translation lookup: t('key') returns the active-language string.
+    // Optional {var} interpolation: t('jobsAvailable', { n: 5 }).
+    const t = useCallback(
+        (key, vars) => {
+            const table = messages[language] || messages.ar;
+            let str = table[key] !== undefined ? table[key] : key;
+            if (vars) {
+                Object.keys(vars).forEach((name) => {
+                    str = str.replace(new RegExp(`\\{${name}\\}`, 'g'), String(vars[name]));
+                });
+            }
+            return str;
+        },
+        [language]
+    );
+
     const value = useMemo(
         () => ({
             language,
             isArabic: language === 'ar',
             toggleLanguage,
-            languageLabels,
+            t,
         }),
-        [language]
+        [language, t]
     );
 
     return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

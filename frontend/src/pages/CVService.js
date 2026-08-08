@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { Badge, BilingualLine, GlassCard, LoaderButton, PremiumButton, ProgressBar, SectionHeading, Timeline } from '../components/PremiumUI';
+import { useLanguage } from '../context/LanguageContext';
 
 const statusSteps = [
     { title: 'pending', description: 'تم الرفع وينتظر اهتمام الخبير.' },
@@ -12,6 +13,7 @@ const statusSteps = [
 
 const CVService = () => {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const role = user?.user_metadata?.role || 'youth';
     const [sessionToken, setSessionToken] = useState('');
     const [file, setFile] = useState(null);
@@ -143,9 +145,9 @@ const CVService = () => {
             <section className="hero hero--local">
                 <div className="hero__grid">
                     <div>
-                        <div className="hero__kicker">خدمة السيرة الذاتية / CV Service</div>
+                        <div className="hero__kicker">{t('cvKicker')}</div>
                         <h1 className="hero__title">
-                            صياغة وتسليم <span className="gradient-text">سيرتك الذاتية</span>.
+                            {t('cvTitle')}
                         </h1>
                         <BilingualLine
                             as="p"
@@ -154,13 +156,13 @@ const CVService = () => {
                             en="Upload your CV and track it until delivery."
                         />
                         <div className="status-strip">
-                            <Badge tone="success">مراجعة خبراء / Expert review</Badge>
+                            <Badge tone="success">{t('expertReview')}</Badge>
                         </div>
                     </div>
 
                     <GlassCard className="hero__orbital hero__orbital--primary">
                         <div className="upload-meter__label">
-                            <span>تقدّم الرفع / Upload progress</span>
+                            <span>{t('uploadProgress')}</span>
                             <strong>{uploadProgress}%</strong>
                         </div>
                         <ProgressBar value={uploadProgress} />
@@ -174,9 +176,9 @@ const CVService = () => {
             <div className="split-grid">
                 <GlassCard className="auth-card">
                     <SectionHeading
-                        kicker="الرفع / Upload"
-                        title="اسقط سيرتك الذاتية هنا"
-                        subtitle="اختر ملفًا وأسقطه هنا."
+                        kicker={t('uploadKicker')}
+                        title={t('uploadTitle')}
+                        subtitle={t('uploadSubtitle')}
                     />
                     <form onSubmit={handleUpload}>
                         <div
@@ -190,7 +192,7 @@ const CVService = () => {
                         >
                             <div className="dropzone__inner">
                                 <div className="icon-circle" style={{ margin: '0 auto 0.85rem' }}>CV</div>
-                                <h3 className="card-title">اسحب الملف وأفلته</h3>
+                                <h3 className="card-title">{t('dragTitle')}</h3>
                                 <BilingualLine ar="PDF وDOC وDOCX مدعومة. اختر ملفًا أو أسقطه هنا." en="PDF, DOC, and DOCX are supported. Choose a file or drop it here." className="card-copy" />
                                 <input
                                     className="field"
@@ -206,16 +208,16 @@ const CVService = () => {
                         <div className="field-group">
                             <textarea
                                 className="textarea"
-                                placeholder="ملاحظات لفريق السيرة الذاتية"
+                                placeholder={t('notesPlaceholder')}
                                 value={notes}
                                 onChange={(event) => setNotes(event.target.value)}
                             />
                             <div className="inline-actions">
                                 <LoaderButton type="submit" variant="gold" loading={isUploading}>
-                                    {isUploading ? 'جارٍ الرفع...' : 'رفع السيرة الذاتية / Upload CV'}
+                                    {isUploading ? t('uploading') : t('uploadButton')}
                                 </LoaderButton>
                                 <PremiumButton type="button" variant="ghost" onClick={() => setFile(null)}>
-                                    إعادة ضبط
+                                    {t('reset')}
                                 </PremiumButton>
                             </div>
                         </div>
@@ -224,20 +226,20 @@ const CVService = () => {
                 </GlassCard>
 
                 <GlassCard className="auth-card">
-                    <SectionHeading kicker="المسار / Workflow" title="الخط الزمني للحالة" subtitle="تابع طلبك من الرفع حتى التسليم." />
+                    <SectionHeading kicker={t('workflowKicker')} title={t('workflowTitle')} subtitle={t('workflowSubtitle')} />
                     <Timeline steps={statusSteps} currentIndex={currentStep >= 0 ? currentStep : 0} />
 
                     <div className="section-block">
-                        <SectionHeading kicker="الأسعار / Pricing" title="اختر الباقة المناسبة" subtitle="أسعار بسيطة وواضحة."
+                        <SectionHeading kicker={t('pricingKicker')} title={t('pricingTitle')} subtitle={t('pricingSubtitle')}
                         />
                         <div className="card-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                             <GlassCard>
-                                <div className="stat-card__label">عادي / Standard</div>
+                                <div className="stat-card__label">{t('standard')}</div>
                                 <div className="stat-card__value">$10</div>
                                 <div className="stat-card__note">مراجعة سريعة مع تمريرة خبير واحدة.</div>
                             </GlassCard>
                             <GlassCard>
-                                <div className="stat-card__label">مميز / Premium</div>
+                                <div className="stat-card__label">{t('premium')}</div>
                                 <div className="stat-card__value">$24</div>
                                 <div className="stat-card__note">معالجة أسرع وتسليم نهائي منسّق.</div>
                             </GlassCard>
@@ -247,7 +249,7 @@ const CVService = () => {
             </div>
 
             <GlassCard>
-                <SectionHeading kicker="الطلبات / Requests" title="طلباتك" subtitle="كل طلباتك في مكان واحد."
+                <SectionHeading kicker={t('requestsKicker')} title={t('requestsTitle')} subtitle={t('requestsSubtitle')}
                 />
                 <div className="activity-feed">
                     {(requests || []).length ? (
@@ -273,7 +275,7 @@ const CVService = () => {
 
             {role === 'expert' ? (
                 <GlassCard>
-                    <SectionHeading kicker="منظور الخبير / Expert view" title="الطلبات المعلّقة" subtitle="احجز الطلبات وابدأ المراجعة." />
+                    <SectionHeading kicker={t('expertKicker')} title={t('expertTitle')} subtitle={t('expertSubtitle')} />
                     <div className="card-grid card-grid--wide">
                         {(pendingRequests || []).length ? (
                             pendingRequests.map((request) => (
@@ -281,13 +283,13 @@ const CVService = () => {
                                     <div className="card-head">
                                         <div>
                                             <div className="badge badge--gold">Request #{request.id}</div>
-                                            <h3 className="card-title" style={{ marginTop: '0.75rem' }}>بانتظار المراجعة</h3>
+                                            <h3 className="card-title" style={{ marginTop: '0.75rem' }}>{t('awaitingReview')}</h3>
                                         </div>
                                         <Badge tone="blue">{request.status}</Badge>
                                     </div>
                                     <p className="card-copy">{request.notes || 'لا توجد ملاحظات'}</p>
                                     <PremiumButton variant="gold" onClick={() => claimRequest(request.id)}>
-                                        استلم الطلب / Claim
+                                        {t('claim')}
                                     </PremiumButton>
                                 </GlassCard>
                             ))

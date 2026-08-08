@@ -414,45 +414,43 @@ body[dir='rtl'] .user-menu__link:hover {
     z-index: 2;
 }
 
-/* Bottom dock: compact strip so the sea stays the hero */
-.hero__dock {
-    position: relative;
-    z-index: 3;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.9rem 1.1rem 0.9rem;
-    margin-top: clamp(6rem, 12vh, 11rem);
-    border-radius: 1.4rem;
-    background: linear-gradient(180deg, rgba(8, 26, 46, 0.6), rgba(6, 20, 36, 0.82));
-    backdrop-filter: blur(14px) saturate(140%);
+/* Marine hero is a full-viewport visual with nothing on top of it */
+.hero--marine-scene {
+    min-height: 78vh;
+    max-height: 44rem;
+    height: 78vh;
+}
+
+/* Welcome content sits below the sea — fully clear of the visual */
+.marine-welcome {
+    margin-top: 1.25rem;
+    padding: 1.4rem 1.6rem 1.2rem;
+    border-radius: calc(var(--radius-xl) + 2px);
+    background: linear-gradient(180deg, rgba(10, 32, 52, 0.8), rgba(8, 26, 46, 0.92));
     border: 1px solid rgba(13, 148, 136, 0.2);
-    box-shadow: 0 18px 50px rgba(4, 14, 26, 0.45);
+    box-shadow: var(--shadow);
 }
 
-.hero__dock .hero__kicker {
-    margin-bottom: 0;
+.marine-welcome .hero__title {
+    margin-top: 0.75rem;
+    font-size: clamp(1.9rem, 4.2vw, 3.2rem);
 }
 
-.hero__dock .hero__title {
-    font-size: clamp(1.5rem, 3.2vw, 2.4rem);
-    line-height: 1.05;
+.marine-welcome .hero__lead {
+    max-width: 52rem;
+    margin: 0.75rem 0 0;
 }
 
-.hero__dock .hero__lead {
-    font-size: clamp(0.9rem, 1.6vw, 1.02rem);
-    margin: 0;
-}
-
-.hero__dock-row {
+.marine-welcome__row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.7rem;
+    gap: 1rem;
+    margin-top: 1.1rem;
 }
 
-.hero__dock .hero__actions {
+.marine-welcome .hero__actions {
     margin-top: 0;
 }
 
@@ -463,13 +461,13 @@ body[dir='rtl'] .user-menu__link:hover {
 }
 
 .stats-grid--inline .stat-card {
-    padding: 0.45rem 0.7rem;
-    min-width: 4.6rem;
-    border-radius: 0.9rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 5rem;
+    border-radius: 1rem;
 }
 
 .stats-grid--inline .stat-card__value {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
 }
 
 .stats-grid--inline .stat-card__label {
@@ -477,12 +475,13 @@ body[dir='rtl'] .user-menu__link:hover {
 }
 
 @media (max-width: 720px) {
-    .hero__dock {
-        margin-top: clamp(5rem, 9vh, 8rem);
-        padding: 0.75rem 0.9rem;
+    .hero--marine-scene {
+        min-height: 62vh;
+        height: 62vh;
+        max-height: 34rem;
     }
 
-    .hero__dock-row {
+    .marine-welcome__row {
         flex-direction: column;
         align-items: flex-start;
     }

@@ -34,40 +34,41 @@ const highlightBars = [
 
 const Home = () => (
     <div className="page-shell page-shell__grid">
-        <section className="hero hero--local hero--marine">
+        {/* Full-height marine visual — nothing overlays the sea */}
+        <section className="hero hero--local hero--marine hero--marine-scene">
             <MarineScene />
             <div className="marine-overlay" aria-hidden="true" />
+        </section>
 
-            {/* Content sits at the bottom so the sea stays visible */}
-            <div className="hero__dock">
-                <div className="hero__kicker">
-                    <span className="nautical-tile" aria-hidden="true">🧭</span>
-                    منصة بورسعيد للشباب
+        {/* Content lives below the sea, fully clear of it */}
+        <section className="section-block marine-welcome">
+            <div className="hero__kicker">
+                <span className="nautical-tile" aria-hidden="true">🧭</span>
+                منصة بورسعيد للشباب
+            </div>
+            <h1 className="hero__title">
+                <span className="gradient-text">PortNova</span> — بوابة شباب بورسعيد للمستقبل
+            </h1>
+            <BilingualLine
+                as="p"
+                className="hero__lead"
+                ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
+                en="Between the sea, the market and the corniche — your gateway to jobs, courses and CV support in Port Said."
+            />
+            <div className="marine-welcome__row">
+                <div className="hero__actions">
+                    <PremiumButton to="/register" variant="gold">
+                        ابدأ الآن / Start
+                    </PremiumButton>
+                    <PremiumButton to="/login" variant="ghost">
+                        تسجيل الدخول / Sign in
+                    </PremiumButton>
                 </div>
-                <h1 className="hero__title">
-                    <span className="gradient-text">PortNova</span> — بوابة شباب بورسعيد للمستقبل
-                </h1>
-                <BilingualLine
-                    as="p"
-                    className="hero__lead"
-                    ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
-                    en="Between the sea, the market and the corniche — your gateway to jobs, courses and CV support in Port Said."
-                />
-                <div className="hero__dock-row">
-                    <div className="hero__actions">
-                        <PremiumButton to="/register" variant="gold">
-                            ابدأ الآن / Start
-                        </PremiumButton>
-                        <PremiumButton to="/login" variant="ghost">
-                            تسجيل الدخول / Sign in
-                        </PremiumButton>
-                    </div>
-                    <div className="stats-grid stats-grid--inline">
-                        <StatCounter label="شباب / Youth" value={1200} suffix="+" />
-                        <StatCounter label="وظائف / Jobs" value={320} suffix="+" />
-                        <StatCounter label="دورات / Courses" value={86} suffix="+" />
-                        <StatCounter label="سير ذاتية / CVs" value={540} suffix="+" />
-                    </div>
+                <div className="stats-grid stats-grid--inline">
+                    <StatCounter label="شباب / Youth" value={1200} suffix="+" />
+                    <StatCounter label="وظائف / Jobs" value={320} suffix="+" />
+                    <StatCounter label="دورات / Courses" value={86} suffix="+" />
+                    <StatCounter label="سير ذاتية / CVs" value={540} suffix="+" />
                 </div>
             </div>
         </section>

@@ -161,16 +161,15 @@ export const messages = {
         dashLocation: 'الموقع',
         dashQuick: 'روابط سريعة',
         dashProfileTitle: 'بطاقة ملفك',
-    },
 
-    // Course details
-    courseHours: 'ساعات',
-    courseMode: 'الطريقة',
-    courseOnline: 'أونلاين',
-    courseOffline: 'حضوري',
-    courseLocation: 'الموقع',
-    courseDate: 'الموعد',
-},
+        // Course details
+        courseHours: 'ساعات',
+        courseMode: 'الطريقة',
+        courseOnline: 'أونلاين',
+        courseOffline: 'حضوري',
+        courseLocation: 'الموقع',
+        courseDate: 'الموعد',
+    },
 
     en: {
         // Brand
@@ -326,14 +325,13 @@ export const messages = {
         dashLocation: 'Location',
         dashQuick: 'Quick links',
         dashProfileTitle: 'Your profile card',
-    },
 
-    // Course details
-    courseHours: 'Hours',
-    courseMode: 'Mode',
-    courseOnline: 'Online',
-    courseOffline: 'Offline',
-    courseLocation: 'Location',
-    courseDate: 'Date',
+        // Course details
+        courseHours: 'Hours',
+        courseMode: 'Mode',
+        courseOnline: 'Online',
+        courseOffline: 'Offline',
+        courseLocation: 'Location',
+        courseDate: 'Date',
     },
 };

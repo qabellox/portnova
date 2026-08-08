@@ -3,12 +3,12 @@ import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '
 import { useLanguage } from '../context/LanguageContext';
 
 const courses = [
-    { title: 'Product Design Sprint', provider: 'PortNova Academy', price: 'Free', progress: 72, level: 'Beginner', tone: 'blue' },
-    { title: 'Startup Operations', provider: 'Harbor School', price: '$49', progress: 44, level: 'Intermediate', tone: 'gold' },
-    { title: 'Career Readiness', provider: 'FutureBridge', price: 'Free', progress: 88, level: 'Foundation', tone: 'success' },
-    { title: 'Data Storytelling', provider: 'Nova Labs', price: '$79', progress: 61, level: 'Advanced', tone: 'blue' },
-    { title: 'Freelance Foundations', provider: 'PortNova Academy', price: 'Free', progress: 55, level: 'Beginner', tone: 'success' },
-    { title: 'Digital Marketing Basics', provider: 'Harbor School', price: '$39', progress: 31, level: 'Intermediate', tone: 'gold' },
+    { title: 'Product Design Sprint', provider: 'PortNova Academy', price: 'Free', hours: 24, mode: 'online', location: 'Zoom', date: 'Flexible', level: 'Beginner', tone: 'blue', emoji: '🎨' },
+    { title: 'Startup Operations', provider: 'Harbor School', price: '$49', hours: 32, mode: 'offline', location: 'Port Said', date: 'Sat 10:00', level: 'Intermediate', tone: 'gold', emoji: '🚀' },
+    { title: 'Career Readiness', provider: 'FutureBridge', price: 'Free', hours: 12, mode: 'online', location: 'Zoom', date: 'Flexible', level: 'Foundation', tone: 'success', emoji: '🧭' },
+    { title: 'Data Storytelling', provider: 'Nova Labs', price: '$79', hours: 20, mode: 'online', location: 'Google Meet', date: 'Wed 18:00', level: 'Advanced', tone: 'blue', emoji: '📊' },
+    { title: 'Freelance Foundations', provider: 'PortNova Academy', price: 'Free', hours: 15, mode: 'offline', location: 'Youth Center', date: 'Sun 12:00', level: 'Beginner', tone: 'success', emoji: '💼' },
+    { title: 'Digital Marketing Basics', provider: 'Harbor School', price: '$39', hours: 18, mode: 'online', location: 'Zoom', date: 'Mon 17:00', level: 'Intermediate', tone: 'gold', emoji: '📣' },
 ];
 
 const Courses = () => {
@@ -72,6 +72,7 @@ const Courses = () => {
                 <div className="card-grid card-grid--compact">
                     {filtered.map((course) => (
                         <GlassCard key={course.title} interactive>
+                            <div className="course-cover" aria-hidden="true">{course.emoji}</div>
                             <div className="card-head">
                                 <div>
                                     <Badge tone={course.tone}>{course.price}</Badge>
@@ -80,11 +81,17 @@ const Courses = () => {
                                     </h3>
                                     <BilingualLine ar={course.provider} en={course.provider} className="card-copy" />
                                 </div>
-                                <div className="company-mark">{course.title.slice(0, 2)}</div>
                             </div>
 
                             <div className="card-meta">
                                 <Badge tone="blue">{t(`level${course.level}`)}</Badge>
+                            </div>
+
+                            <div className="course-detail">
+                                <span className="course-detail__item">⏱ <strong>{course.hours}</strong> {t('courseHours')}</span>
+                                <span className="course-detail__item">📍 <strong>{course.mode === 'online' ? t('courseOnline') : t('courseOffline')}</strong></span>
+                                <span className="course-detail__item">🏷 {course.location}</span>
+                                <span className="course-detail__item">📅 {course.date}</span>
                             </div>
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>

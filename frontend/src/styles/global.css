@@ -1156,6 +1156,97 @@ body[dir='rtl'] .user-menu__link:hover {
     align-items: stretch;
 }
 
+/* Account type picker — clean, selectable cards */
+.role-picker {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.role-option {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(125, 211, 252, 0.18);
+    background: rgba(8, 34, 58, 0.5);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.role-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.role-option:hover {
+    border-color: rgba(125, 211, 252, 0.4);
+}
+
+.role-option--active {
+    border-color: rgba(45, 212, 191, 0.7);
+    background: linear-gradient(160deg, rgba(12, 74, 110, 0.4), rgba(45, 212, 191, 0.14));
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.25), 0 8px 24px rgba(6, 16, 30, 0.35);
+}
+
+.role-option__mark {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.role-option__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.role-option__text strong {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.role-option__text small {
+    font-size: 0.76rem;
+    color: var(--muted);
+}
+
+/* Course detail rows */
+.course-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+}
+
+.course-detail__item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: rgba(226, 232, 240, 0.85);
+}
+
+.course-detail__item strong {
+    color: #f8fafc;
+    font-weight: 700;
+}
+
+.course-cover {
+    position: relative;
+    height: 6.5rem;
+    border-radius: 1rem;
+    margin-bottom: 0.9rem;
+    display: grid;
+    place-items: center;
+    font-size: 2rem;
+    background:
+        radial-gradient(circle at 30% 30%, rgba(45, 212, 191, 0.35), transparent 60%),
+        linear-gradient(160deg, rgba(12, 74, 110, 0.7), rgba(8, 34, 58, 0.9));
+    border: 1px solid rgba(125, 211, 252, 0.22);
+}
+
 .auth-aside {
     padding: 1.5rem;
     border-radius: var(--radius-xl);

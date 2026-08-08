@@ -117,6 +117,23 @@ export const messages = {
         aboutTitle: 'من نحن',
         aboutKicker: 'من نحن',
         aboutEmpty: 'المحتوى هنا سيُضاف لاحقًا.',
+
+        // Account roles (frontend choice)
+        roleLabel: 'نوع الحساب',
+        roleYouth: 'شاب / باحث',
+        roleYouthDesc: 'أبحث عن وظائف ودورات وخدمة سيرة ذاتية.',
+        roleCompany: 'شركة / جهة توظيف',
+        roleCompanyDesc: 'أنشر وظائف وأقدم فرصًا.',
+        roleExpert: 'خبير / مقدّم دورات',
+        roleExpertDesc: 'أقدّم دورات ومراجعة سير ذاتية.',
+
+        // Course details
+        courseHours: 'ساعات',
+        courseMode: 'الطريقة',
+        courseOnline: 'أونلاين',
+        courseOffline: 'حضوري',
+        courseLocation: 'الموقع',
+        courseDate: 'الموعد',
     },
 
     en: {
@@ -229,5 +246,22 @@ export const messages = {
         aboutTitle: 'About Us',
         aboutKicker: 'About',
         aboutEmpty: 'Content will be added here later.',
+
+        // Account roles (frontend choice)
+        roleLabel: 'Account type',
+        roleYouth: 'Youth / Seeker',
+        roleYouthDesc: 'I look for jobs, courses, and CV support.',
+        roleCompany: 'Company / Employer',
+        roleCompanyDesc: 'I post jobs and offer opportunities.',
+        roleExpert: 'Expert / Course provider',
+        roleExpertDesc: 'I provide courses and CV review.',
+
+        // Course details
+        courseHours: 'Hours',
+        courseMode: 'Mode',
+        courseOnline: 'Online',
+        courseOffline: 'Offline',
+        courseLocation: 'Location',
+        courseDate: 'Date',
     },
 };

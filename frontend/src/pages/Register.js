@@ -79,12 +79,37 @@ const Register = () => {
                         <input className="field" type="text" placeholder={isArabic ? 'الاسم الكامل' : 'Full name'} value={fullName} onChange={(event) => setFullName(event.target.value)} required />
                         <input className="field" type="email" placeholder={isArabic ? 'البريد الإلكتروني' : 'Email'} value={email} onChange={(event) => setEmail(event.target.value)} required />
                         <input className="field" type="password" placeholder={isArabic ? 'كلمة المرور' : 'Password'} value={password} onChange={(event) => setPassword(event.target.value)} required />
-                        <select className="select" value={role} onChange={(event) => setRole(event.target.value)}>
-                            <option value="youth">{isArabic ? 'شاب' : 'Youth'}</option>
-                            <option value="expert">{isArabic ? 'خبير' : 'Expert'}</option>
-                            <option value="company">{isArabic ? 'شركة' : 'Company'}</option>
-                            <option value="admin">{isArabic ? 'مدير' : 'Admin'}</option>
-                        </select>
+                        <div className="field-group" style={{ gap: '0.5rem' }}>
+                            <span className="filter-label" style={{ textTransform: 'none', letterSpacing: '0.02em' }}>
+                                {isArabic ? 'نوع الحساب' : 'Account type'}
+                            </span>
+                            <div className="role-picker">
+                                <label className={`role-option ${role === 'youth' ? 'role-option--active' : ''}`}>
+                                    <input type="radio" name="role" value="youth" checked={role === 'youth'} onChange={(event) => setRole(event.target.value)} />
+                                    <span className="role-option__mark">🎓</span>
+                                    <span className="role-option__text">
+                                        <strong>{isArabic ? 'شاب / باحث' : 'Youth / Seeker'}</strong>
+                                        <small>{isArabic ? 'أبحث عن وظائف ودورات وسيرة ذاتية.' : 'I look for jobs, courses, and CV support.'}</small>
+                                    </span>
+                                </label>
+                                <label className={`role-option ${role === 'company' ? 'role-option--active' : ''}`}>
+                                    <input type="radio" name="role" value="company" checked={role === 'company'} onChange={(event) => setRole(event.target.value)} />
+                                    <span className="role-option__mark">🏢</span>
+                                    <span className="role-option__text">
+                                        <strong>{isArabic ? 'شركة / جهة توظيف' : 'Company / Employer'}</strong>
+                                        <small>{isArabic ? 'أنشر وظائف وأقدم فرصًا.' : 'I post jobs and offer opportunities.'}</small>
+                                    </span>
+                                </label>
+                                <label className={`role-option ${role === 'expert' ? 'role-option--active' : ''}`}>
+                                    <input type="radio" name="role" value="expert" checked={role === 'expert'} onChange={(event) => setRole(event.target.value)} />
+                                    <span className="role-option__mark">📚</span>
+                                    <span className="role-option__text">
+                                        <strong>{isArabic ? 'خبير / مقدّم دورات' : 'Expert / Course provider'}</strong>
+                                        <small>{isArabic ? 'أقدّم دورات ومراجعة سير ذاتية.' : 'I provide courses and CV review.'}</small>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
                         <PremiumButton type="submit" variant="primary" disabled={loading}>
                             {loading ? (isArabic ? 'جارٍ إنشاء الحساب...' : 'Creating account...') : isArabic ? 'إنشاء الحساب' : 'Create account'}
                         </PremiumButton>

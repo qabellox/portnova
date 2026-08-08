@@ -247,7 +247,7 @@ export const messages = {
         cvFileHint: 'PDF or DOC, max 5MB',
         cvAttached: 'Your CV is attached',
         cvRemove: 'Remove',
-        cvNoFile: 'No CV attached yet, upload one to continue.'
+        cvNoFile: 'No CV attached yet, upload one to continue.',
 
         // Courses
         coursesKicker: 'Learning',

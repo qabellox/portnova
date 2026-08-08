@@ -25,7 +25,7 @@ export const messages = {
         statCvs: 'سير ذاتية',
         offerKicker: 'ما نقدمه',
         offerTitle: 'كل ما يحتاجه شاب بورسعيد في مكان واحد',
-        offerSubtitle: 'وظائف، دورات، وخدمة سيرة ذاتية مصممة لتناسبك.'
+        offerSubtitle: 'وظائف، دورات، وخدمة سيرة ذاتية مصممة لتناسبك.',
         featureJobs: 'وظائف',
         featureCourses: 'دورات',
         featureCv: 'سيرة ذاتية',

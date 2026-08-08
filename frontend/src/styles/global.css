@@ -170,12 +170,12 @@ img {
     }
 }
 
-/* Breathing wave surface along the bottom edge */
+/* Rolling wave surface along the bottom edge */
 .backdrop__waves {
     position: fixed;
-    inset-inline: 0;
+    inset-inline: -8%;
     bottom: 0;
-    height: 18vh;
+    height: 20vh;
     z-index: 1;
     pointer-events: none;
     overflow: hidden;
@@ -185,31 +185,32 @@ img {
     position: absolute;
     inset-inline: 0;
     bottom: 0;
-    width: 100%;
-    height: 100%;
-    animation: waveBreathe 26s ease-in-out infinite alternate;
+    width: 116%;
+    height: 108%;
+    animation: waveRoll 24s ease-in-out infinite alternate;
     will-change: transform, opacity;
 }
 
 .backdrop__wave--b {
+    bottom: -2%;
     animation-duration: 34s;
     animation-delay: -12s;
 }
 
-@keyframes waveBreathe {
+@keyframes waveRoll {
     0% {
-        transform: translateX(-2%) scaleY(1);
-        opacity: 0.7;
+        transform: translateX(-3.5%) translateY(0) scaleY(1);
+        opacity: 0.75;
     }
 
     50% {
-        transform: translateX(2%) scaleY(1.1);
+        transform: translateX(1.5%) translateY(1.2%) scaleY(1.06);
         opacity: 1;
     }
 
     100% {
-        transform: translateX(-2%) scaleY(1);
-        opacity: 0.7;
+        transform: translateX(-3.5%) translateY(0) scaleY(1);
+        opacity: 0.75;
     }
 }
 
@@ -717,9 +718,27 @@ body[dir='rtl'] .user-menu__link:hover {
     position: relative;
     overflow: hidden;
     border-radius: var(--radius-xl);
-    border: 1px solid rgba(13, 148, 136, 0.16);
-    background: linear-gradient(180deg, rgba(10, 32, 52, 0.76), rgba(12, 38, 60, 0.92));
+    border: 1px solid rgba(125, 211, 252, 0.2);
+    background:
+        linear-gradient(180deg, rgba(18, 66, 100, 0.82), rgba(8, 36, 62, 0.94)),
+        linear-gradient(135deg, rgba(12, 74, 110, 0.55), rgba(13, 148, 136, 0.18));
     box-shadow: var(--shadow);
+}
+
+/* Foam-lit top edge — like light catching the water's surface */
+.stat-card::before,
+.metric-card::before,
+.feature-card::before,
+.glass-card::before,
+.data-card::before,
+.auth-card::before,
+.timeline-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(204, 251, 241, 0.6), transparent);
+    pointer-events: none;
 }
 
 .stat-card,
@@ -737,8 +756,8 @@ body[dir='rtl'] .user-menu__link:hover {
 .auth-card:hover,
 .timeline-card:hover {
     transform: translateY(-4px) scale(1.01);
-    border-color: rgba(13, 148, 136, 0.3);
-    box-shadow: 0 0 0 1px rgba(12, 74, 110, 0.2), 0 26px 70px rgba(6, 16, 30, 0.5), 0 0 42px rgba(13, 148, 136, 0.16);
+    border-color: rgba(125, 211, 252, 0.4);
+    box-shadow: 0 0 0 1px rgba(12, 74, 110, 0.25), 0 26px 70px rgba(6, 16, 30, 0.5), 0 0 42px rgba(45, 212, 191, 0.2);
 }
 
 .stat-card::after,
@@ -858,26 +877,26 @@ body[dir='rtl'] .user-menu__link:hover {
     gap: 0.35rem;
     padding: 0.4rem 0.75rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(125, 211, 252, 0.06);
+    border: 1px solid rgba(125, 211, 252, 0.16);
 }
 
 .badge--gold {
-    background: linear-gradient(135deg, rgba(217, 119, 6, 0.2), rgba(217, 119, 6, 0.06));
+    background: linear-gradient(135deg, rgba(217, 119, 6, 0.22), rgba(217, 119, 6, 0.06));
     color: #fcd34d;
-    border-color: rgba(217, 119, 6, 0.28);
+    border-color: rgba(217, 119, 6, 0.3);
 }
 
 .badge--blue {
-    background: linear-gradient(135deg, rgba(12, 74, 110, 0.28), rgba(12, 74, 110, 0.08));
+    background: linear-gradient(135deg, rgba(12, 74, 110, 0.34), rgba(45, 212, 191, 0.1));
     color: #7dd3fc;
-    border-color: rgba(12, 74, 110, 0.32);
+    border-color: rgba(45, 212, 191, 0.34);
 }
 
 .badge--success {
-    background: linear-gradient(135deg, rgba(13, 148, 136, 0.2), rgba(13, 148, 136, 0.06));
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.24), rgba(13, 148, 136, 0.08));
     color: #99f6e4;
-    border-color: rgba(13, 148, 136, 0.28);
+    border-color: rgba(45, 212, 191, 0.32);
 }
 
 .company-mark {
@@ -1187,17 +1206,18 @@ body[dir='rtl'] .user-menu__link:hover {
     min-height: 14rem;
     padding: 1.25rem;
     border-radius: 1.4rem;
-    border: 1px dashed rgba(13, 148, 136, 0.4);
+    border: 1px dashed rgba(125, 211, 252, 0.45);
     background:
-        radial-gradient(circle at center, rgba(12, 74, 110, 0.2), transparent 60%),
-        rgba(8, 26, 46, 0.6);
+        radial-gradient(circle at center, rgba(45, 212, 191, 0.16), transparent 58%),
+        radial-gradient(circle at center, rgba(12, 74, 110, 0.22), transparent 62%),
+        rgba(8, 34, 58, 0.68);
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .dropzone--active {
     transform: scale(1.01);
-    border-color: rgba(13, 148, 136, 0.9);
-    box-shadow: 0 0 0 1px rgba(13, 148, 136, 0.18), 0 0 48px rgba(13, 148, 136, 0.22);
+    border-color: rgba(125, 211, 252, 0.85);
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.2), 0 0 48px rgba(45, 212, 191, 0.24);
 }
 
 .dropzone__inner {
@@ -1972,9 +1992,10 @@ body[dir='rtl'] .metric-card__note {
     padding: 1.1rem 1.2rem;
     margin-bottom: 1.25rem;
     background:
-        linear-gradient(180deg, rgba(14, 165, 233, 0.06), transparent 55%),
-        rgba(7, 14, 27, 0.7);
+        linear-gradient(180deg, rgba(45, 212, 191, 0.07), transparent 55%),
+        linear-gradient(160deg, rgba(12, 74, 110, 0.22), rgba(8, 34, 58, 0.72));
     backdrop-filter: blur(18px);
+    border-color: rgba(125, 211, 252, 0.2);
 }
 
 .filter-row {

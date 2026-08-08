@@ -56,13 +56,33 @@ export const AnimatedBackdrop = () => {
                 ))}
             </div>
 
-            {/* Breathing wave surface along the bottom */}
+            {/* Rolling wave surface along the bottom — layered crests with foam */}
             <div className="backdrop__waves" aria-hidden="true">
-                <svg className="backdrop__wave backdrop__wave--a" viewBox="0 0 1440 120" preserveAspectRatio="none">
-                    <path d="M0 62 C 240 22, 480 102, 720 62 C 960 22, 1200 102, 1440 62 L 1440 120 L 0 120 Z" fill="rgba(125,211,252,0.07)" />
+                <svg className="backdrop__wave backdrop__wave--b" viewBox="0 0 1440 130" preserveAspectRatio="none">
+                    <path
+                        d="M0 86 C 90 74, 180 60, 270 66 C 360 72, 450 92, 540 88 C 630 84, 720 60, 810 64 C 900 68, 990 92, 1080 90 C 1170 88, 1260 66, 1350 68 C 1395 69, 1420 70, 1440 70 L 1440 130 L 0 130 Z"
+                        fill="rgba(45,212,191,0.05)"
+                    />
+                    <path
+                        d="M0 86 C 90 74, 180 60, 270 66 C 360 72, 450 92, 540 88 C 630 84, 720 60, 810 64 C 900 68, 990 92, 1080 90 C 1170 88, 1260 66, 1350 68"
+                        fill="none"
+                        stroke="rgba(153,246,228,0.25)"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                    />
                 </svg>
-                <svg className="backdrop__wave backdrop__wave--b" viewBox="0 0 1440 120" preserveAspectRatio="none">
-                    <path d="M0 72 C 240 32, 480 112, 720 72 C 960 32, 1200 112, 1440 72 L 1440 120 L 0 120 Z" fill="rgba(45,212,191,0.055)" />
+                <svg className="backdrop__wave backdrop__wave--a" viewBox="0 0 1440 130" preserveAspectRatio="none">
+                    <path
+                        d="M0 92 C 96 76, 190 62, 286 70 C 382 78, 470 102, 560 98 C 650 94, 726 66, 820 70 C 914 74, 1000 100, 1090 98 C 1180 96, 1270 72, 1360 74 C 1400 75, 1424 76, 1440 76 L 1440 130 L 0 130 Z"
+                        fill="rgba(125,211,252,0.07)"
+                    />
+                    <path
+                        d="M0 92 C 96 76, 190 62, 286 70 C 382 78, 470 102, 560 98 C 650 94, 726 66, 820 70 C 914 74, 1000 100, 1090 98 C 1180 96, 1270 72, 1360 74"
+                        fill="none"
+                        stroke="rgba(186,230,253,0.32)"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                    />
                 </svg>
             </div>
 

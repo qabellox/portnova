@@ -110,6 +110,7 @@
 }
 
 .marine-vessel__rig {
+   position: relative;
    animation: fleetSail var(--dur) linear infinite;
    animation-delay: var(--delay);
    will-change: transform;
@@ -152,24 +153,27 @@
    50%      { transform: translateY(-3px) rotate(0.4deg); }
 }
 
-/* Hover/focus reveal card on each boat */
+/* Info card. Lives inside the rig so it sails with its boat, and is
+   counter-scaled by 1/--depth so it is ALWAYS a readable fixed size
+   (it does not shrink with far boats). Anchored above the boat. */
 .marine-vessel__card {
    position: absolute;
    left: 50%;
-   bottom: 118%;
-   transform: translateX(-50%) translateY(10px);
-   width: 15rem;
-   max-width: 70vw;
+   bottom: calc(100% + 14px);
+   width: 16rem;
+   max-width: 74vw;
    display: flex;
    flex-direction: column;
-   gap: 0.3rem;
-   padding: 0.8rem 0.95rem;
-   border-radius: 1rem;
-   background: linear-gradient(160deg, rgba(10, 40, 66, 0.94), rgba(8, 30, 50, 0.97));
-   border: 1px solid rgba(125, 211, 252, 0.35);
-   box-shadow: 0 18px 46px rgba(3, 12, 26, 0.6), 0 0 0 1px rgba(212, 175, 55, 0.15);
+   gap: 0.32rem;
+   padding: 0.9rem 1.05rem;
+   border-radius: 1.1rem;
+   background: linear-gradient(160deg, rgba(10, 40, 66, 0.96), rgba(8, 30, 50, 0.98));
+   border: 1px solid rgba(125, 211, 252, 0.4);
+   box-shadow: 0 20px 50px rgba(3, 12, 26, 0.65), 0 0 0 1px rgba(212, 175, 55, 0.2);
    opacity: 0;
    pointer-events: none;
+   transform: translateX(-50%) translateY(8px) scale(calc(1 / var(--depth)));
+   transform-origin: 50% 100%;
    transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
    z-index: 6;
 }
@@ -178,11 +182,26 @@
 .marine-vessel:focus-within .marine-vessel__card {
    opacity: 1;
    pointer-events: auto;
-   transform: translateX(-50%) translateY(0);
+   transform: translateX(-50%) translateY(0) scale(calc(1 / var(--depth)));
+}
+
+/* Tail pointing down to the boat */
+.marine-vessel__card::after {
+   content: '';
+   position: absolute;
+   left: 50%;
+   bottom: -9px;
+   width: 18px;
+   height: 18px;
+   transform: translateX(-50%) rotate(45deg);
+   background: inherit;
+   border-right: 1px solid rgba(125, 211, 252, 0.35);
+   border-bottom: 1px solid rgba(125, 211, 252, 0.35);
+   border-radius: 3px;
 }
 
 .marine-vessel__kicker {
-   font-size: 0.68rem;
+   font-size: 0.7rem;
    font-weight: 800;
    letter-spacing: 0.08em;
    text-transform: uppercase;
@@ -190,26 +209,27 @@
 }
 
 .marine-vessel__title {
-   font-size: 0.98rem;
+   font-size: 1.02rem;
    font-weight: 800;
    color: #f8fafc;
+   line-height: 1.25;
 }
 
 .marine-vessel__desc {
-   font-size: 0.8rem;
-   color: rgba(226, 232, 240, 0.85);
-   line-height: 1.4;
+   font-size: 0.84rem;
+   color: rgba(226, 232, 240, 0.88);
+   line-height: 1.45;
 }
 
 .marine-vessel__btn {
-   margin-top: 0.3rem;
+   margin-top: 0.35rem;
    display: inline-flex;
    align-items: center;
    justify-content: center;
-   padding: 0.5rem 0.85rem;
+   padding: 0.55rem 0.95rem;
    border-radius: 999px;
    text-decoration: none;
-   font-size: 0.82rem;
+   font-size: 0.85rem;
    font-weight: 800;
    color: #fff7d6;
    background: linear-gradient(135deg, #a97f1f 0%, #d4af37 55%, #e6c767 100%);
@@ -234,7 +254,8 @@
    .marine-gull__body,
    .marine-vessel,
    .marine-vessel__rig,
-   .marine-vessel__svg {
+   .marine-vessel__svg,
+   .marine-vessel__card {
       animation: none !important;
    }
 }

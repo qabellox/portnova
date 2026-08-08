@@ -324,7 +324,10 @@ const MarineScene = ({ className = '' }) => {
                 ))}
             </div>
 
-            {/* 3D fleet of boats advertising jobs & courses */}
+            {/* 3D fleet of boats advertising jobs & courses.
+                The info card lives INSIDE the rig so it sails with its boat,
+                and it counter-scales by 1/--depth so it is always a readable
+                fixed size no matter how far the boat is. */}
             <div className="marine-fleet" aria-hidden="true">
                 {fleet.map((vessel) => (
                     <div
@@ -336,25 +339,25 @@ const MarineScene = ({ className = '' }) => {
                             <div className="marine-vessel__svg" style={{ width: vessel.w, height: vessel.h }}>
                                 {vessel.kind === 'jobs' ? <JobShip /> : <CourseBoat />}
                             </div>
-                        </div>
-                        <div className="marine-vessel__card">
-                            <span className="marine-vessel__kicker">
-                                {vessel.kind === 'jobs' ? '⚓ ' : '🧭 '}
-                                {vessel.kind === 'jobs' ? t('boatJobs') : t('boatCourses')}
-                            </span>
-                            <strong className="marine-vessel__title">
-                                {vessel.kind === 'jobs' ? t('jobBoatTitle') : t('courseBoatTitle')}
-                            </strong>
-                            <span className="marine-vessel__desc">
-                                {vessel.kind === 'jobs' ? t('jobBoatDesc') : t('courseBoatDesc')}
-                            </span>
-                            <Link
-                                className="marine-vessel__btn"
-                                to={vessel.kind === 'jobs' ? '/jobs' : '/courses'}
-                                tabIndex="0"
-                            >
-                                {vessel.kind === 'jobs' ? t('boatSeeJobs') : t('boatSeeCourses')}
-                            </Link>
+                            <div className="marine-vessel__card">
+                                <span className="marine-vessel__kicker">
+                                    {vessel.kind === 'jobs' ? '⚓ ' : '🧭 '}
+                                    {vessel.kind === 'jobs' ? t('boatJobs') : t('boatCourses')}
+                                </span>
+                                <strong className="marine-vessel__title">
+                                    {vessel.kind === 'jobs' ? t('jobBoatTitle') : t('courseBoatTitle')}
+                                </strong>
+                                <span className="marine-vessel__desc">
+                                    {vessel.kind === 'jobs' ? t('jobBoatDesc') : t('courseBoatDesc')}
+                                </span>
+                                <Link
+                                    className="marine-vessel__btn"
+                                    to={vessel.kind === 'jobs' ? '/jobs' : '/courses'}
+                                    tabIndex="0"
+                                >
+                                    {vessel.kind === 'jobs' ? t('boatSeeJobs') : t('boatSeeCourses')}
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 ))}

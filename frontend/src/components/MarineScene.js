@@ -32,66 +32,107 @@ const MarineScene = ({ className = '' }) => {
 
         const horizon = () => height * 0.42;
 
+        // deterministic pseudo-random for stable glitter positions
+        const pseudo = (n) => {
+            const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+            return s - Math.floor(s);
+        };
+
         const drawSky = () => {
-            const g = ctx.createLinearGradient(0, 0, 0, horizon());
-            g.addColorStop(0, '#7ec8e3');
-            g.addColorStop(0.5, '#bae6fd');
-            g.addColorStop(1, '#dff3fc');
+            const hz = horizon();
+            // realistic sky: deep blue zenith -> cyan -> warm haze at the horizon
+            const g = ctx.createLinearGradient(0, 0, 0, hz + 2);
+            g.addColorStop(0, '#12568a');
+            g.addColorStop(0.45, '#3f92c6');
+            g.addColorStop(0.72, '#9ed0e8');
+            g.addColorStop(0.9, '#f6d9aa');
+            g.addColorStop(1, '#fbe3ba');
             ctx.fillStyle = g;
-            ctx.fillRect(0, 0, width, horizon() + 2);
+            ctx.fillRect(0, 0, width, hz + 2);
+
+            // soft distant clouds
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            for (let i = 0; i < 7; i++) {
+                const cx = width * (0.06 + i * 0.15);
+                const cy = hz * (0.22 + pseudo(i) * 0.5);
+                const rw = width * (0.09 + pseudo(i + 20) * 0.12);
+                const cloud = ctx.createRadialGradient(cx, cy, 0, cx, cy, rw);
+                cloud.addColorStop(0, 'rgba(255,255,255,0.6)');
+                cloud.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = cloud;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, rw, rw * 0.28, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
         };
 
         const drawSun = (t) => {
             const sx = width * 0.72;
             const sy = horizon() * 0.96;
-            const r = Math.min(width, height) * 0.055;
+            const r = Math.min(width, height) * 0.05;
             const pulse = 1 + Math.sin(t * 0.0012) * 0.03;
 
-            const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 5);
-            glow.addColorStop(0, 'rgba(255,245,205,0.9)');
-            glow.addColorStop(0.35, 'rgba(255,238,180,0.45)');
+            // god rays sweeping from the sun
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            for (let i = 0; i < 7; i++) {
+                const ang = -0.55 + i * 0.16 + Math.sin(t * 0.0004 + i * 1.3) * 0.04;
+                ctx.save();
+                ctx.translate(sx, sy);
+                ctx.rotate(ang);
+                const ray = ctx.createLinearGradient(0, 0, 0, -hz * 0.9);
+                ray.addColorStop(0, 'rgba(255,238,180,0.35)');
+                ray.addColorStop(1, 'rgba(255,238,180,0)');
+                ctx.fillStyle = ray;
+                ctx.beginPath();
+                ctx.moveTo(-r * 0.4, 0);
+                ctx.lineTo(r * 0.4, 0);
+                ctx.lineTo(r * 1.5, -hz * 0.9);
+                ctx.lineTo(-r * 1.5, -hz * 0.9);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+            ctx.restore();
+
+            // large atmospheric glow
+            const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 6);
+            glow.addColorStop(0, 'rgba(255,246,205,0.95)');
+            glow.addColorStop(0.3, 'rgba(255,238,180,0.5)');
             glow.addColorStop(1, 'rgba(255,238,180,0)');
             ctx.fillStyle = glow;
             ctx.beginPath();
-            ctx.arc(sx, sy, r * 5, 0, Math.PI * 2);
+            ctx.arc(sx, sy, r * 6, 0, Math.PI * 2);
             ctx.fill();
 
+            // sun disc
             const disc = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * pulse);
-            disc.addColorStop(0, '#fffdf2');
-            disc.addColorStop(0.5, '#fff7d6');
-            disc.addColorStop(1, 'rgba(254,240,138,0.2)');
+            disc.addColorStop(0, '#fffef5');
+            disc.addColorStop(0.55, '#fff7d6');
+            disc.addColorStop(1, 'rgba(254,240,138,0.1)');
             ctx.fillStyle = disc;
             ctx.beginPath();
             ctx.arc(sx, sy, r * pulse, 0, Math.PI * 2);
             ctx.fill();
-
-            const refGrad = ctx.createLinearGradient(0, horizon(), 0, height);
-            refGrad.addColorStop(0, 'rgba(254,240,138,0.5)');
-            refGrad.addColorStop(1, 'rgba(254,240,138,0)');
-            ctx.fillStyle = refGrad;
-            ctx.globalCompositeOperation = 'screen';
-            for (let i = 0; i < 14; i++) {
-                const y = horizon() + i * ((height - horizon()) / 16);
-                const w = (width * 0.09) * (1 - i / 16) * (0.7 + Math.sin(t * 0.003 + i * 0.9) * 0.3);
-                ctx.beginPath();
-                ctx.ellipse(sx, y, w, 2.5, 0, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.globalCompositeOperation = 'source-over';
         };
 
-        const waveY = (x, t, base, amp, freq, speed) =>
-            base + Math.sin(x * freq + t * speed) * amp + Math.sin(x * freq * 0.53 + t * speed * 0.7) * amp * 0.4;
+        const waveY = (x, t, base, amp, freq, speed, phase) =>
+            base
+            + Math.sin(x * freq + t * speed + phase) * amp
+            + Math.sin(x * freq * 0.53 + t * speed * 0.71 + phase * 2) * amp * 0.4
+            + Math.sin(x * freq * 0.29 + t * speed * 1.3 + phase * 3) * amp * 0.2;
 
-        const drawWaveLayer = (t, base, amp, freq, speed, colorTop, colorBottom, foam) => {
+        const drawWaveLayer = (t, base, amp, freq, speed, phase, colorTop, colorBottom, foam, foamAlpha) => {
             ctx.beginPath();
             ctx.moveTo(0, height);
-            for (let x = 0; x <= width; x += 4) {
-                ctx.lineTo(x, waveY(x, t, base, amp, freq, speed));
+            for (let x = 0; x <= width; x += 3) {
+                ctx.lineTo(x, waveY(x, t, base, amp, freq, speed, phase));
             }
             ctx.lineTo(width, height);
             ctx.closePath();
-            const g = ctx.createLinearGradient(0, base - amp, 0, height);
+            const g = ctx.createLinearGradient(0, base - amp * 2, 0, height);
             g.addColorStop(0, colorTop);
             g.addColorStop(1, colorBottom);
             ctx.fillStyle = g;
@@ -99,31 +140,70 @@ const MarineScene = ({ className = '' }) => {
 
             if (foam) {
                 ctx.beginPath();
-                for (let x = 0; x <= width; x += 4) {
-                    const y = waveY(x, t, base, amp, freq, speed);
+                for (let x = 0; x <= width; x += 3) {
+                    const y = waveY(x, t, base, amp, freq, speed, phase);
                     if (x === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
                 }
-                ctx.strokeStyle = 'rgba(248,250,252,0.5)';
-                ctx.lineWidth = 1.6;
+                ctx.strokeStyle = `rgba(248,250,252,${foamAlpha})`;
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
             }
         };
 
         const drawSea = (t) => {
             const hz = horizon();
+
+            // depth-based water: deep navy at horizon -> coastal turquoise shallows near the viewer
             const base = ctx.createLinearGradient(0, hz, 0, height);
-            base.addColorStop(0, '#0d5c85');
-            base.addColorStop(0.5, '#0a4a6e');
-            base.addColorStop(1, '#07334d');
+            base.addColorStop(0, '#0b5178');
+            base.addColorStop(0.35, '#0d6f8e');
+            base.addColorStop(0.7, '#0e8f96');
+            base.addColorStop(1, '#12b3a2');
             ctx.fillStyle = base;
             ctx.fillRect(0, hz, width, height - hz);
 
-            drawWaveLayer(t, hz + height * 0.08, height * 0.02, 0.006, 0.0009, 'rgba(12,74,110,0.75)', 'rgba(12,74,110,0.2)', false);
-            drawWaveLayer(t, hz + height * 0.18, height * 0.03, 0.0045, 0.0007, 'rgba(13,148,136,0.6)', 'rgba(13,148,136,0.15)', false);
-            drawWaveLayer(t, hz + height * 0.3, height * 0.035, 0.0038, 0.00055, 'rgba(20,184,166,0.55)', 'rgba(20,184,166,0.1)', true);
-            drawWaveLayer(t, hz + height * 0.42, height * 0.04, 0.0032, 0.00045, 'rgba(45,212,191,0.45)', 'rgba(45,212,191,0.08)', true);
-            drawWaveLayer(t, hz + height * 0.52, height * 0.03, 0.0026, 0.0004, 'rgba(248,250,252,0.5)', 'rgba(248,250,252,0)', true);
+            // sky reflection band just below the horizon (fresnel)
+            const refl = ctx.createLinearGradient(0, hz, 0, hz + height * 0.14);
+            refl.addColorStop(0, 'rgba(220,240,255,0.55)');
+            refl.addColorStop(1, 'rgba(220,240,255,0)');
+            ctx.fillStyle = refl;
+            ctx.fillRect(0, hz, width, height * 0.14);
+
+            // lit translucent wave layers (additive for a shader feel)
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            drawWaveLayer(t, hz + height * 0.06, height * 0.018, 0.006, 0.001, 0, 'rgba(80,180,220,0.5)', 'rgba(13,148,136,0)', false, 0);
+            drawWaveLayer(t, hz + height * 0.16, height * 0.026, 0.0045, 0.0008, 1.7, 'rgba(90,200,230,0.45)', 'rgba(20,184,166,0)', true, 0.35);
+            drawWaveLayer(t, hz + height * 0.3, height * 0.032, 0.0038, 0.0006, 3.1, 'rgba(45,212,191,0.5)', 'rgba(13,148,136,0)', true, 0.5);
+            drawWaveLayer(t, hz + height * 0.44, height * 0.036, 0.0032, 0.0005, 4.4, 'rgba(94,234,212,0.55)', 'rgba(20,184,166,0)', true, 0.65);
+            drawWaveLayer(t, hz + height * 0.54, height * 0.028, 0.0026, 0.0004, 5.5, 'rgba(248,250,252,0.7)', 'rgba(248,250,252,0)', true, 0.8);
+            ctx.restore();
+
+            // sun glitter: hundreds of dancing specular highlights beneath the sun
+            const sx = width * 0.72;
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            const rows = 26;
+            for (let i = 0; i < rows; i++) {
+                const p = (i + 1) / rows;
+                const gy = hz + p * p * (height - hz);
+                const spread = width * (0.02 + p * 0.16);
+                const count = Math.max(3, Math.round(14 * (1 - p) + 6));
+                for (let k = 0; k < count; k++) {
+                    const seed = i * 31 + k * 7;
+                    const dx = (pseudo(seed) - 0.5) * 2 * spread;
+                    const flick = 0.4 + 0.6 * Math.abs(Math.sin(t * 0.004 + seed * 1.7));
+                    const gx = sx + dx;
+                    const gw = (2 + p * 6) * (0.5 + flick * 0.8);
+                    const gh = gw * 0.35;
+                    ctx.fillStyle = `rgba(255,240,180,${0.5 * flick})`;
+                    ctx.beginPath();
+                    ctx.ellipse(gx, gy, gw, gh, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
         };
 
         const drawGull = (x, y, wing, time) => {

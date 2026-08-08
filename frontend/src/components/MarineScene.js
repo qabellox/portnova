@@ -4,11 +4,11 @@ import { Link } from 'react-router-dom';
 /**
  * MarineScene — front-view shader-style live seascape.
  *
- * Everything is drawn on a canvas with real perspective: a sky with sun and
- * drifting haze, a horizon, and animated waves that roll toward the viewer.
- * Thin sun-glitter streaks sit on the water (no glowing circles), click on
- * the sea to spawn realistic ripples, a felucca with app shortcuts sails
- * slowly across, and a flock of gulls drifts high in the sky.
+ * Everything is drawn on a canvas with real perspective: a sky with a soft
+ * sun glow and a horizon, and animated waves that roll toward the viewer.
+ * Click on the sea to spawn realistic ripples, a felucca with app shortcuts
+ * sails slowly across (looping seamlessly), and a flock of gulls drifts
+ * high in the sky.
  */
 const MarineScene = ({ className = '' }) => {
     const canvasRef = useRef(null);
@@ -43,14 +43,7 @@ const MarineScene = ({ className = '' }) => {
 
         const horizonY = () => height * 0.36;
 
-        // Soft drifting clouds in the sky (translucent blobs)
-        const clouds = [
-            { x: 0.12, y: 0.10, w: 0.34, h: 0.05, s: 0.000008, a: 0.5 },
-            { x: 0.55, y: 0.20, w: 0.42, h: 0.045, s: 0.000006, a: 0.42 },
-            { x: 0.30, y: 0.29, w: 0.30, h: 0.035, s: 0.000010, a: 0.34 },
-        ];
-
-        const drawSky = (t) => {
+        const drawSky = () => {
             const hy = horizonY();
             const g = ctx.createLinearGradient(0, 0, 0, hy);
             g.addColorStop(0, '#0a2e52');
@@ -70,24 +63,6 @@ const MarineScene = ({ className = '' }) => {
             glow.addColorStop(1, 'rgba(255,224,160,0)');
             ctx.fillStyle = glow;
             ctx.fillRect(0, 0, width, hy + 2);
-
-            // Drifting clouds
-            ctx.save();
-            ctx.globalCompositeOperation = 'screen';
-            for (const c of clouds) {
-                const cx = (width * c.x + t * c.s * width) % (width * 1.4) - width * 0.2;
-                const cy = hy * c.y;
-                const cw = width * c.w;
-                const ch = hy * c.h;
-                const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, cw);
-                grad.addColorStop(0, `rgba(250,252,255,${c.a})`);
-                grad.addColorStop(1, 'rgba(250,252,255,0)');
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.ellipse(cx, cy, cw, ch, 0, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.restore();
 
             // Haze right above the horizon
             const haze = ctx.createLinearGradient(0, hy - 14, 0, hy + 6);
@@ -144,42 +119,6 @@ const MarineScene = ({ className = '' }) => {
                 band.addColorStop(1, rgba(colBot, 1));
                 ctx.fillStyle = band;
                 ctx.fill();
-
-                // Crest highlight (foam) on foreground waves
-                if (d0 > 0.5) {
-                    const amp = 1 + d0 * d0 * 17;
-                    ctx.beginPath();
-                    started = false;
-                    for (let x = -6; x <= width + 6; x += 6) {
-                        const y = waveY(x, d0, t);
-                        if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
-                    }
-                    const foamA = 0.05 + (d0 - 0.5) * 0.22;
-                    ctx.strokeStyle = `rgba(235,248,255,${foamA})`;
-                    ctx.lineWidth = 1 + d0 * 1.8;
-                    ctx.stroke();
-                }
-            }
-        };
-
-        // Thin horizontal sun-glitter streaks on the water (not circles)
-        const drawGlitter = (t) => {
-            const hy = horizonY();
-            const sunX = width * 0.7;
-            for (let i = 0; i < 30; i++) {
-                const depth = i / 29;
-                const base = hy + (height - hy) * Math.pow(depth, 2.3);
-                const flick = 0.35 + 0.65 * Math.abs(Math.sin(t * 0.0022 + i * 1.9));
-                const len = 6 + depth * depth * 90;
-                const jitter = (Math.sin(i * 12.9898) * 43758.5453) % 1;
-                const x = sunX + (jitter - 0.5) * depth * width * 0.22;
-                const alpha = (0.05 + depth * 0.3) * flick;
-                ctx.strokeStyle = `rgba(255,250,228,${alpha})`;
-                ctx.lineWidth = 1 + depth * 1.4;
-                ctx.beginPath();
-                ctx.moveTo(x - len / 2, base);
-                ctx.lineTo(x + len / 2, base);
-                ctx.stroke();
             }
         };
 
@@ -214,9 +153,8 @@ const MarineScene = ({ className = '' }) => {
         const render = () => {
             const t = performance.now() - startTime;
             ctx.clearRect(0, 0, width, height);
-            drawSky(t);
+            drawSky();
             drawSea(t);
-            drawGlitter(t);
             drawRipples();
             rafId = requestAnimationFrame(render);
         };

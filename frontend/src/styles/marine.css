@@ -63,10 +63,12 @@
    50%      { transform: scaleY(0.82) rotate(-1.5deg); }
 }
 
-/* Felucca sailing across the foreground */
+/* Felucca sailing across the foreground, looping seamlessly:
+   fully off-screen at both 0% and 100% so it exits right and
+   re-enters left with no visible jump. */
 .marine-boat {
    position: absolute;
-   left: -22%;
+   left: 0;
    bottom: 3.5%;
    z-index: 4;
    pointer-events: auto;
@@ -127,8 +129,8 @@
 }
 
 @keyframes boatSail {
-   0% { transform: translateX(0); }
-   100% { transform: translateX(126vw); }
+   0%   { transform: translateX(-460px); }
+   100% { transform: translateX(calc(100vw + 460px)); }
 }
 
 @keyframes boatBobbing {
@@ -149,5 +151,3 @@
       animation: none !important;
    }
 }
-
-

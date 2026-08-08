@@ -204,29 +204,34 @@ const MarineScene = ({ className = '' }) => {
 
         const drawStars = (t, moonAlpha) => {
             const hy = horizonY();
-            for (let i = 0; i < 26; i++) {
-                const sx = rand(i) * width;
-                const sy = rand(i + 50) * hy * 0.85;
-                const size = 1 + (i % 4) * 1.1;
-                const tw = 0.55 + 0.45 * Math.sin(t * 0.0012 + i * 2.1);
-                const alpha = (0.35 + 0.65 * tw) * moonAlpha;
-                if (i % 5 === 0) {
-                    const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 9);
-                    glow.addColorStop(0, `rgba(200,220,255,${0.5 * alpha})`);
-                    glow.addColorStop(1, 'rgba(200,220,255,0)');
-                    ctx.fillStyle = glow;
-                    ctx.beginPath();
-                    ctx.arc(sx, sy, size * 9, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+            // Fewer stars on small screens (density scales with width), varied
+            // sizes and locations, with a brighter, shinier twinkle on the big ones.
+            const density = Math.min(1, width / 900);
+            const heroCount = Math.round(12 * density);
+            const smallCount = Math.round(46 * density);
+
+            for (let i = 0; i < heroCount; i++) {
+                const sx = rand(i * 7 + 1) * width;
+                const sy = rand(i * 13 + 3) * hy * 0.85;
+                const size = 1 + (i % 5) * 1.3;
+                const tw = 0.5 + 0.5 * Math.sin(t * 0.0016 + i * 2.1);
+                const alpha = (0.4 + 0.6 * tw) * moonAlpha;
+                const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 10);
+                glow.addColorStop(0, `rgba(210,228,255,${0.6 * alpha})`);
+                glow.addColorStop(0.4, `rgba(190,210,245,${0.22 * alpha})`);
+                glow.addColorStop(1, 'rgba(190,210,245,0)');
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(sx, sy, size * 10, 0, Math.PI * 2);
+                ctx.fill();
                 drawSparkle(sx, sy, size, alpha);
             }
-            for (let i = 0; i < 120; i++) {
-                const sx = rand(i + 200) * width;
-                const sy = rand(i + 300) * hy * 0.8;
-                const tw = 0.5 + 0.5 * Math.sin(t * 0.0018 + i * 3.1);
-                const alpha = (0.18 + 0.4 * tw) * moonAlpha;
-                drawSparkle(sx, sy, 0.55 + (i % 3) * 0.3, alpha);
+            for (let i = 0; i < smallCount; i++) {
+                const sx = rand(i * 31 + 17) * width;
+                const sy = rand(i * 17 + 11) * hy * 0.78;
+                const tw = 0.4 + 0.6 * Math.sin(t * 0.0022 + i * 3.1);
+                const alpha = (0.2 + 0.42 * tw) * moonAlpha;
+                drawSparkle(sx, sy, 0.5 + (i % 4) * 0.35, alpha);
             }
         };
 

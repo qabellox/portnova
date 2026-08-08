@@ -369,26 +369,27 @@
       perspective-origin: 50% 70%;
    }
 
-   /* Pull lanes up toward the horizon so a short hero shows
-      foreground + mid + background boats without covering each other. */
+   /* Keep every boat BELOW the horizon (36% from top = 64% from bottom)
+      on a short phone hero, so nothing floats in the sky, while boats
+      stay clearly separated. */
    .marine-vessel--job-a {
       bottom: 8%;
    }
 
    .marine-vessel--course-a {
-      bottom: 30%;
+      bottom: 26%;
    }
 
    .marine-vessel--job-b {
-      bottom: 46%;
+      bottom: 40%;
    }
 
    .marine-vessel--course-b {
-      bottom: 58%;
+      bottom: 50%;
    }
 
    .marine-vessel--course-c {
-      bottom: 68%;
+      bottom: 58%;
    }
 
    /* Card stays a readable fixed size, anchored above the boat. */

@@ -3,66 +3,75 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 export const AnimatedBackdrop = () => {
-    const particles = useMemo(
+    // Rising air bubbles — glassy, slow, drifting like through seawater
+    const bubbles = useMemo(
         () =>
-            Array.from({ length: 22 }, (_, index) => ({
-                id: index,
-                left: `${(index * 11 + 7) % 100}%`,
-                top: `${(index * 17 + 13) % 100}%`,
-                delay: `${(index * 0.55) % 7}s`,
-                duration: `${6 + (index % 5)}s`,
-                color: index % 3 === 0 ? 'rgba(251, 191, 36, 0.75)' : 'rgba(14, 165, 233, 0.8)',
+            Array.from({ length: 16 }, (_, index) => ({
+                id: `bubble-${index}`,
+                left: `${(index * 6.1 + 4) % 100}%`,
+                delay: `${(index * 1.4) % 14}s`,
+                duration: `${17 + (index % 9) * 2}s`,
+                size: 6 + (index % 5) * 4,
             })),
         []
     );
 
-    const risingParticles = useMemo(
+    // Tiny marine glints — foam, sea-light, and sun-through-water
+    const glints = useMemo(
         () =>
-            Array.from({ length: 14 }, (_, index) => ({
-                id: `rise-${index}`,
-                left: `${(index * 7.3 + 3) % 100}%`,
-                delay: `${(index * 1.7) % 12}s`,
-                duration: `${14 + (index % 7) * 2}s`,
-                size: 4 + (index % 4) * 2,
+            Array.from({ length: 12 }, (_, index) => ({
+                id: `glint-${index}`,
+                left: `${(index * 8.3 + 5) % 100}%`,
+                top: `${(index * 17 + 12) % 100}%`,
+                delay: `${(index * 0.9) % 8}s`,
+                duration: `${7 + (index % 5)}s`,
+                tint: index % 3 === 0 ? 'foam' : index % 2 === 0 ? 'sea' : 'sun',
             })),
         []
     );
 
     return (
         <div className="backdrop" aria-hidden="true">
+            {/* Deep-sea mesh: blues, teal, and a faint sun-through-water glow */}
             <div className="premium-mesh" />
+
+            {/* Drifting underwater caustic light */}
+            <div className="backdrop__light backdrop__light--a" />
+            <div className="backdrop__light backdrop__light--b" />
+
+            {/* Rising bubbles */}
             <div className="premium-particles">
-                {risingParticles.map((p) => (
+                {bubbles.map((b) => (
                     <span
-                        key={p.id}
+                        key={b.id}
                         className="premium-particle"
                         style={{
-                            left: p.left,
-                            width: `${p.size}px`,
-                            height: `${p.size}px`,
-                            animationDelay: p.delay,
-                            animationDuration: p.duration,
+                            left: b.left,
+                            width: `${b.size}px`,
+                            height: `${b.size}px`,
+                            animationDelay: b.delay,
+                            animationDuration: b.duration,
                         }}
                     />
                 ))}
             </div>
-            <div className="backdrop__mesh backdrop__mesh--blue" />
-            <div className="backdrop__mesh backdrop__mesh--gold" />
-            <div className="backdrop__mesh backdrop__mesh--ice" />
-            <span className="backdrop__orb" style={{ top: '12%', left: '8%', color: 'rgba(14, 165, 233, 0.9)', animationDelay: '-2s' }} />
-            <span className="backdrop__orb" style={{ top: '20%', right: '12%', color: 'rgba(251, 191, 36, 0.9)', animationDelay: '-6s' }} />
-            <span className="backdrop__orb" style={{ bottom: '22%', left: '18%', color: 'rgba(224, 242, 254, 0.9)', animationDelay: '-10s' }} />
-            {particles.map((particle) => (
+
+            {/* Breathing wave surface along the bottom */}
+            <div className="backdrop__waves" aria-hidden="true">
+                <svg className="backdrop__wave backdrop__wave--a" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path d="M0 62 C 240 22, 480 102, 720 62 C 960 22, 1200 102, 1440 62 L 1440 120 L 0 120 Z" fill="rgba(125,211,252,0.07)" />
+                </svg>
+                <svg className="backdrop__wave backdrop__wave--b" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path d="M0 72 C 240 32, 480 112, 720 72 C 960 32, 1200 112, 1440 72 L 1440 120 L 0 120 Z" fill="rgba(45,212,191,0.055)" />
+                </svg>
+            </div>
+
+            {/* Tiny marine glints floating up */}
+            {glints.map((g) => (
                 <span
-                    key={particle.id}
-                    className="backdrop__spark"
-                    style={{
-                        left: particle.left,
-                        top: particle.top,
-                        background: particle.color,
-                        animationDelay: particle.delay,
-                        animationDuration: particle.duration,
-                    }}
+                    key={g.id}
+                    className={`backdrop__glint backdrop__glint--${g.tint}`}
+                    style={{ left: g.left, top: g.top, animationDelay: g.delay, animationDuration: g.duration }}
                 />
             ))}
         </div>

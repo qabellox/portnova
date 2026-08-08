@@ -126,55 +126,133 @@ img {
     pointer-events: none;
 }
 
-.backdrop__mesh,
-.backdrop__orb,
-.backdrop__spark {
+/* Drifting underwater caustic light — like sunbeams through the sea */
+.backdrop__light {
     position: absolute;
     border-radius: 999px;
-    filter: blur(12px);
-}
-
-.backdrop__mesh {
-    width: 36rem;
-    height: 36rem;
-    opacity: 0.65;
+    filter: blur(34px);
     mix-blend-mode: screen;
-    animation: floatMesh 22s ease-in-out infinite alternate;
+    animation: causticDrift 26s ease-in-out infinite alternate;
+    will-change: transform, opacity;
 }
 
-.backdrop__mesh--blue {
-    top: -12rem;
-    left: -10rem;
-    background: radial-gradient(circle, rgba(12, 74, 110, 0.45), rgba(12, 74, 110, 0));
+.backdrop__light--a {
+    top: 6%;
+    left: -12%;
+    width: 62vw;
+    height: 36vh;
+    background: radial-gradient(ellipse, rgba(125, 211, 252, 0.18), rgba(125, 211, 252, 0));
 }
 
-.backdrop__mesh--gold {
-    top: 12rem;
-    right: -8rem;
-    background: radial-gradient(circle, rgba(217, 119, 6, 0.28), rgba(217, 119, 6, 0));
-    animation-delay: -6s;
-}
-
-.backdrop__mesh--ice {
-    bottom: -10rem;
-    left: 30%;
-    background: radial-gradient(circle, rgba(13, 148, 136, 0.3), rgba(13, 148, 136, 0));
+.backdrop__light--b {
+    bottom: 10%;
+    right: -16%;
+    width: 54vw;
+    height: 32vh;
+    background: radial-gradient(ellipse, rgba(45, 212, 191, 0.16), rgba(45, 212, 191, 0));
     animation-delay: -12s;
 }
 
-.backdrop__orb {
-    width: 12px;
-    height: 12px;
-    box-shadow: 0 0 18px currentColor;
-    animation: orbit 14s linear infinite;
+@keyframes causticDrift {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 0.55;
+    }
+
+    50% {
+        transform: translate3d(6vw, -3vh, 0) scale(1.14);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate3d(-4vw, 3vh, 0) scale(0.94);
+        opacity: 0.7;
+    }
 }
 
-.backdrop__spark {
-    width: 4px;
-    height: 4px;
+/* Breathing wave surface along the bottom edge */
+.backdrop__waves {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    height: 18vh;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.backdrop__wave {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    animation: waveBreathe 26s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+}
+
+.backdrop__wave--b {
+    animation-duration: 34s;
+    animation-delay: -12s;
+}
+
+@keyframes waveBreathe {
+    0% {
+        transform: translateX(-2%) scaleY(1);
+        opacity: 0.7;
+    }
+
+    50% {
+        transform: translateX(2%) scaleY(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(-2%) scaleY(1);
+        opacity: 0.7;
+    }
+}
+
+/* Tiny marine glints — foam, sea-light, sun-through-water */
+.backdrop__glint {
+    position: absolute;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
-    opacity: 0.9;
-    animation: sparkle 5.5s ease-in-out infinite;
+    opacity: 0;
+    animation: glintFloat ease-in-out infinite;
+    will-change: transform, opacity;
+}
+
+.backdrop__glint--foam {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.45);
+}
+
+.backdrop__glint--sea {
+    background: radial-gradient(circle, rgba(125, 211, 252, 0.95), rgba(125, 211, 252, 0));
+    box-shadow: 0 0 12px rgba(125, 211, 252, 0.45);
+}
+
+.backdrop__glint--sun {
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.8), rgba(251, 191, 36, 0));
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+}
+
+@keyframes glintFloat {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 0;
+    }
+
+    30% {
+        opacity: 0.75;
+    }
+
+    100% {
+        transform: translateY(-9vh) scale(1.1);
+        opacity: 0;
+    }
 }
 
 .shell-nav {
@@ -1242,16 +1320,6 @@ body[dir='rtl'] .user-menu__link:hover {
     }
 }
 
-@keyframes floatMesh {
-    0% {
-        transform: translate3d(0, 0, 0) rotate(0deg);
-    }
-
-    100% {
-        transform: translate3d(3rem, -2rem, 0) rotate(18deg);
-    }
-}
-
 @keyframes floatCard {
 
     0%,
@@ -1288,33 +1356,7 @@ body[dir='rtl'] .user-menu__link:hover {
     }
 }
 
-@keyframes orbit {
-    0% {
-        transform: rotate(0deg) translateX(0);
-    }
 
-    50% {
-        transform: rotate(180deg) translateX(8px);
-    }
-
-    100% {
-        transform: rotate(360deg) translateX(0);
-    }
-}
-
-@keyframes sparkle {
-
-    0%,
-    100% {
-        transform: scale(0.6);
-        opacity: 0.35;
-    }
-
-    50% {
-        transform: scale(1.35);
-        opacity: 1;
-    }
-}
 
 @keyframes sheen {
     0% {
@@ -1544,8 +1586,7 @@ body[dir='rtl'] .chip-row {
 }
 
 body[dir='rtl'] .brand__logo,
-body[dir='rtl'] .backdrop__orb,
-body[dir='rtl'] .backdrop__spark {
+body[dir='rtl'] .backdrop__glint {
     transform: scaleX(-1);
 }
 
@@ -1600,18 +1641,18 @@ body[dir='rtl'] .metric-card__note {
    PREMIUM IMMERSIVE LAYER
    ============================================================ */
 
-/* ---- 1. Animated mesh gradient background (Mediterranean: sea -> turquoise -> gold) ---- */
+/* ---- 1. Animated deep-sea mesh: blues, teal, with a faint sun-through-water glow ---- */
 .premium-mesh {
     position: fixed;
     inset: -20%;
     z-index: 0;
     pointer-events: none;
     background:
-        radial-gradient(42% 55% at 18% 22%, rgba(12, 74, 110, 0.6), transparent 68%),
-        radial-gradient(48% 60% at 82% 18%, rgba(217, 119, 6, 0.38), transparent 66%),
-        radial-gradient(55% 60% at 70% 82%, rgba(13, 148, 136, 0.4), transparent 70%),
-        radial-gradient(50% 50% at 28% 74%, rgba(251, 113, 133, 0.2), transparent 64%);
-    filter: blur(60px) saturate(130%);
+        radial-gradient(46% 60% at 20% 18%, rgba(12, 74, 110, 0.62), transparent 68%),
+        radial-gradient(52% 64% at 84% 16%, rgba(45, 212, 191, 0.3), transparent 64%),
+        radial-gradient(58% 62% at 68% 84%, rgba(8, 47, 88, 0.5), transparent 70%),
+        radial-gradient(46% 50% at 30% 72%, rgba(217, 119, 6, 0.14), transparent 60%);
+    filter: blur(60px) saturate(125%);
     animation: meshShift 26s ease-in-out infinite alternate;
     mix-blend-mode: screen;
     will-change: transform, opacity;
@@ -1639,7 +1680,7 @@ body[dir='rtl'] .metric-card__note {
     }
 }
 
-/* ---- 2. Floating gold particles (drifting) ---- */
+/* ---- 2. Rising air bubbles (glassy, drifting through seawater) ---- */
 .premium-particles {
     position: fixed;
     inset: 0;
@@ -1650,34 +1691,40 @@ body[dir='rtl'] .metric-card__note {
 
 .premium-particle {
     position: absolute;
-    bottom: -2rem;
-    width: 6px;
-    height: 6px;
+    bottom: -3rem;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(251, 191, 36, 0.95), rgba(251, 191, 36, 0));
-    box-shadow: 0 0 12px rgba(251, 191, 36, 0.55);
+    background:
+        radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95), rgba(165, 226, 250, 0.4) 46%, rgba(125, 211, 252, 0) 74%);
+    border: 1px solid rgba(186, 230, 253, 0.5);
+    box-shadow: 0 0 10px rgba(125, 211, 252, 0.35);
     opacity: 0;
-    animation: particleRise linear infinite;
+    animation: bubbleRise linear infinite;
     will-change: transform, opacity;
 }
 
-@keyframes particleRise {
+@keyframes bubbleRise {
     0% {
-        transform: translateY(0) translateX(0) scale(0.6);
+        transform: translate3d(0, 0, 0) scale(0.5);
         opacity: 0;
     }
 
-    12% {
-        opacity: 0.9;
+    10% {
+        opacity: 0.7;
     }
 
-    55% {
-        transform: translateY(-42vh) translateX(2.5rem) scale(1.05);
-        opacity: 0.75;
+    50% {
+        transform: translate3d(0.6rem, -46vh, 0) scale(1);
+        opacity: 0.55;
+    }
+
+    90% {
+        opacity: 0.3;
     }
 
     100% {
-        transform: translateY(-92vh) translateX(-1.5rem) scale(0.55);
+        transform: translate3d(-0.4rem, -96vh, 0) scale(1.1);
         opacity: 0;
     }
 }
@@ -1882,10 +1929,10 @@ body[dir='rtl'] .metric-card__note {
 
     .premium-mesh,
     .premium-particles,
-    .hero__orbital,
-    .backdrop__mesh,
-    .backdrop__orb,
-    .backdrop__spark {
+    .backdrop__light,
+    .backdrop__waves,
+    .backdrop__glint,
+    .hero__orbital {
         animation: none !important;
     }
 

@@ -11,7 +11,6 @@
    background: linear-gradient(180deg, #0a2e52 0%, #164a78 55%, #0a2c50 100%);
 }
 
-/* Animated seascape + interactive ripples */
 .marine-canvas {
    position: absolute;
    inset: 0;
@@ -43,7 +42,6 @@
    filter: drop-shadow(0 2px 3px rgba(4, 14, 26, 0.4));
 }
 
-/* Each wing swings from the body — realistic flapping */
 .marine-gull__wing {
    transform-box: view-box;
    transform-origin: 30px 12px;
@@ -51,13 +49,8 @@
    will-change: transform;
 }
 
-.marine-gull__wing--l {
-   animation-name: gullWingL;
-}
-
-.marine-gull__wing--r {
-   animation-name: gullWingR;
-}
+.marine-gull__wing--l { animation-name: gullWingL; }
+.marine-gull__wing--r { animation-name: gullWingR; }
 
 .marine-gull__body {
    animation: gullBob 1.8s ease-in-out infinite;
@@ -65,90 +58,31 @@
 }
 
 @keyframes gullWingL {
-   0% {
-      transform: rotate(6deg);
-   }
-
-   100% {
-      transform: rotate(-34deg);
-   }
+   0% { transform: rotate(6deg); }
+   100% { transform: rotate(-34deg); }
 }
 
 @keyframes gullWingR {
-   0% {
-      transform: rotate(-6deg);
-   }
-
-   100% {
-      transform: rotate(34deg);
-   }
+   0% { transform: rotate(-6deg); }
+   100% { transform: rotate(34deg); }
 }
 
 @keyframes gullBob {
-
-   0%,
-   100% {
-      transform: translateY(0);
-   }
-
-   50% {
-      transform: translateY(-1px);
-   }
+   0%, 100% { transform: translateY(0); }
+   50% { transform: translateY(-1px); }
 }
 
-.marine-gull--1 {
-   top: 7%;
-   left: -16%;
-   animation-duration: 52s;
-}
-
-.marine-gull--2 {
-   top: 13%;
-   left: -16%;
-   animation-duration: 66s;
-   animation-delay: -24s;
-}
-
-.marine-gull--3 {
-   top: 4%;
-   left: -16%;
-   animation-duration: 78s;
-   animation-delay: -40s;
-}
-
-.marine-gull--4 {
-   top: 20%;
-   left: -16%;
-   animation-duration: 60s;
-   animation-delay: -12s;
-}
-
-.marine-gull--5 {
-   top: 10%;
-   left: -16%;
-   animation-duration: 88s;
-   animation-delay: -55s;
-}
-
-.marine-gull--6 {
-   top: 25%;
-   left: -16%;
-   animation-duration: 70s;
-   animation-delay: -32s;
-}
+.marine-gull--1 { top: 7%;  left: -16%; animation-duration: 52s; }
+.marine-gull--2 { top: 13%; left: -16%; animation-duration: 66s; animation-delay: -24s; }
+.marine-gull--3 { top: 4%;  left: -16%; animation-duration: 78s; animation-delay: -40s; }
+.marine-gull--4 { top: 20%; left: -16%; animation-duration: 60s; animation-delay: -12s; }
+.marine-gull--5 { top: 10%; left: -16%; animation-duration: 88s; animation-delay: -55s; }
+.marine-gull--6 { top: 25%; left: -16%; animation-duration: 70s; animation-delay: -32s; }
 
 @keyframes gullDrift {
-   0% {
-      transform: translateX(0) translateY(0);
-   }
-
-   50% {
-      transform: translateX(62vw) translateY(-2.5vh);
-   }
-
-   100% {
-      transform: translateX(124vw) translateY(1.5vh);
-   }
+   0%   { transform: translateX(0) translateY(0); }
+   50%  { transform: translateX(62vw) translateY(-2.5vh); }
+   100% { transform: translateX(124vw) translateY(1.5vh); }
 }
 
 /* ============================================================
@@ -174,7 +108,6 @@
    z-index: 1;
 }
 
-/* A hovered/focused boat (and its info card) rises above any boat it overlaps */
 .marine-vessel:hover,
 .marine-vessel:focus-within {
    z-index: 20;
@@ -187,10 +120,22 @@
    will-change: transform;
 }
 
+/* The boat rides the swell: bobs up/down by --bob (wave magnitude at its
+   depth) and rocks fore/aft with the wave, so it never moves in a straight
+   line. Duration is tied to the swell so it looks natural, not mechanical. */
 .marine-vessel__svg {
    display: block;
-   animation: vesselBobbing 6s ease-in-out infinite;
+   animation: vesselRide 7.5s ease-in-out infinite;
    filter: drop-shadow(0 22px 26px rgba(3, 12, 26, 0.55));
+   will-change: transform;
+}
+
+@keyframes vesselRide {
+   0%, 100% { transform: translateY(calc(var(--bob, 10px) * 0.15)) rotate(-2.2deg); }
+   20%      { transform: translateY(calc(var(--bob, 10px) * -0.4)) rotate(1.6deg); }
+   40%      { transform: translateY(calc(var(--bob, 10px) * 0.5)) rotate(-1.1deg); }
+   60%      { transform: translateY(calc(var(--bob, 10px) * -0.85)) rotate(2.4deg); }
+   80%      { transform: translateY(calc(var(--bob, 10px) * 0.35)) rotate(-1.8deg); }
 }
 
 /* Jobs cargo ships sail left → right */
@@ -203,63 +148,24 @@
    animation-name: fleetSailLeft;
 }
 
-/* Depth lanes: foreground big & low, background small & near the horizon.
-   Larger gaps put background boats clearly behind the foreground ones. */
-.marine-vessel--job-a {
-   bottom: 5%;
-}
-
-.marine-vessel--course-a {
-   bottom: 14%;
-}
-
-.marine-vessel--job-b {
-   bottom: 32%;
-}
-
-.marine-vessel--course-b {
-   bottom: 44%;
-}
-
-.marine-vessel--course-c {
-   bottom: 54%;
-}
+/* Depth lanes: foreground big & low, background small & near the horizon */
+.marine-vessel--job-a    { bottom: 5%; }
+.marine-vessel--course-a { bottom: 14%; }
+.marine-vessel--job-b    { bottom: 32%; }
+.marine-vessel--course-b { bottom: 44%; }
+.marine-vessel--course-c { bottom: 54%; }
 
 @keyframes fleetSailRight {
-   0% {
-      transform: translateX(-120%);
-   }
-
-   100% {
-      transform: translateX(130vw);
-   }
+   0%   { transform: translateX(-120%); }
+   100% { transform: translateX(130vw); }
 }
 
 @keyframes fleetSailLeft {
-   0% {
-      transform: translateX(130vw);
-   }
-
-   100% {
-      transform: translateX(-120%);
-   }
+   0%   { transform: translateX(130vw); }
+   100% { transform: translateX(-120%); }
 }
 
-@keyframes vesselBobbing {
-
-   0%,
-   100% {
-      transform: translateY(0) rotate(0deg);
-   }
-
-   50% {
-      transform: translateY(-3px) rotate(0.4deg);
-   }
-}
-
-/* Info card. Lives inside the rig so it sails with its boat, and is
-   counter-scaled by 1/--depth so it is ALWAYS a readable fixed size
-   (it does not shrink with far boats). Anchored above the boat. */
+/* Info card: readable fixed size, anchored above the boat */
 .marine-vessel__card {
    position: absolute;
    left: 50%;
@@ -289,7 +195,6 @@
    transform: translateX(-50%) translateY(0) scale(calc(1 / var(--depth)));
 }
 
-/* Tail pointing down to the boat */
 .marine-vessel__card::after {
    content: '';
    position: absolute;
@@ -346,13 +251,11 @@
    box-shadow: 0 14px 28px rgba(212, 175, 55, 0.42);
 }
 
-/* Keep the overlay from blocking sea clicks */
 .marine-overlay {
    pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-
    .marine-canvas,
    .marine-gull,
    .marine-gull__wing,

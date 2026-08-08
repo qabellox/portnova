@@ -5,14 +5,13 @@ import { useLanguage } from '../context/LanguageContext';
 /**
  * MarineScene: 3D live seascape.
  *
- * The sea is drawn on a canvas (perspective waves rolling toward the viewer).
+ * The sea is drawn on a canvas as a perspective field of rolling waves with
+ * smooth shaded crests and soft specular glints (no hard lines or dashes).
  * On top of it, a 3D fleet sails across at different depths:
  *   - Cargo ships (⚓) advertise JOBS, sailing left to right.
  *   - Sailboats (🧭) advertise COURSES, sailing right to left.
+ * Each boat rides the swells (bobbing + rocking that matches wave magnitude).
  * Hover (or focus) a boat to reveal its info card with a direct link.
- *
- * The sky is time-responsive: at night a moon and stars appear over a dark
- * sea; during the day a glowing sun returns. The transition is smooth.
  */
 
 const JobShip = () => (
@@ -161,7 +160,6 @@ const MarineScene = ({ className = '' }) => {
         ];
         const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
         const clamp01 = (v) => Math.max(0, Math.min(1, v));
-        // Deterministic pseudo-random from a seed (stable across frames)
         const rand = (seed) => {
             const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
             return x - Math.floor(x);
@@ -169,19 +167,13 @@ const MarineScene = ({ className = '' }) => {
 
         const horizonY = () => height * 0.36;
 
-        /**
-         * Time of day: 0 at midnight, 0.5 at noon, 1 back to midnight.
-         * dayLight = 1 during full day, 0 at full night (smooth cosine).
-         */
         const getDayLight = () => {
             const now = new Date();
             const mins = now.getHours() * 60 + now.getMinutes();
-            const t = mins / 1440; // 0..1 over 24h
-            // peak at noon (t=0.5), trough at midnight (t=0/1)
+            const t = mins / 1440;
             return (Math.cos((t - 0.5) * Math.PI * 2) + 1) / 2;
         };
 
-        // Day and night sky palettes (top → horizon)
         const skyDay = [[10, 46, 82], [29, 92, 138], [90, 158, 192], [168, 210, 226]];
         const skyNight = [[2, 5, 13], [7, 18, 36], [16, 39, 66], [28, 58, 88]];
 
@@ -194,7 +186,6 @@ const MarineScene = ({ className = '' }) => {
             return g;
         };
 
-        /** A real 4-point sparkle star (not a dot) with a bright core. */
         const drawSparkle = (x, y, r, alpha) => {
             const pr = r * 2.6;
             ctx.save();
@@ -213,7 +204,6 @@ const MarineScene = ({ className = '' }) => {
 
         const drawStars = (t, moonAlpha) => {
             const hy = horizonY();
-            // Bigger hero sparkles with a soft glow
             for (let i = 0; i < 26; i++) {
                 const sx = rand(i) * width;
                 const sy = rand(i + 50) * hy * 0.85;
@@ -231,7 +221,6 @@ const MarineScene = ({ className = '' }) => {
                 }
                 drawSparkle(sx, sy, size, alpha);
             }
-            // Dense small sparkles for the milky depth
             for (let i = 0; i < 120; i++) {
                 const sx = rand(i + 200) * width;
                 const sy = rand(i + 300) * hy * 0.8;
@@ -243,32 +232,24 @@ const MarineScene = ({ className = '' }) => {
 
         const drawSky = (t, dayLight) => {
             const hy = horizonY();
-
             ctx.fillStyle = skyGradient(dayLight);
             ctx.fillRect(0, 0, width, hy);
 
-            // Moon: visible when it's dark (dayLight < ~0.5)
             const moonAlpha = clamp01((0.55 - dayLight) / 0.22);
             if (moonAlpha > 0.02) {
                 const moonX = width * 0.24;
                 const moonY = hy * 0.4;
                 const mr = Math.max(24, width * 0.027);
-
-                // soft halo
                 const glow = ctx.createRadialGradient(moonX, moonY, 2, moonX, moonY, width * 0.2);
                 glow.addColorStop(0, `rgba(226,236,252,${0.6 * moonAlpha})`);
                 glow.addColorStop(0.35, `rgba(190,210,240,${0.2 * moonAlpha})`);
                 glow.addColorStop(1, 'rgba(190,210,240,0)');
                 ctx.fillStyle = glow;
                 ctx.fillRect(0, 0, width, hy + 2);
-
-                // moon disc (warm full-moon white)
                 ctx.fillStyle = `rgba(244,248,255,${0.98 * moonAlpha})`;
                 ctx.beginPath();
                 ctx.arc(moonX, moonY, mr, 0, Math.PI * 2);
                 ctx.fill();
-
-                // crater shading for depth
                 ctx.fillStyle = `rgba(160,180,210,${0.22 * moonAlpha})`;
                 ctx.beginPath();
                 ctx.arc(moonX - mr * 0.25, moonY + mr * 0.18, mr * 0.24, 0, Math.PI * 2);
@@ -281,7 +262,6 @@ const MarineScene = ({ className = '' }) => {
                 ctx.fill();
             }
 
-            // Sun: visible when it's light (dayLight > ~0.45)
             const sunAlpha = clamp01((dayLight - 0.45) / 0.22);
             if (sunAlpha > 0.02) {
                 const sunX = width * 0.72;
@@ -293,52 +273,51 @@ const MarineScene = ({ className = '' }) => {
                 glow.addColorStop(1, 'rgba(255,224,160,0)');
                 ctx.fillStyle = glow;
                 ctx.fillRect(0, 0, width, hy + 2);
-
                 ctx.fillStyle = `rgba(255,250,232,${0.98 * sunAlpha})`;
                 ctx.beginPath();
                 ctx.arc(sunX, sunY, Math.max(18, width * 0.022), 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // Stars: strongest at full night, fade as day returns
             if (moonAlpha > 0.04) {
                 drawStars(t, moonAlpha);
             }
 
-            // Haze at the horizon (dimmer at night)
-            const haze = ctx.createLinearGradient(0, hy - 14, 0, hy + 6);
-            haze.addColorStop(0, 'rgba(200,226,238,0)');
-            haze.addColorStop(0.5, `rgba(214,236,244,${0.5 * (0.35 + dayLight * 0.65)})`);
-            haze.addColorStop(1, 'rgba(214,236,244,0)');
+            // Soft haze at the horizon (never a hard white line)
+            const haze = ctx.createLinearGradient(0, hy - 20, 0, hy + 12);
+            haze.addColorStop(0, 'rgba(180,205,225,0)');
+            haze.addColorStop(0.5, `rgba(190,214,232,${0.28 * (0.35 + dayLight * 0.65)})`);
+            haze.addColorStop(1, 'rgba(180,205,225,0)');
             ctx.fillStyle = haze;
-            ctx.fillRect(0, hy - 14, width, 20);
+            ctx.fillRect(0, hy - 20, width, 32);
         };
 
-        /** Organic ocean surface: long swell + shorter chop, per-row relief. */
+        /**
+         * Ocean surface height at (x, depth d in 0..1, time t).
+         * Layers of swells + chop for an organic, non-cubic surface.
+         */
         const waveY = (x, d, t) => {
             const hy = horizonY();
-            const base = hy + (height - hy) * Math.pow(d, 2.3);
-            const amp = 3 + d * d * 36;
-            const wl = 60 + d * d * 260;
-            const speed = 0.00042 + d * 0.0011;
-            const phase = t * speed + d * 6.3;
+            const base = hy + (height - hy) * Math.pow(d, 2.15);
+            const amp = 2.5 + d * d * 34;
+            const wl = 90 + d * d * 330;
+            const speed = 0.00036 + d * 0.001;
+            const phase = t * speed + d * 5.2;
             const a = Math.sin((x / wl) * Math.PI * 2 + phase);
-            const b = Math.sin((x / (wl * 0.33)) * Math.PI * 2 + phase * 1.6 + 2.0) * 0.5;
-            return base + (a + b) * amp;
+            const b = Math.sin((x / (wl * 0.42)) * Math.PI * 2 + phase * 1.45 + 1.3) * 0.42;
+            const c = Math.sin((x / (wl * 0.16)) * Math.PI * 2 + phase * 2.2 + 3.1) * 0.16;
+            return base + (a + b + c) * amp;
         };
 
+        /** Filled, shaded 3D sea: soft crest gradients, no strokes or dashes. */
         const drawSea = (t, dayLight) => {
             const hy = horizonY();
             const moonAlpha = clamp01((0.55 - dayLight) / 0.22);
-            const rows = 44;
             const nightAmt = 1 - dayLight;
 
             const horizonC = mix([150, 198, 220], [44, 82, 112], nightAmt);
             const deepC = mix([8, 36, 68], [3, 12, 28], nightAmt);
-            // Crests are lit by the sun (day) or the moon (night)
-            const crestDay = [196, 228, 240];
-            const crestNight = [92, 132, 164];
-            const crestC = mix(crestDay, crestNight, nightAmt);
+            const crestC = mix([196, 228, 240], [92, 132, 164], nightAmt);
 
             const base = ctx.createLinearGradient(0, hy, 0, height);
             base.addColorStop(0, rgba(mix([63, 134, 173], [30, 70, 104], nightAmt), 1));
@@ -347,7 +326,8 @@ const MarineScene = ({ className = '' }) => {
             ctx.fillStyle = base;
             ctx.fillRect(0, hy, width, height - hy);
 
-            // Wave bands with a lighter crest facing the viewer (relief)
+            // Perspective wave bands: fill each as a smooth shaded swell
+            const rows = 52;
             for (let i = 0; i < rows; i++) {
                 const d0 = i / rows;
                 const d1 = (i + 1) / rows;
@@ -355,93 +335,60 @@ const MarineScene = ({ className = '' }) => {
                 const botC = mix(crestC, deepC, d1);
 
                 ctx.beginPath();
-                for (let x = -8; x <= width + 8; x += 6) {
+                for (let x = -10; x <= width + 10; x += 5) {
                     const y = waveY(x, d0, t);
-                    if (x === -8) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                    if (x === -10) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
-                for (let x = width + 8; x >= -8; x -= 6) {
+                for (let x = width + 10; x >= -10; x -= 5) {
                     ctx.lineTo(x, waveY(x, d1, t));
                 }
                 ctx.closePath();
-                const g = ctx.createLinearGradient(0, waveY(0, d0, t), 0, waveY(0, d1, t) + 2);
-                g.addColorStop(0, rgba(topC, 0.92));
-                g.addColorStop(0.55, rgba(topC, 0.98));
+                const g = ctx.createLinearGradient(0, waveY(0, d0, t), 0, waveY(0, d1, t) + 3);
+                g.addColorStop(0, rgba(topC, 0.9));
+                g.addColorStop(0.72, rgba(topC, 0.96));
                 g.addColorStop(1, rgba(botC, 1));
                 ctx.fillStyle = g;
                 ctx.fill();
             }
 
-            // Crest highlight ridges (the bright lip of each wave)
-            for (let i = 4; i < rows; i++) {
-                const d = i / rows;
-                const hiA = (0.08 + d * 0.4) * (0.45 + 0.55 * dayLight + 0.2 * moonAlpha);
-                if (hiA < 0.03) continue;
+            // Soft specular glints on the wave faces (gentle sheen, not lines)
+            const glintC = dayLight > 0.5 ? '255,255,255' : '190,215,245';
+            for (let i = 0; i < 90; i++) {
+                const rx = rand(i);
+                const ry = rand(i + 60);
+                const x = rx * width;
+                const y = hy + Math.pow(ry, 1.4) * (height - hy) * 0.95;
+                const d = ry;
+                const tw = 0.5 + 0.5 * Math.sin(t * 0.0024 + i * 1.9);
+                const r = (2 + d * 14) * (0.6 + 0.4 * tw);
+                const alpha = (0.04 + 0.16 * d) * (0.3 + 0.7 * dayLight) * tw;
+                if (alpha < 0.02) continue;
+                const gl = ctx.createRadialGradient(x, y, 0, x, y, r);
+                gl.addColorStop(0, `rgba(${glintC},${alpha})`);
+                gl.addColorStop(1, `rgba(${glintC},0)`);
+                ctx.fillStyle = gl;
                 ctx.beginPath();
-                for (let x = -8; x <= width + 8; x += 6) {
-                    const y = waveY(x, d, t) - 2;
-                    if (x === -8) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                }
-                ctx.strokeStyle = `rgba(214,236,248,${hiA})`;
-                ctx.lineWidth = 1 + d * 2.4;
-                ctx.stroke();
-            }
-
-            // Foam crests: persistent broken white caps, moonlit at night too
-            ctx.setLineDash([3, 8]);
-            for (let i = 5; i < rows; i++) {
-                const d = i / rows;
-                const foamA = (0.08 + d * 0.5) * (0.5 + 0.5 * dayLight + 0.28 * moonAlpha);
-                if (foamA < 0.03) continue;
-                ctx.beginPath();
-                for (let x = -8; x <= width + 8; x += 8) {
-                    const y = waveY(x, d, t) - 1;
-                    if (x === -8) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-                }
-                ctx.strokeStyle = `rgba(240,250,255,${foamA})`;
-                ctx.lineWidth = 0.9 + d * 1.8;
-                ctx.stroke();
-            }
-            ctx.setLineDash([]);
-
-            // Moonlight path shimmer directly under the moon
-            if (moonAlpha > 0.1) {
-                const moonX = width * 0.24;
-                const pathGrad = ctx.createLinearGradient(0, hy, 0, height);
-                pathGrad.addColorStop(0, `rgba(226,236,252,${0.45 * moonAlpha})`);
-                pathGrad.addColorStop(0.4, `rgba(214,228,248,${0.2 * moonAlpha})`);
-                pathGrad.addColorStop(1, 'rgba(226,236,252,0)');
-                ctx.fillStyle = pathGrad;
-                ctx.beginPath();
-                ctx.moveTo(moonX - 34, hy);
-                for (let y = hy; y <= height; y += 10) {
-                    const w = 40 + (y - hy) * 0.38;
-                    const wob = Math.sin(y * 0.05 + t * 0.001) * 7;
-                    ctx.lineTo(moonX + wob, y);
-                    ctx.lineTo(moonX - w + wob, y + 5);
-                }
-                ctx.closePath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // Specular glitter: sparkling dashes clustered around the light path
-            const lightX = dayLight > 0.5 ? width * 0.72 : width * 0.24;
-            for (let i = 0; i < 200; i++) {
-                const rx = rand(i);
-                const ry = rand(i + 90);
-                const x = lightX + (rx - 0.5) * width * 0.55;
-                const y = hy + ry * (height - hy) * 0.96;
-                const d = ry;
-                const tw = 0.5 + 0.5 * Math.sin(t * 0.003 + i * 2.3);
-                const len = 5 + d * 26;
-                const light = 0.3 + 0.7 * dayLight + 0.25 * moonAlpha;
-                const a = (0.07 + 0.36 * d) * tw * light;
-                if (a < 0.03) continue;
-                ctx.strokeStyle = `rgba(255,255,255,${a})`;
-                ctx.lineWidth = 1 + d;
+            // Soft moonlight column under the moon (fade with the waves)
+            if (moonAlpha > 0.1) {
+                const moonX = width * 0.24;
+                const colGrad = ctx.createLinearGradient(0, hy, 0, height);
+                colGrad.addColorStop(0, `rgba(200,222,248,${0.2 * moonAlpha})`);
+                colGrad.addColorStop(1, 'rgba(200,222,248,0)');
+                ctx.fillStyle = colGrad;
                 ctx.beginPath();
-                ctx.moveTo(x - len / 2, y);
-                ctx.lineTo(x + len / 2, y);
-                ctx.stroke();
+                ctx.moveTo(moonX - 26, hy);
+                for (let y = hy; y <= height; y += 12) {
+                    const w = 24 + (y - hy) * 0.22;
+                    const wob = Math.sin(y * 0.06 + t * 0.0008) * 8;
+                    ctx.lineTo(moonX + wob, y);
+                    ctx.lineTo(moonX - w + wob, y + 6);
+                }
+                ctx.closePath();
+                ctx.fill();
             }
         };
 
@@ -495,7 +442,6 @@ const MarineScene = ({ className = '' }) => {
         };
     }, []);
 
-    // Gull split into two wings + body so each wing can swing with life
     const gullLeft = 'M30 12 C 23 7, 14 4, 4 8 C 13 10, 22 11, 30 12 Z';
     const gullRight = 'M30 12 C 37 7, 46 4, 56 8 C 47 10, 38 11, 30 12 Z';
     const gullBody = 'M27 12 C 29 11, 31 11, 33 12 C 31 13, 29 13, 27 12 Z';
@@ -509,10 +455,7 @@ const MarineScene = ({ className = '' }) => {
         { cls: 'marine-gull--6', size: 32, top: 25, dur: 70, delay: -32, op: 0.65 },
     ];
 
-    // The 3D fleet: job cargo ships sail left→right, course sailboats sail right→left,
-    // spread across foreground, mid and background so the sea has depth.
-    // Each boat advertises ONE real job/course (focus = its exact role/title in the
-    // data, so the deep link lands on that exact card).
+    // Each boat rides the swells: bob amplitude grows with depth (wave magnitude)
     const fleet = [
         { kind: 'jobs', cls: 'marine-vessel--job-a', w: 340, h: 166, dur: 60, delay: -8, depth: 1, focus: 'Frontend Product Intern', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
         { kind: 'courses', cls: 'marine-vessel--course-a', w: 296, h: 148, dur: 78, delay: -30, depth: 0.8, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
@@ -525,7 +468,6 @@ const MarineScene = ({ className = '' }) => {
         <div className={`marine-scene ${className}`.trim()}>
             <canvas ref={canvasRef} className="marine-canvas" aria-hidden="true" />
 
-            {/* Flock of gulls: wings swing with life while gliding */}
             <div className="marine-gulls" aria-hidden="true">
                 {gulls.map((g) => (
                     <span key={g.cls} className={`marine-gull ${g.cls}`} style={{ opacity: g.op }}>
@@ -538,16 +480,12 @@ const MarineScene = ({ className = '' }) => {
                 ))}
             </div>
 
-            {/* 3D fleet of boats advertising jobs & courses.
-                The info card lives INSIDE the rig so it sails with its boat,
-                and it counter-scales by 1/--depth so it is always a readable
-                fixed size no matter how far the boat is. */}
             <div className="marine-fleet" aria-hidden="true">
                 {fleet.map((vessel) => (
                     <div
                         key={vessel.cls}
                         className={`marine-vessel marine-vessel--${vessel.kind} ${vessel.cls}`}
-                        style={{ '--dur': `${vessel.dur}s`, '--delay': `${vessel.delay}s`, '--depth': vessel.depth }}
+                        style={{ '--dur': `${vessel.dur}s`, '--delay': `${vessel.delay}s`, '--depth': vessel.depth, '--bob': `${6 + vessel.depth * 12}px` }}
                     >
                         <div className="marine-vessel__rig">
                             <div className="marine-vessel__svg" style={{ width: vessel.w, height: vessel.h }}>
@@ -558,12 +496,8 @@ const MarineScene = ({ className = '' }) => {
                                     {vessel.kind === 'jobs' ? '⚓ ' : '🧭 '}
                                     {vessel.kind === 'jobs' ? t('boatJobs') : t('boatCourses')}
                                 </span>
-                                <strong className="marine-vessel__title">
-                                    {t(vessel.titleKey)}
-                                </strong>
-                                <span className="marine-vessel__desc">
-                                    {t(vessel.descKey)}
-                                </span>
+                                <strong className="marine-vessel__title">{t(vessel.titleKey)}</strong>
+                                <span className="marine-vessel__desc">{t(vessel.descKey)}</span>
                                 <Link
                                     className="marine-vessel__btn"
                                     to={

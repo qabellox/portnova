@@ -41,26 +41,114 @@
 .marine-gull svg {
    display: block;
    filter: drop-shadow(0 2px 3px rgba(4, 14, 26, 0.4));
-   animation: gullFlap 6s ease-in-out infinite;
-   transform-origin: 50% 40%;
 }
 
-.marine-gull--1 { top: 7%;  left: -16%; animation-duration: 52s; }
-.marine-gull--2 { top: 13%; left: -16%; animation-duration: 66s; animation-delay: -24s; }
-.marine-gull--3 { top: 4%;  left: -16%; animation-duration: 78s; animation-delay: -40s; }
-.marine-gull--4 { top: 20%; left: -16%; animation-duration: 60s; animation-delay: -12s; }
-.marine-gull--5 { top: 10%; left: -16%; animation-duration: 88s; animation-delay: -55s; }
-.marine-gull--6 { top: 25%; left: -16%; animation-duration: 70s; animation-delay: -32s; }
+/* Each wing swings from the body — realistic flapping, not teleporting */
+.marine-gull__wing {
+   transform-box: view-box;
+   transform-origin: 30px 12px;
+   animation: gullWing 0.9s ease-in-out infinite alternate;
+   will-change: transform;
+}
+
+.marine-gull__wing--l {
+   animation-name: gullWingL;
+}
+
+.marine-gull__wing--r {
+   animation-name: gullWingR;
+}
+
+.marine-gull__body {
+   animation: gullBob 1.8s ease-in-out infinite;
+   transform-origin: 30px 12px;
+}
+
+@keyframes gullWingL {
+   0% {
+      transform: rotate(6deg);
+   }
+
+   100% {
+      transform: rotate(-34deg);
+   }
+}
+
+@keyframes gullWingR {
+   0% {
+      transform: rotate(-6deg);
+   }
+
+   100% {
+      transform: rotate(34deg);
+   }
+}
+
+@keyframes gullBob {
+
+   0%,
+   100% {
+      transform: translateY(0);
+   }
+
+   50% {
+      transform: translateY(-1px);
+   }
+}
+
+.marine-gull--1 {
+   top: 7%;
+   left: -16%;
+   animation-duration: 52s;
+}
+
+.marine-gull--2 {
+   top: 13%;
+   left: -16%;
+   animation-duration: 66s;
+   animation-delay: -24s;
+}
+
+.marine-gull--3 {
+   top: 4%;
+   left: -16%;
+   animation-duration: 78s;
+   animation-delay: -40s;
+}
+
+.marine-gull--4 {
+   top: 20%;
+   left: -16%;
+   animation-duration: 60s;
+   animation-delay: -12s;
+}
+
+.marine-gull--5 {
+   top: 10%;
+   left: -16%;
+   animation-duration: 88s;
+   animation-delay: -55s;
+}
+
+.marine-gull--6 {
+   top: 25%;
+   left: -16%;
+   animation-duration: 70s;
+   animation-delay: -32s;
+}
 
 @keyframes gullDrift {
-   0%   { transform: translateX(0) translateY(0); }
-   50%  { transform: translateX(62vw) translateY(-2.5vh); }
-   100% { transform: translateX(124vw) translateY(1.5vh); }
-}
+   0% {
+      transform: translateX(0) translateY(0);
+   }
 
-@keyframes gullFlap {
-   0%, 100% { transform: scaleY(1) rotate(0deg); }
-   50%      { transform: scaleY(0.82) rotate(-1.5deg); }
+   50% {
+      transform: translateX(62vw) translateY(-2.5vh);
+   }
+
+   100% {
+      transform: translateX(124vw) translateY(1.5vh);
+   }
 }
 
 /* Felucca sailing across the foreground, looping seamlessly:
@@ -129,13 +217,25 @@
 }
 
 @keyframes boatSail {
-   0%   { transform: translateX(-460px); }
-   100% { transform: translateX(calc(100vw + 460px)); }
+   0% {
+      transform: translateX(-460px);
+   }
+
+   100% {
+      transform: translateX(calc(100vw + 460px));
+   }
 }
 
 @keyframes boatBobbing {
-   0%, 100% { transform: translateY(0) rotate(0deg); }
-   50%      { transform: translateY(-3px) rotate(0.35deg); }
+
+   0%,
+   100% {
+      transform: translateY(0) rotate(0deg);
+   }
+
+   50% {
+      transform: translateY(-3px) rotate(0.35deg);
+   }
 }
 
 /* Keep the overlay from blocking sea clicks */
@@ -144,8 +244,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
    .marine-canvas,
    .marine-gull,
+   .marine-gull__wing,
+   .marine-gull__body,
    .marine-boat,
    .marine-boat__svg {
       animation: none !important;

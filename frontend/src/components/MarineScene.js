@@ -173,10 +173,10 @@ const MarineScene = ({ className = '' }) => {
         };
     }, []);
 
-    // Realistic gull silhouette (dark, thin, two wings + body)
-    const gullPath =
-        'M2 16 C 7 7, 16 3, 27 9 C 30 7, 34 7, 38 10 C 46 4, 56 7, 60 15 ' +
-        'C 53 11, 46 10, 41 12 C 37 12, 34 13, 31 12 C 26 10, 12 11, 2 16 Z';
+    // Gull split into two wings + body so each wing can swing with life
+    const gullLeft = 'M30 12 C 23 7, 14 4, 4 8 C 13 10, 22 11, 30 12 Z';
+    const gullRight = 'M30 12 C 37 7, 46 4, 56 8 C 47 10, 38 11, 30 12 Z';
+    const gullBody = 'M27 12 C 29 11, 31 11, 33 12 C 31 13, 29 13, 27 12 Z';
 
     const gulls = [
         { cls: 'marine-gull--1', size: 64, top: 7, dur: 52, delay: -6, op: 0.92 },
@@ -192,12 +192,14 @@ const MarineScene = ({ className = '' }) => {
             {/* Front-view animated seascape — sky, horizon, rolling waves, interaction */}
             <canvas ref={canvasRef} className="marine-canvas" aria-hidden="true" />
 
-            {/* Flock of realistic gulls */}
+            {/* Flock of gulls — wings swing with life while gliding */}
             <div className="marine-gulls" aria-hidden="true">
                 {gulls.map((g) => (
                     <span key={g.cls} className={`marine-gull ${g.cls}`} style={{ opacity: g.op }}>
                         <svg viewBox="0 0 60 24" width={g.size} height={g.size * 0.4}>
-                            <path d={gullPath} fill="#1c2a3a" />
+                            <path className="marine-gull__wing marine-gull__wing--l" d={gullLeft} fill="#1c2a3a" />
+                            <path className="marine-gull__wing marine-gull__wing--r" d={gullRight} fill="#1c2a3a" />
+                            <path className="marine-gull__body" d={gullBody} fill="#1c2a3a" />
                         </svg>
                     </span>
                 ))}

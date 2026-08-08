@@ -187,30 +187,95 @@ img {
     bottom: 0;
     width: 116%;
     height: 108%;
-    animation: waveRoll 24s ease-in-out infinite alternate;
+    animation: waveSwirl 26s ease-in-out infinite;
     will-change: transform, opacity;
 }
 
 .backdrop__wave--b {
     bottom: -2%;
-    animation-duration: 34s;
-    animation-delay: -12s;
+    animation-duration: 36s;
+    animation-delay: -14s;
 }
 
-@keyframes waveRoll {
+/* Irregular swell — the sea breathes and creases unevenly, not a metronome */
+@keyframes waveSwirl {
     0% {
-        transform: translateX(-3.5%) translateY(0) scaleY(1);
-        opacity: 0.75;
+        transform: translateX(-3%) translateY(0) scaleY(1) rotate(0deg);
+        opacity: 0.7;
     }
 
-    50% {
-        transform: translateX(1.5%) translateY(1.2%) scaleY(1.06);
+    12% {
+        transform: translateX(-1%) translateY(0.6%) scaleY(1.04) rotate(0.4deg);
+        opacity: 0.9;
+    }
+
+    23% {
+        transform: translateX(0.5%) translateY(0) scaleY(1) rotate(-0.3deg);
+        opacity: 0.8;
+    }
+
+    37% {
+        transform: translateX(2%) translateY(1.4%) scaleY(1.1) rotate(0.6deg);
         opacity: 1;
     }
 
-    100% {
-        transform: translateX(-3.5%) translateY(0) scaleY(1);
+    48% {
+        transform: translateX(1%) translateY(0.4%) scaleY(1.03) rotate(-0.2deg);
+        opacity: 0.85;
+    }
+
+    61% {
+        transform: translateX(-1.5%) translateY(0) scaleY(1) rotate(0.3deg);
         opacity: 0.75;
+    }
+
+    74% {
+        transform: translateX(-3%) translateY(1%) scaleY(1.07) rotate(-0.5deg);
+        opacity: 0.9;
+    }
+
+    86% {
+        transform: translateX(-1%) translateY(0.3%) scaleY(1.02) rotate(0.2deg);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateX(-3%) translateY(0) scaleY(1) rotate(0deg);
+        opacity: 0.7;
+    }
+}
+
+/* Foam crests that flicker and crumble unevenly on the breaking waves */
+.backdrop__wave path {
+    animation: waveFoam 5.2s ease-in-out infinite;
+}
+
+.backdrop__wave--b path {
+    animation-duration: 7.4s;
+    animation-delay: -3s;
+}
+
+@keyframes waveFoam {
+
+    0%,
+    100% {
+        opacity: 0.55;
+    }
+
+    18% {
+        opacity: 1;
+    }
+
+    34% {
+        opacity: 0.4;
+    }
+
+    55% {
+        opacity: 0.95;
+    }
+
+    78% {
+        opacity: 0.5;
     }
 }
 
@@ -2133,6 +2198,7 @@ body[dir='rtl'] .metric-card__note {
     .premium-particles,
     .backdrop__light,
     .backdrop__waves,
+    .backdrop__wave path,
     .backdrop__glint,
     .hero__orbital,
     .click-wave {

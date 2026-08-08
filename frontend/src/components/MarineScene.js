@@ -2,18 +2,16 @@
 import { Link } from 'react-router-dom';
 
 /**
- * MarineScene — photoreal live wallpaper for PortNova.
+ * MarineScene — front-view shader-style live seascape.
  *
- * A real ocean photograph is the base layer (slow Ken Burns drift), so the
- * water is genuinely realistic, not drawn. On top of it a canvas adds subtle
- * moving sunlight shimmer + specular glints so the sea feels alive, plus
- * interactive ripples wherever you click on the water. A vessel with app
- * shortcuts sails slowly across the foreground. Gulls drift slowly and
- * naturally.
+ * Everything is drawn on a canvas with real perspective: a sky with sun and
+ * drifting haze, a horizon, and animated waves that roll toward the viewer.
+ * Thin sun-glitter streaks sit on the water (no glowing circles), click on
+ * the sea to spawn realistic ripples, a felucca with app shortcuts sails
+ * slowly across, and a flock of gulls drifts high in the sky.
  */
 const MarineScene = ({ className = '' }) => {
     const canvasRef = useRef(null);
-    const boatRef = useRef(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -36,76 +34,172 @@ const MarineScene = ({ className = '' }) => {
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         };
 
-        const pseudo = (n) => {
-            const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-            return s - Math.floor(s);
-        };
+        const mix = (c1, c2, t) => [
+            Math.round(c1[0] + (c2[0] - c1[0]) * t),
+            Math.round(c1[1] + (c2[1] - c1[1]) * t),
+            Math.round(c1[2] + (c2[2] - c1[2]) * t),
+        ];
+        const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
-        // Slow sunlight shimmer + specular glints dancing on the water
-        const drawWaterLife = (t) => {
+        const horizonY = () => height * 0.36;
+
+        // Soft drifting clouds in the sky (translucent blobs)
+        const clouds = [
+            { x: 0.12, y: 0.10, w: 0.34, h: 0.05, s: 0.000008, a: 0.5 },
+            { x: 0.55, y: 0.20, w: 0.42, h: 0.045, s: 0.000006, a: 0.42 },
+            { x: 0.30, y: 0.29, w: 0.30, h: 0.035, s: 0.000010, a: 0.34 },
+        ];
+
+        const drawSky = (t) => {
+            const hy = horizonY();
+            const g = ctx.createLinearGradient(0, 0, 0, hy);
+            g.addColorStop(0, '#0a2e52');
+            g.addColorStop(0.55, '#1d5c8a');
+            g.addColorStop(0.85, '#5a9ec0');
+            g.addColorStop(1, '#a8d2e2');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, width, hy);
+
+            // Sun: soft warm glow near the horizon (diffuse, not a hard disc)
+            const sunX = width * 0.7;
+            const sunY = hy - 4;
+            const glow = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, width * 0.26);
+            glow.addColorStop(0, 'rgba(255,246,214,0.95)');
+            glow.addColorStop(0.18, 'rgba(255,232,178,0.55)');
+            glow.addColorStop(0.5, 'rgba(255,224,160,0.16)');
+            glow.addColorStop(1, 'rgba(255,224,160,0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, width, hy + 2);
+
+            // Drifting clouds
             ctx.save();
             ctx.globalCompositeOperation = 'screen';
-
-            // sun glitter column (slow flicker)
-            const sx = width * 0.68;
-            const rows = 34;
-            for (let i = 0; i < rows; i++) {
-                const p = (i + 1) / rows;
-                const gy = height * (0.5 + p * 0.5);
-                const spread = width * (0.04 + p * 0.18);
-                const count = Math.max(4, Math.round(20 * (1 - p) + 8));
-                for (let k = 0; k < count; k++) {
-                    const seed = i * 41 + k * 13;
-                    const dx = (pseudo(seed) - 0.5) * 2 * spread;
-                    const flick = 0.35 + 0.65 * Math.abs(Math.sin(t * 0.0018 + seed * 2.3));
-                    const gx = sx + dx;
-                    const gw = (2 + p * 7) * (0.5 + flick * 0.9);
-                    const gh = gw * 0.3;
-                    ctx.fillStyle = `rgba(255,244,200,${0.5 * flick})`;
-                    ctx.beginPath();
-                    ctx.ellipse(gx, gy, gw, gh, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-
-            // slow moving light bands (gentle swell highlights)
-            for (let b = 0; b < 3; b++) {
-                const phase = t * 0.00012 + b * 2.1;
-                const bandY = height * (0.55 + Math.sin(phase) * 0.16 + b * 0.12);
-                const bandH = 10 + b * 8;
-                const bandW = width * (0.5 + b * 0.18);
-                const bandX = width * 0.5 + Math.cos(phase * 0.8) * width * 0.1 - bandW / 2;
-                const grad = ctx.createLinearGradient(bandX, bandY, bandX + bandW, bandY);
-                grad.addColorStop(0, 'rgba(255,255,255,0)');
-                grad.addColorStop(0.5, `rgba(255,255,255,${0.12 - b * 0.03})`);
-                grad.addColorStop(1, 'rgba(255,255,255,0)');
+            for (const c of clouds) {
+                const cx = (width * c.x + t * c.s * width) % (width * 1.4) - width * 0.2;
+                const cy = hy * c.y;
+                const cw = width * c.w;
+                const ch = hy * c.h;
+                const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, cw);
+                grad.addColorStop(0, `rgba(250,252,255,${c.a})`);
+                grad.addColorStop(1, 'rgba(250,252,255,0)');
                 ctx.fillStyle = grad;
                 ctx.beginPath();
-                ctx.ellipse(bandX + bandW / 2, bandY, bandW / 2, bandH, 0, 0, Math.PI * 2);
+                ctx.ellipse(cx, cy, cw, ch, 0, 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.restore();
+
+            // Haze right above the horizon
+            const haze = ctx.createLinearGradient(0, hy - 14, 0, hy + 6);
+            haze.addColorStop(0, 'rgba(200,226,238,0)');
+            haze.addColorStop(0.5, 'rgba(214,236,244,0.5)');
+            haze.addColorStop(1, 'rgba(214,236,244,0)');
+            ctx.fillStyle = haze;
+            ctx.fillRect(0, hy - 14, width, 20);
+        };
+
+        const waveY = (x, depth, t) => {
+            const hy = horizonY();
+            const base = hy + (height - hy) * Math.pow(depth, 2.5);
+            const amp = 1 + depth * depth * 17;
+            const wl = 46 + depth * depth * 230;
+            const speed = 0.00055 + depth * 0.0011;
+            const phase = t * speed + depth * 6.3;
+            return base + Math.sin((x / wl) * Math.PI * 2 + phase) * amp;
+        };
+
+        const drawSea = (t) => {
+            const hy = horizonY();
+            const rows = 36;
+            const horizonC = [150, 198, 220];
+            const deepC = [8, 36, 68];
+
+            // Sea base gradient
+            const base = ctx.createLinearGradient(0, hy, 0, height);
+            base.addColorStop(0, '#3f86ad');
+            base.addColorStop(0.5, '#164a78');
+            base.addColorStop(1, '#0a2c50');
+            ctx.fillStyle = base;
+            ctx.fillRect(0, hy, width, height - hy);
+
+            // Perspective wave bands
+            for (let i = 0; i < rows; i++) {
+                const d0 = i / (rows - 1);
+                const d1 = (i + 1) / (rows - 1);
+                const colTop = mix(horizonC, deepC, d0);
+                const colBot = mix(horizonC, deepC, d1);
+
+                ctx.beginPath();
+                let started = false;
+                for (let x = -6; x <= width + 6; x += 6) {
+                    const y = waveY(x, d0, t);
+                    if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+                }
+                for (let x = width + 6; x >= -6; x -= 6) {
+                    ctx.lineTo(x, waveY(x, d1, t));
+                }
+                ctx.closePath();
+                const band = ctx.createLinearGradient(0, waveY(0, d0, t), 0, waveY(0, d1, t) + 2);
+                band.addColorStop(0, rgba(colTop, 0.96));
+                band.addColorStop(1, rgba(colBot, 1));
+                ctx.fillStyle = band;
+                ctx.fill();
+
+                // Crest highlight (foam) on foreground waves
+                if (d0 > 0.5) {
+                    const amp = 1 + d0 * d0 * 17;
+                    ctx.beginPath();
+                    started = false;
+                    for (let x = -6; x <= width + 6; x += 6) {
+                        const y = waveY(x, d0, t);
+                        if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+                    }
+                    const foamA = 0.05 + (d0 - 0.5) * 0.22;
+                    ctx.strokeStyle = `rgba(235,248,255,${foamA})`;
+                    ctx.lineWidth = 1 + d0 * 1.8;
+                    ctx.stroke();
+                }
+            }
+        };
+
+        // Thin horizontal sun-glitter streaks on the water (not circles)
+        const drawGlitter = (t) => {
+            const hy = horizonY();
+            const sunX = width * 0.7;
+            for (let i = 0; i < 30; i++) {
+                const depth = i / 29;
+                const base = hy + (height - hy) * Math.pow(depth, 2.3);
+                const flick = 0.35 + 0.65 * Math.abs(Math.sin(t * 0.0022 + i * 1.9));
+                const len = 6 + depth * depth * 90;
+                const jitter = (Math.sin(i * 12.9898) * 43758.5453) % 1;
+                const x = sunX + (jitter - 0.5) * depth * width * 0.22;
+                const alpha = (0.05 + depth * 0.3) * flick;
+                ctx.strokeStyle = `rgba(255,250,228,${alpha})`;
+                ctx.lineWidth = 1 + depth * 1.4;
+                ctx.beginPath();
+                ctx.moveTo(x - len / 2, base);
+                ctx.lineTo(x + len / 2, base);
+                ctx.stroke();
+            }
         };
 
         const drawRipples = () => {
             for (let i = ripples.length - 1; i >= 0; i--) {
                 const r = ripples[i];
                 r.age += 16;
-                if (r.age > 1300) {
-                    ripples.splice(i, 1);
-                    continue;
-                }
-                const p = r.age / 1300;
-                const radius = 10 + p * 60;
+                if (r.age > 1500) { ripples.splice(i, 1); continue; }
+                const p = r.age / 1500;
+                const rx = 8 + p * 74;
+                const ry = rx * 0.28;
                 ctx.beginPath();
-                ctx.ellipse(r.x, r.y, radius, radius * 0.32, 0, 0, Math.PI * 2);
-                ctx.strokeStyle = `rgba(255,255,255,${0.55 * (1 - p)})`;
-                ctx.lineWidth = 2;
+                ctx.ellipse(r.x, r.y, rx, ry, 0, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255,255,255,${0.5 * (1 - p)})`;
+                ctx.lineWidth = 1.4;
                 ctx.stroke();
                 ctx.beginPath();
-                ctx.ellipse(r.x, r.y, radius * 0.55, radius * 0.18, 0, 0, Math.PI * 2);
-                ctx.strokeStyle = `rgba(250,250,250,${0.4 * (1 - p)})`;
-                ctx.lineWidth = 1.3;
+                ctx.ellipse(r.x, r.y, rx * 0.55, ry * 0.55, 0, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(240,250,255,${0.3 * (1 - p)})`;
+                ctx.lineWidth = 1;
                 ctx.stroke();
             }
         };
@@ -114,15 +208,15 @@ const MarineScene = ({ className = '' }) => {
             const rect = canvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            if (y > height * 0.42) {
-                ripples.push({ x, y, age: 0 });
-            }
+            if (y > horizonY() + 8) ripples.push({ x, y, age: 0 });
         };
 
         const render = () => {
             const t = performance.now() - startTime;
             ctx.clearRect(0, 0, width, height);
-            drawWaterLife(t);
+            drawSky(t);
+            drawSea(t);
+            drawGlitter(t);
             drawRipples();
             rafId = requestAnimationFrame(render);
         };
@@ -139,57 +233,98 @@ const MarineScene = ({ className = '' }) => {
         };
     }, []);
 
+    // Realistic gull silhouette (dark, thin, two wings + body)
+    const gullPath =
+        'M2 16 C 7 7, 16 3, 27 9 C 30 7, 34 7, 38 10 C 46 4, 56 7, 60 15 ' +
+        'C 53 11, 46 10, 41 12 C 37 12, 34 13, 31 12 C 26 10, 12 11, 2 16 Z';
+
+    const gulls = [
+        { cls: 'marine-gull--1', size: 64, top: 7, dur: 52, delay: -6, op: 0.92 },
+        { cls: 'marine-gull--2', size: 46, top: 13, dur: 66, delay: -24, op: 0.8 },
+        { cls: 'marine-gull--3', size: 74, top: 4, dur: 78, delay: -40, op: 0.95 },
+        { cls: 'marine-gull--4', size: 38, top: 20, dur: 60, delay: -12, op: 0.72 },
+        { cls: 'marine-gull--5', size: 54, top: 10, dur: 88, delay: -55, op: 0.85 },
+        { cls: 'marine-gull--6', size: 32, top: 25, dur: 70, delay: -32, op: 0.65 },
+    ];
+
     return (
         <div className={`marine-scene ${className}`.trim()}>
-            {/* Real ocean photo — the live wallpaper base */}
-            <div className="marine-photo" style={{ backgroundImage: 'url(/images/ocean.jpg)' }} />
-            <div className="marine-photo marine-photo--tint" />
-
-            {/* Light + interactive ripples over the photo */}
+            {/* Front-view animated seascape — sky, horizon, rolling waves, interaction */}
             <canvas ref={canvasRef} className="marine-canvas" aria-hidden="true" />
 
-            {/* Slow, realistic gulls */}
+            {/* Flock of realistic gulls */}
             <div className="marine-gulls" aria-hidden="true">
-                <span className="marine-gull marine-gull--1"><svg viewBox="0 0 60 20" width="60" height="20"><path d="M3 12 C 9 4, 18 3, 30 8 C 42 3, 51 4, 57 12 C 52 8, 46 8, 30 13 C 14 8, 8 8, 3 12 Z" fill="#1e293b" opacity="0.85"/></svg></span>
-                <span className="marine-gull marine-gull--2"><svg viewBox="0 0 60 20" width="60" height="20"><path d="M3 12 C 9 4, 18 3, 30 8 C 42 3, 51 4, 57 12 C 52 8, 46 8, 30 13 C 14 8, 8 8, 3 12 Z" fill="#1e293b" opacity="0.7"/></svg></span>
-                <span className="marine-gull marine-gull--3"><svg viewBox="0 0 60 20" width="60" height="20"><path d="M3 12 C 9 4, 18 3, 30 8 C 42 3, 51 4, 57 12 C 52 8, 46 8, 30 13 C 14 8, 8 8, 3 12 Z" fill="#1e293b" opacity="0.6"/></svg></span>
+                {gulls.map((g) => (
+                    <span key={g.cls} className={`marine-gull ${g.cls}`} style={{ opacity: g.op }}>
+                        <svg viewBox="0 0 60 24" width={g.size} height={g.size * 0.4}>
+                            <path d={gullPath} fill="#1c2a3a" />
+                        </svg>
+                    </span>
+                ))}
             </div>
 
-            {/* Interactive vessel with app shortcuts on its deck */}
-            <div className="marine-boat" ref={boatRef}>
-                <svg className="marine-boat__svg" viewBox="0 0 360 130" width="360" height="130">
+            {/* Realistic felucca with app shortcuts on its deck console */}
+            <div className="marine-boat">
+                <svg className="marine-boat__svg" viewBox="0 0 420 210" width="420" height="210">
                     <defs>
-                        <linearGradient id="boatHull" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#1f4e63" />
-                            <stop offset="100%" stopColor="#0a2230" />
+                        <linearGradient id="feluccaSail" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="#f6efdd" />
+                            <stop offset="60%" stopColor="#e7d9b6" />
+                            <stop offset="100%" stopColor="#cbb889" />
                         </linearGradient>
-                        <linearGradient id="boatStripe" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#9c3d2f" />
-                            <stop offset="100%" stopColor="#5c1e1e" />
+                        <linearGradient id="feluccaHull" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#8a5a34" />
+                            <stop offset="55%" stopColor="#6b4024" />
+                            <stop offset="100%" stopColor="#3a2314" />
                         </linearGradient>
-                        <linearGradient id="boatDeck" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#dce7ee" />
-                            <stop offset="100%" stopColor="#a8bcc9" />
+                        <linearGradient id="feluccaStripe" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#b03a24" />
+                            <stop offset="100%" stopColor="#8a2418" />
                         </linearGradient>
                     </defs>
 
-                    <path d="M0 108 C 45 104, 70 112, 110 108 C 150 104, 190 112, 230 108 C 270 104, 315 112, 360 108 L 360 130 L 0 130 Z" fill="#ffffff" opacity="0.14" />
+                    {/* Lateen sail with a gentle billow */}
+                    <path
+                        d="M 244 12 C 200 34, 128 96, 66 150 C 112 130, 176 122, 246 128 C 246 88, 245 50, 244 12 Z"
+                        fill="url(#feluccaSail)"
+                        stroke="#b8a878"
+                        strokeWidth="1"
+                        opacity="0.94"
+                    />
+                    {/* Red stripe near the sail foot */}
+                    <path
+                        d="M 66 150 C 112 130, 176 122, 246 128 L 246 118 C 176 112, 112 120, 72 140 Z"
+                        fill="url(#feluccaStripe)"
+                        opacity="0.9"
+                    />
+                    {/* Mast */}
+                    <path d="M 244 6 L 244 152" stroke="#4a2f1a" strokeWidth="4" strokeLinecap="round" />
+                    {/* Yard arm */}
+                    <path d="M 244 12 L 60 156" stroke="#5a3a22" strokeWidth="3" strokeLinecap="round" />
+                    {/* Small pennant */}
+                    <path d="M 244 6 L 224 10 L 244 14 Z" fill="#b03a24" />
 
-                    <path d="M10 78 L 350 78 L 338 116 L 24 116 Z" fill="url(#boatHull)" />
-                    <path d="M30 104 L 330 104 L 338 116 L 24 116 Z" fill="url(#boatStripe)" />
-                    <rect x="18" y="73" width="324" height="7" rx="3" fill="url(#boatDeck)" />
-                    <path d="M10 78 L 26 74 L 24 92 L 10 96 Z" fill="#0f3a4f" />
-                    <path d="M350 78 L 350 116 L 338 116 L 338 78 Z" fill="#0c3044" />
-
-                    <rect x="120" y="18" width="5" height="56" fill="#6d4a2b" />
-                    <path d="M125 22 L 216 60 L 125 76 Z" fill="#f8fafc" opacity="0.95" stroke="#cbd5e1" strokeWidth="1" />
-                    <path d="M125 22 L 92 74 L 125 78 Z" fill="#eef2f7" opacity="0.9" />
-
-                    <rect x="228" y="42" width="92" height="31" rx="3" fill="#e5edf3" />
-                    <rect x="236" y="50" width="12" height="11" rx="1" fill="#0ea5e9" opacity="0.9" />
-                    <rect x="252" y="50" width="12" height="11" rx="1" fill="#0ea5e9" opacity="0.9" />
-                    <rect x="268" y="50" width="12" height="11" rx="1" fill="#0ea5e9" opacity="0.9" />
-                    <rect x="26" y="76" width="314" height="2" fill="#0a2230" opacity="0.7" />
+                    {/* Hull */}
+                    <path
+                        d="M 22 148 C 80 136, 150 132, 220 136 C 290 140, 350 146, 396 156 L 390 176 C 320 166, 150 160, 40 176 Z"
+                        fill="url(#feluccaHull)"
+                    />
+                    {/* Gunwale */}
+                    <path
+                        d="M 26 148 C 84 137, 152 133, 222 137 C 290 141, 348 147, 392 157"
+                        fill="none"
+                        stroke="#c9a468"
+                        strokeWidth="2"
+                        opacity="0.85"
+                    />
+                    {/* Waterline */}
+                    <path
+                        d="M 40 166 C 150 158, 320 160, 390 168 L 390 176 C 320 166, 150 160, 40 176 Z"
+                        fill="#10283c"
+                        opacity="0.6"
+                    />
+                    {/* Bowsprit */}
+                    <path d="M 22 148 L 6 156" stroke="#5a3a22" strokeWidth="3" strokeLinecap="round" />
                 </svg>
 
                 <nav className="marine-boat__icons" aria-label="Boat shortcuts">

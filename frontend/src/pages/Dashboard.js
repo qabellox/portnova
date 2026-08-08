@@ -52,7 +52,7 @@ const Dashboard = () => {
                     <div>
                         <div className="hero__kicker">{isArabic ? 'لوحة التحكم' : 'Dashboard'}</div>
                         <h1 className="hero__title">
-                            {isArabic ? 'مركز قيادة مناسب لدور' : 'A role-aware command center for'} <span className="gradient-text">{fullName}</span>.
+                            {isArabic ? 'أهلًا' : 'Welcome'}, <span className="gradient-text">{fullName}</span>.
                         </h1>
                         <BilingualLine
                             as="p"
@@ -62,21 +62,19 @@ const Dashboard = () => {
                         />
                         <div className="status-strip">
                             <Badge tone="gold">{isArabic ? role : role}</Badge>
-                            <Badge tone="blue">{isArabic ? 'جلسة مباشرة' : 'Live session'}</Badge>
-                            <Badge tone="success">Supabase Auth</Badge>
                         </div>
                     </div>
 
                     <GlassCard className="hero__orbital hero__orbital--primary">
                         <div className="upload-meter__label">
-                            <span>{isArabic ? 'صحة الحساب' : 'Account health'}</span>
+                            <span>{isArabic ? 'اكتمال الملف' : 'Profile completion'}</span>
                             <strong>94%</strong>
                         </div>
                         <ProgressBar value={94} />
                         <div className="card-copy" style={{ marginTop: '1rem' }}>
                             {isArabic
-                                ? 'واجهتك مضبوطة لتدفق أنيق وحركة مصقولة ووضوح كامل للدور.'
-                                : 'Your interface is tuned for premium flow, polished motion, and role clarity.'}
+                                ? 'أكمل بيانات ملفك لتظهر بوضوح لأصحاب العمل والمنصة.'
+                                : 'Complete your profile so it shows clearly to employers and the platform.'}
                         </div>
                     </GlassCard>
                 </div>
@@ -90,12 +88,12 @@ const Dashboard = () => {
 
             <div className="split-grid">
                 <GlassCard>
-                    <SectionHeading kicker={isArabic ? 'لقطة سريعة' : 'Snapshot'} title={isArabic ? 'النشاط الأخير' : 'Recent activity'} subtitle={isArabic ? 'تغذية مرتبة تمنح اللوحة نبضًا حيًا.' : 'A clean feed gives the dashboard a living pulse.'} />
+                    <SectionHeading kicker={isArabic ? 'لقطة سريعة' : 'Snapshot'} title={isArabic ? 'النشاط الأخير' : 'Recent activity'} subtitle={isArabic ? 'أحدث التحديثات على حسابك.' : 'Latest updates on your account.'} />
                     <div className="activity-feed">
                         {[
-                            isArabic ? 'تمت مزامنة تحديث جديد للملف مع Supabase.' : 'New profile update synced to Supabase.',
-                            isArabic ? 'انتقل طلب السيرة الذاتية من معلق إلى مُسند.' : 'CV request moved from pending to assigned.',
-                            isArabic ? 'تم تحديث تقدّم إكمال الدورة للمستخدم الحالي.' : 'Course completion progress updated for the current user.',
+                            isArabic ? 'تم تحديث ملفك الشخصي.' : 'Your profile was updated.',
+                            isArabic ? 'طلب سيرة ذاتية قيد المراجعة.' : 'A CV request is under review.',
+                            isArabic ? 'تقدّم جديد في إحدى دوراتك.' : 'New progress in one of your courses.',
                         ].map((entry) => (
                             <div key={entry} className="activity-item">
                                 <div className="activity-dot" />
@@ -109,7 +107,7 @@ const Dashboard = () => {
                 </GlassCard>
 
                 <GlassCard>
-                    <SectionHeading kicker={isArabic ? 'إشارة' : 'Signal'} title={isArabic ? 'أشرطة بيانات متحركة' : 'Animated data bars'} subtitle={isArabic ? 'حتى البيانات الفارغة تظهر كأنها مخطط حي.' : 'Even empty data gets a premium chart-like presentation.'} />
+                    <SectionHeading kicker={isArabic ? 'أداء' : 'Performance'} title={isArabic ? 'مؤشراتك' : 'Your indicators'} subtitle={isArabic ? 'متابعة سريعة لأهم الأرقام.' : 'A quick look at your key numbers.'} />
                     <div className="mini-bars">
                         {[
                             { label: isArabic ? 'التركيز' : 'Focus', value: 92 },

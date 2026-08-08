@@ -104,14 +104,14 @@ const Admin = () => {
                 <GlassCard>
                     <SectionHeading kicker={isArabic ? 'الأمان' : 'Security'} title={isArabic ? 'إعدادات الأمان' : 'Security status'} />
                     <div className="status-strip">
-                        <Badge tone="success">{isArabic ? 'RLS مفعّل' : 'RLS enabled'}</Badge>
-                        <Badge tone="success">{isArabic ? 'مصادقة Supabase' : 'Supabase auth'}</Badge>
-                        <Badge tone="gold">{isArabic ? 'أدوار' : 'Roles'}</Badge>
+                        <Badge tone="success">{isArabic ? 'حماية البيانات مفعّلة' : 'Data protection on'}</Badge>
+                        <Badge tone="success">{isArabic ? 'مصادقة آمنة' : 'Secure auth'}</Badge>
+                        <Badge tone="gold">{isArabic ? 'أدوار محددة' : 'Defined roles'}</Badge>
                     </div>
                     <div className="card-copy" style={{ marginTop: '1rem' }}>
                         {isArabic
-                            ? 'تطبق سياسات أمان على مستوى الصف (RLS) لحماية بيانات المستخدمين.'
-                            : 'Row Level Security policies protect user data across tables.'}
+                            ? 'سياسات حماية تحافظ على خصوصية بيانات المستخدمين.'
+                            : 'Protection policies keep user data private.'}
                     </div>
                     <div style={{ marginTop: '1rem' }}>
                         <div className="upload-meter__label">

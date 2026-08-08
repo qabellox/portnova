@@ -51,7 +51,7 @@ const Register = () => {
                     </div>
                     <div>
                         <div className="brand__name">PortNova</div>
-                        <div className="brand__tag">{isArabic ? 'أنشئ ملفك المميز' : 'Create your premium profile'}</div>
+                        <div className="brand__tag">{isArabic ? 'انضم إلى شباب بورسعيد' : 'Join Port Said youth'}</div>
                     </div>
                 </div>
                 <h1 className="hero__title" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>
@@ -60,13 +60,13 @@ const Register = () => {
                 <BilingualLine
                     as="p"
                     className="hero__lead"
-                    ar="أنشئ ملفًا يدعم الوظائف والتعلم وخدمة السيرة الذاتية داخل منظومة واحدة سلسة."
-                    en="Create a profile that powers jobs, learning, and CV support in one fluid ecosystem."
+                    ar="أنشئ حسابك للوصول إلى الوظائف والدورات وخدمة السيرة الذاتية."
+                    en="Create your account to access jobs, courses, and CV service."
                 />
                 <div className="auth-aside__stack">
-                    <div className="auth-aside__stack-item">{isArabic ? 'تسجيل أنيق مع تهيئة حسب الدور.' : 'Elegant signup with role-aware onboarding.'}</div>
-                    <div className="auth-aside__stack-item">{isArabic ? 'لمسات الحركة الزرقاء والذهبية تبقي الصفحة دافئة ومميزة.' : 'Blue and gold motion accents keep the page warm and premium.'}</div>
-                    <div className="auth-aside__stack-item">{isArabic ? 'مصممة لعرض محلي موثوق.' : 'Built for funder-grade presentation.'}</div>
+                    <div className="auth-aside__stack-item">{isArabic ? 'وظائف لشباب بورسعيد.' : 'Jobs for Port Said youth.'}</div>
+                    <div className="auth-aside__stack-item">{isArabic ? 'دورات عملية لتطوير مهاراتك.' : 'Practical courses to build your skills.'}</div>
+                    <div className="auth-aside__stack-item">{isArabic ? 'سيرة ذاتية حتى التسليم النهائي.' : 'CV service through final delivery.'}</div>
                 </div>
             </aside>
 

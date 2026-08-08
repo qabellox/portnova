@@ -40,8 +40,8 @@ const Jobs = () => {
         <div className="page-shell">
             <SectionHeading
                 kicker="الفرص / Opportunities"
-                title="وظائف واضحة، حية، ومناسبة لشباب بورسعيد"
-                subtitle="بطاقات زجاجية، وتوافق متحرك، ولمسات ذهبية تجعل سوق الوظائف يبدو محليًا ومميزًا."
+                title="وظائف لشباب بورسعيد"
+                subtitle="ابحث، رشّح، وقدّم على الوظيفة المناسبة."
             />
 
             <GlassCard className="filter-panel">
@@ -100,8 +100,7 @@ const Jobs = () => {
                             </div>
 
                             <div className="card-meta">
-                                <Badge tone="blue">نشطة / Active</Badge>
-                                <Badge tone="gold">توافق قوي / High match</Badge>
+                                <Badge tone={job.tone}>{job.category}</Badge>
                             </div>
 
                             <div style={{ marginTop: '1rem' }}>
@@ -114,7 +113,6 @@ const Jobs = () => {
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>
                                 <PremiumButton variant="primary">قدّم الآن / Apply</PremiumButton>
-                                <PremiumButton variant="ghost">معاينة / Preview</PremiumButton>
                             </div>
                         </GlassCard>
                     ))}

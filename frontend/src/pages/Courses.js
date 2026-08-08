@@ -36,8 +36,8 @@ const Courses = () => {
         <div className="page-shell">
             <SectionHeading
                 kicker="التعلم / Learning"
-                title="دورات بروح شبابية ولمسة محلية"
-                subtitle="مؤشرات تقدّم متحركة ولمسات سعرية مرتبة تجعل التعلم أقرب وأسهل للناس هنا."
+                title="دورات لتطوير مهاراتك"
+                subtitle="تعلّم ما يناسب مستواك واهتمامك."
             />
 
             <GlassCard className="filter-panel">
@@ -85,7 +85,6 @@ const Courses = () => {
 
                             <div className="card-meta">
                                 <Badge tone="blue">{course.level}</Badge>
-                                <Badge tone="gold">تفاعلية / Interactive</Badge>
                             </div>
 
                             <div style={{ marginTop: '1rem' }}>
@@ -98,7 +97,6 @@ const Courses = () => {
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>
                                 <PremiumButton variant="primary">سجّل / Enroll</PremiumButton>
-                                <PremiumButton variant="ghost">معاينة / Preview</PremiumButton>
                             </div>
                         </GlassCard>
                     ))}

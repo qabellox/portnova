@@ -145,24 +145,22 @@ const CVService = () => {
                     <div>
                         <div className="hero__kicker">خدمة السيرة الذاتية / CV Service</div>
                         <h1 className="hero__title">
-                            صياغة وتسليم السيرة الذاتية مع <span className="gradient-text">إحساس محلي راقٍ</span>.
+                            صياغة وتسليم <span className="gradient-text">سيرتك الذاتية</span>.
                         </h1>
                         <BilingualLine
                             as="p"
                             className="hero__lead"
-                            ar="منطقة رفع بالسحب والإفلات، وتتبع تقدّم متحرك، وخط زمني واضح يجعل الخدمة موثوقة وسهلة."
-                            en="A drag-drop upload zone, animated progress tracking, and a status timeline make the service feel trusted and premium."
+                            ar="ارفع سيرتك الذاتية وتابعها حتى التسليم."
+                            en="Upload your CV and track it until delivery."
                         />
                         <div className="status-strip">
-                            <Badge tone="gold">جاهز للدفع / Payments</Badge>
-                            <Badge tone="blue">سحب وإفلات / Drag & drop</Badge>
                             <Badge tone="success">مراجعة خبراء / Expert review</Badge>
                         </div>
                     </div>
 
                     <GlassCard className="hero__orbital hero__orbital--primary">
                         <div className="upload-meter__label">
-                            <span>زخم الرفع / Upload momentum</span>
+                            <span>تقدّم الرفع / Upload progress</span>
                             <strong>{uploadProgress}%</strong>
                         </div>
                         <ProgressBar value={uploadProgress} />
@@ -178,7 +176,7 @@ const CVService = () => {
                     <SectionHeading
                         kicker="الرفع / Upload"
                         title="اسقط سيرتك الذاتية هنا"
-                        subtitle="منطقة الرفع تضيء عند المرور، وتتبع التقدم، وتحافظ على تجربة واثقة وأنيقة."
+                        subtitle="اختر ملفًا وأسقطه هنا."
                     />
                     <form onSubmit={handleUpload}>
                         <div
@@ -193,7 +191,7 @@ const CVService = () => {
                             <div className="dropzone__inner">
                                 <div className="icon-circle" style={{ margin: '0 auto 0.85rem' }}>CV</div>
                                 <h3 className="card-title">اسحب الملف وأفلته</h3>
-                                <BilingualLine ar="PDF وDOC وDOCX مدعومة. اختر ملفًا أو أسقطه في المساحة المضيئة." en="PDF, DOC, and DOCX supported. Choose a file or drop it into the luminous area." className="card-copy" />
+                                <BilingualLine ar="PDF وDOC وDOCX مدعومة. اختر ملفًا أو أسقطه هنا." en="PDF, DOC, and DOCX are supported. Choose a file or drop it here." className="card-copy" />
                                 <input
                                     className="field"
                                     style={{ marginTop: '1rem' }}
@@ -226,11 +224,11 @@ const CVService = () => {
                 </GlassCard>
 
                 <GlassCard className="auth-card">
-                    <SectionHeading kicker="المسار / Workflow" title="الخط الزمني للحالة" subtitle="كل خطوة تظل واضحة حتى يشعر المستخدم أن العملية تتحرك للأمام." />
+                    <SectionHeading kicker="المسار / Workflow" title="الخط الزمني للحالة" subtitle="تابع طلبك من الرفع حتى التسليم." />
                     <Timeline steps={statusSteps} currentIndex={currentStep >= 0 ? currentStep : 0} />
 
                     <div className="section-block">
-                        <SectionHeading kicker="الأسعار / Pricing" title="أسعار مؤقتة بسيطة" subtitle="يمكن ربط الدفع هنا لاحقًا دون تغيير لغة التصميم."
+                        <SectionHeading kicker="الأسعار / Pricing" title="اختر الباقة المناسبة" subtitle="أسعار بسيطة وواضحة."
                         />
                         <div className="card-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                             <GlassCard>
@@ -241,7 +239,7 @@ const CVService = () => {
                             <GlassCard>
                                 <div className="stat-card__label">مميز / Premium</div>
                                 <div className="stat-card__value">$24</div>
-                                <div className="stat-card__note">معالجة أولوية مع لمسة تسليم نهائية.</div>
+                                <div className="stat-card__note">معالجة أسرع وتسليم نهائي منسّق.</div>
                             </GlassCard>
                         </div>
                     </div>
@@ -249,7 +247,7 @@ const CVService = () => {
             </div>
 
             <GlassCard>
-                <SectionHeading kicker="الطلبات / Requests" title="طلباتك" subtitle="تابع كل رفع وإسناد وتسليم في قائمة واحدة واضحة."
+                <SectionHeading kicker="الطلبات / Requests" title="طلباتك" subtitle="كل طلباتك في مكان واحد."
                 />
                 <div className="activity-feed">
                     {(requests || []).length ? (
@@ -275,7 +273,7 @@ const CVService = () => {
 
             {role === 'expert' ? (
                 <GlassCard>
-                    <SectionHeading kicker="منظور الخبير / Expert view" title="الطلبات المعلّقة" subtitle="يمكن للخبراء حجز الطلبات بخطوة مضيئة واحدة." />
+                    <SectionHeading kicker="منظور الخبير / Expert view" title="الطلبات المعلّقة" subtitle="احجز الطلبات وابدأ المراجعة." />
                     <div className="card-grid card-grid--wide">
                         {(pendingRequests || []).length ? (
                             pendingRequests.map((request) => (

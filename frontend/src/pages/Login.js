@@ -47,7 +47,7 @@ const Login = () => {
                     </div>
                     <div>
                         <div className="brand__name">PortNova</div>
-                        <div className="brand__tag">{isArabic ? 'بوابة دخول مميزة' : 'Premium access portal'}</div>
+                        <div className="brand__tag">{isArabic ? 'بوابة شباب بورسعيد' : 'Port Said youth portal'}</div>
                     </div>
                 </div>
                 <h1 className="hero__title" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>
@@ -56,13 +56,13 @@ const Login = () => {
                 <BilingualLine
                     as="p"
                     className="hero__lead"
-                    ar="سجّل دخولك لتكمل رحلتك في الوظائف والدورات وخدمة السيرة الذاتية ولوحة التحكم."
-                    en="Sign in to continue the vibrant flow across jobs, courses, CV service, and the dashboard."
+                    ar="سجّل دخولك للوصول إلى الوظائف والدورات وخدمة السيرة الذاتية."
+                    en="Sign in to access jobs, courses, and CV service."
                 />
                 <div className="auth-aside__stack">
-                    <div className="auth-aside__stack-item">{isArabic ? 'واجهة زجاجية مع لمسات حركة ذهبية وزرقاء.' : 'Glass-morphism UI with gold and blue motion highlights.'}</div>
-                    <div className="auth-aside__stack-item">{isArabic ? 'انتقالات سلسة وأزرار نابضة وتجربة دخول أنيقة.' : 'Smooth transitions, ripple buttons, and a polished login feel.'}</div>
-                    <div className="auth-aside__stack-item">{isArabic ? 'مهيأة لعرض محلي موثوق ومقنع.' : 'Built for funder-facing presentation and trust.'}</div>
+                    <div className="auth-aside__stack-item">{isArabic ? 'وظائف لشباب بورسعيد.' : 'Jobs for Port Said youth.'}</div>
+                    <div className="auth-aside__stack-item">{isArabic ? 'دورات عملية لتطوير مهاراتك.' : 'Practical courses to build your skills.'}</div>
+                    <div className="auth-aside__stack-item">{isArabic ? 'سيرة ذاتية حتى التسليم النهائي.' : 'CV service through final delivery.'}</div>
                 </div>
             </aside>
 

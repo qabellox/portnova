@@ -5,23 +5,23 @@ import { Badge, BilingualLine, GlassCard, PremiumButton, ProgressBar, SectionHea
 const featureCards = [
     {
         icon: '⚓',
-        title: 'ميناء الفرص',
-        copyAr: 'من قلب الميناء، ابحث عن الوظائف وتابع التعلّم وانتقل من ملفك إلى التقديم في مساحة واحدة.',
-        copyEn: 'From the heart of the port, find jobs, track learning, and go from profile to application in one place.',
+        title: 'وظائف',
+        copyAr: 'ابحث عن وظيفة تناسبك وقدّم عليها مباشرة.',
+        copyEn: 'Find a job that fits you and apply directly.',
         tone: 'blue',
     },
     {
         icon: '🧭',
-        title: 'بوصلة أصحاب العمل',
-        copyAr: 'انشر وظائفك وراجع المتقدمين بمسارات ذكية واضحة، تمامًا مثل إدارة سفينة في ميناء.',
-        copyEn: 'Post jobs and review applicants with smart, clear workflows — like steering a ship into harbor.',
+        title: 'دورات',
+        copyAr: 'طوّر مهاراتك بدورات عملية في مجالك.',
+        copyEn: 'Build your skills with practical courses.',
         tone: 'gold',
     },
     {
         icon: '🐟',
-        title: 'سيرة ذاتية تُصطاد وتُسلَّم',
-        copyAr: 'ارفع، وأسنِد، ونسّق، وسلّم عبر خط زمني يمنح المستخدم ثقة في كل خطوة.',
-        copyEn: 'Upload, assign, format, and deliver with a timeline that gives users confidence at every step.',
+        title: 'سيرة ذاتية',
+        copyAr: 'ارفع سيرتك الذاتية وتابعها حتى التسليم.',
+        copyEn: 'Upload your CV and track it to delivery.',
         tone: 'success',
     },
 ];
@@ -75,9 +75,9 @@ const Home = () => (
 
         <section className="section-block">
             <SectionHeading
-                kicker="التجربة / Experience"
-                title="مظهر يجمع الدفء المحلي مع الإحساس بالفخامة"
-                subtitle="كل سطح هنا فيه حركة ولمعان وعمق، لكن بروح بورسعيد الشبابية وليس ببرود الشركات التقنية."
+                kicker="ما نقدمه / What we offer"
+                title="كل ما يحتاجه شاب بورسعيد في مكان واحد"
+                subtitle="وظائف، دورات، وخدمة سيرة ذاتية — مصممة لتناسبك."
             />
             <div className="card-grid">
                 {featureCards.map((card) => (
@@ -96,7 +96,7 @@ const Home = () => (
 
         <section className="section-block split-grid">
             <GlassCard>
-                <SectionHeading kicker="الإيقاع / Momentum" title="إشارات حية للمنصة" subtitle="إحصاءات متحركة تمنح الصفحة طاقة فورية من دون ازدحام بصري." />
+                <SectionHeading kicker="النتائج / Results" title="أرقام منصتنا" subtitle="مؤشرات حقيقية عن تفاعل شباب بورسعيد." />
                 <div className="mini-bars">
                     {highlightBars.map((bar) => (
                         <div key={bar.label} className="mini-bars__row">
@@ -111,7 +111,7 @@ const Home = () => (
             </GlassCard>
 
             <GlassCard>
-                <SectionHeading kicker="ابدأ / Call to action" title="خلّي PortNova هو الانطباع الأول" subtitle="أزرار الدعوة هنا مضيئة ودافئة وواضحة عبر كل الصفحات." />
+                <SectionHeading kicker="ابدأ / Get started" title="جاهز تبدأ رحلتك؟" subtitle="أنشئ حسابك واستكشف كل ما تقدمه المنصة." />
                 <div className="inline-actions">
                     <PremiumButton to="/dashboard" variant="primary">
                         استكشف اللوحة / Explore

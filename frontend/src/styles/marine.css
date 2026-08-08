@@ -293,6 +293,7 @@
 }
 
 .marine-vessel:hover .marine-vessel__card,
+.marine-vessel:focus .marine-vessel__card,
 .marine-vessel:focus-within .marine-vessel__card {
    opacity: 1;
    pointer-events: auto;

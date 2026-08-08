@@ -1363,6 +1363,51 @@ body[dir='rtl'] .user-menu__link:hover {
     overflow: hidden;
 }
 
+/* CV card — required part of the profile, marine-consistent */
+.cv-card {
+    margin-bottom: 1.25rem;
+    padding: 1.2rem;
+    background:
+        linear-gradient(160deg, rgba(12, 74, 110, 0.24), rgba(8, 34, 58, 0.72)),
+        linear-gradient(180deg, rgba(45, 212, 191, 0.06), transparent 60%);
+}
+
+.cv-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.cv-card__empty,
+.cv-card__attached {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.cv-card__attached {
+    padding: 0.85rem 1rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(45, 212, 191, 0.35);
+    background: rgba(13, 148, 136, 0.08);
+}
+
+.cv-card__file-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.cv-card__attached strong {
+    display: block;
+    color: #f8fafc;
+    font-size: 0.95rem;
+}
+
+.cv-card__attached .muted {
+    font-size: 0.8rem;
+}
+
 .auth-aside__logo {
     display: inline-flex;
     align-items: center;

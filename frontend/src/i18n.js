@@ -68,6 +68,14 @@ export const messages = {
         jobPosted: 'نُشرت',
         jobPostedToday: 'اليوم',
         jobPostedDays: 'منذ {n} أيام',
+        cvKicker: 'السيرة الذاتية',
+        cvRequiredTitle: 'السيرة الذاتية إلزامية للتقديم',
+        cvRequiredSubtitle: 'أرفق سيرتك الذاتية لتتمكن من التقديم على الوظائف.',
+        cvUpload: 'ارفع سيرتك الذاتية',
+        cvFileHint: 'PDF أو DOC — الحد الأقصى 5MB',
+        cvAttached: 'تم إرفاق سيرتك الذاتية',
+        cvRemove: 'إزالة',
+        cvNoFile: 'لم تُرفق سيرة ذاتية بعد — ارفع واحدة للمتابعة.',
 
         // Courses
         coursesKicker: 'التعلم',
@@ -232,6 +240,14 @@ export const messages = {
         jobPosted: 'Posted',
         jobPostedToday: 'Today',
         jobPostedDays: '{n} days ago',
+        cvKicker: 'CV',
+        cvRequiredTitle: 'A CV is required to apply',
+        cvRequiredSubtitle: 'Attach your CV so you can apply to jobs.',
+        cvUpload: 'Upload your CV',
+        cvFileHint: 'PDF or DOC — max 5MB',
+        cvAttached: 'Your CV is attached',
+        cvRemove: 'Remove',
+        cvNoFile: 'No CV attached yet — upload one to continue.',
 
         // Courses
         coursesKicker: 'Learning',

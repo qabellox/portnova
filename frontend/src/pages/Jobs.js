@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -16,6 +16,13 @@ const Jobs = () => {
     const [query, setQuery] = useState('');
     const [location, setLocation] = useState('All');
     const [category, setCategory] = useState('All');
+    const [cvName, setCvName] = useState('');
+    const cvInputRef = useRef(null);
+
+    const onPickCv = (event) => {
+        const file = event.target.files?.[0];
+        if (file) setCvName(file.name);
+    };
 
     const locations = useMemo(() => ['All', ...new Set(jobs.map((j) => j.location))], []);
     const categories = useMemo(() => ['All', ...new Set(jobs.map((j) => j.category))], []);
@@ -77,6 +84,34 @@ const Jobs = () => {
                     <span className="muted">
                         {t('jobsAvailable', { n: filtered.length })}
                     </span>
+                </div>
+            </GlassCard>
+
+            {/* CV — required part of the profile for applying */}
+            <GlassCard className="cv-card">
+                <SectionHeading kicker={t('cvKicker')} title={t('cvRequiredTitle')} subtitle={t('cvRequiredSubtitle')} />
+                <div className="cv-card__body">
+                    <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" hidden onChange={onPickCv} />
+                    {cvName ? (
+                        <div className="cv-card__attached">
+                            <span className="cv-card__file-icon" aria-hidden="true">📄</span>
+                            <div>
+                                <strong>{cvName}</strong>
+                                <span className="muted">{t('cvAttached')}</span>
+                            </div>
+                            <PremiumButton variant="ghost" onClick={() => { setCvName(''); if (cvInputRef.current) cvInputRef.current.value = ''; }}>
+                                {t('cvRemove')}
+                            </PremiumButton>
+                        </div>
+                    ) : (
+                        <div className="cv-card__empty">
+                            <span className="muted">{t('cvNoFile')}</span>
+                            <PremiumButton variant="gold" onClick={() => cvInputRef.current?.click()}>
+                                {t('cvUpload')}
+                            </PremiumButton>
+                            <span className="muted">{t('cvFileHint')}</span>
+                        </div>
+                    )}
                 </div>
             </GlassCard>
 

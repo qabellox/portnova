@@ -1062,10 +1062,33 @@ body[dir='rtl'] .user-menu__link:hover {
     transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
 }
 
+/* Foam-light top edge + wave-sheen that sweeps across on hover */
+.btn::before,
+.premium-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 30%),
+        linear-gradient(115deg, transparent 24%, rgba(204, 251, 241, 0.4) 46%, rgba(255, 255, 255, 0.5) 52%, rgba(204, 251, 241, 0.4) 58%, transparent 78%);
+    transform: translateX(-130%);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+}
+
+.btn:hover::before,
+.premium-button:hover::before {
+    transform: translateX(130%);
+}
+
 .btn:hover,
 .premium-button:hover {
     transform: translateY(-1px) scale(1.02);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 12px 28px rgba(2, 8, 23, 0.3), 0 0 28px rgba(14, 165, 233, 0.16);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 12px 28px rgba(2, 8, 23, 0.3),
+        0 0 30px rgba(14, 165, 233, 0.22);
 }
 
 .btn:active,
@@ -1096,24 +1119,29 @@ body[dir='rtl'] .user-menu__link:hover {
     background: linear-gradient(135deg, rgba(251, 113, 133, 0.82), rgba(190, 18, 60, 0.92));
 }
 
+/* Click ripple — reads as a water ring spreading on the surface */
 .btn__ripple {
     position: absolute;
     border-radius: 999px;
     transform: translate(-50%, -50%);
-    animation: ripple 0.75s ease-out;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.28) 36%, transparent 70%);
+    animation: ripple 0.8s ease-out;
+    background: radial-gradient(circle, rgba(204, 251, 241, 0.55) 0%, rgba(204, 251, 241, 0) 60%);
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 0 14px rgba(204, 251, 241, 0.3);
     pointer-events: none;
     mix-blend-mode: screen;
 }
 
 .btn--primary .btn__ripple,
 .premium-button--primary .btn__ripple {
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.78) 0%, rgba(224, 242, 254, 0.36) 36%, transparent 70%);
+    background: radial-gradient(circle, rgba(204, 251, 241, 0.6) 0%, rgba(204, 251, 241, 0) 60%);
+    border-color: rgba(224, 242, 254, 0.6);
 }
 
 .btn--gold .btn__ripple,
 .premium-button--gold .btn__ripple {
-    background: radial-gradient(circle, rgba(255, 247, 205, 0.9) 0%, rgba(251, 191, 36, 0.34) 34%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 247, 205, 0.65) 0%, rgba(251, 191, 36, 0) 60%);
+    border-color: rgba(255, 247, 205, 0.6);
 }
 
 .btn__content {
@@ -1749,20 +1777,43 @@ body[dir='rtl'] .metric-card__note {
     }
 }
 
-/* ---- 3. Micro-interactions: buttons ---- */
+/* ---- 3. Micro-interactions: buttons (marine blue + gold grading) ---- */
 .btn:hover,
 .premium-button:hover {
     transform: translateY(-2px) scale(1.05);
     box-shadow:
         0 0 0 1px rgba(255, 255, 255, 0.1),
         0 14px 34px rgba(6, 16, 30, 0.45),
-        0 0 34px rgba(12, 74, 110, 0.4),
-        0 0 70px rgba(217, 119, 6, 0.2);
+        0 0 30px rgba(12, 74, 110, 0.42),
+        0 0 60px rgba(217, 119, 6, 0.18);
 }
 
 .btn:active,
 .premium-button:active {
     transform: translateY(0) scale(0.97);
+}
+
+/* Wave divider under section headings — a calm sea line */
+.section-header {
+    position: relative;
+    padding-bottom: 0.9rem;
+}
+
+.section-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 4.5rem;
+    height: 7px;
+    background:
+        radial-gradient(circle at 12% 50%, rgba(125, 211, 252, 0.9) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 30% 50%, rgba(45, 212, 191, 0.9) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 48% 50%, rgba(125, 211, 252, 0.9) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 66% 50%, rgba(45, 212, 191, 0.9) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 84% 50%, rgba(217, 119, 6, 0.9) 0 2px, transparent 2.5px);
+    border-radius: 999px;
+    opacity: 0.7;
 }
 
 /* ---- 3b. Cards: lift + glow border ---- */

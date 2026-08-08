@@ -385,11 +385,11 @@
    }
 
    .marine-vessel--course-b {
-      bottom: 50%;
+      bottom: 46%;
    }
 
    .marine-vessel--course-c {
-      bottom: 58%;
+      bottom: 52%;
    }
 
    /* Card stays a readable fixed size, anchored above the boat. */

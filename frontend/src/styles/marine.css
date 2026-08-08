@@ -95,7 +95,7 @@
    inset: 0;
    z-index: 4;
    perspective: 1400px;
-   perspective-origin: 50% 62%;
+   perspective-origin: 50% 55%;
    pointer-events: none;
 }
 
@@ -132,11 +132,13 @@
    animation-name: fleetSailLeft;
 }
 
-/* Depth lanes: foreground big, background small & higher on the sea */
-.marine-vessel--job-a   { bottom: 6%; }
-.marine-vessel--course-a { bottom: 13%; }
-.marine-vessel--job-b   { bottom: 22%; }
-.marine-vessel--course-b { bottom: 30%; }
+/* Depth lanes: foreground big & low, background small & near the horizon.
+   Larger gaps put background boats clearly behind the foreground ones. */
+.marine-vessel--job-a    { bottom: 5%; }
+.marine-vessel--course-a { bottom: 14%; }
+.marine-vessel--job-b    { bottom: 32%; }
+.marine-vessel--course-b { bottom: 44%; }
+.marine-vessel--course-c { bottom: 54%; }
 
 @keyframes fleetSailRight {
    0%   { transform: translateX(-120%); }
@@ -160,12 +162,12 @@
    position: absolute;
    left: 50%;
    bottom: calc(100% + 14px);
-   width: 16rem;
+   width: 16.5rem;
    max-width: 74vw;
    display: flex;
    flex-direction: column;
    gap: 0.32rem;
-   padding: 0.9rem 1.05rem;
+   padding: 0.95rem 1.1rem;
    border-radius: 1.1rem;
    background: linear-gradient(160deg, rgba(10, 40, 66, 0.96), rgba(8, 30, 50, 0.98));
    border: 1px solid rgba(125, 211, 252, 0.4);
@@ -209,14 +211,14 @@
 }
 
 .marine-vessel__title {
-   font-size: 1.02rem;
+   font-size: 1.04rem;
    font-weight: 800;
    color: #f8fafc;
    line-height: 1.25;
 }
 
 .marine-vessel__desc {
-   font-size: 0.84rem;
+   font-size: 0.86rem;
    color: rgba(226, 232, 240, 0.88);
    line-height: 1.45;
 }

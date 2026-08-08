@@ -161,6 +161,11 @@ const MarineScene = ({ className = '' }) => {
         ];
         const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
         const clamp01 = (v) => Math.max(0, Math.min(1, v));
+        // Deterministic pseudo-random from a seed (stable across frames)
+        const rand = (seed) => {
+            const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+            return x - Math.floor(x);
+        };
 
         const horizonY = () => height * 0.36;
 
@@ -189,7 +194,54 @@ const MarineScene = ({ className = '' }) => {
             return g;
         };
 
-        const drawSky = (dayLight) => {
+        /** A real 4-point sparkle star (not a dot) with a bright core. */
+        const drawSparkle = (x, y, r, alpha) => {
+            const pr = r * 2.6;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.beginPath();
+            ctx.moveTo(0, -pr);
+            ctx.quadraticCurveTo(r, -r * 0.6, pr, 0);
+            ctx.quadraticCurveTo(r, r * 0.6, 0, pr);
+            ctx.quadraticCurveTo(-r, r * 0.6, -pr, 0);
+            ctx.quadraticCurveTo(-r, -r * 0.6, 0, -pr);
+            ctx.closePath();
+            ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+            ctx.fill();
+            ctx.restore();
+        };
+
+        const drawStars = (t, moonAlpha) => {
+            const hy = horizonY();
+            // Bigger hero sparkles with a soft glow
+            for (let i = 0; i < 26; i++) {
+                const sx = rand(i) * width;
+                const sy = rand(i + 50) * hy * 0.85;
+                const size = 1 + (i % 4) * 1.1;
+                const tw = 0.55 + 0.45 * Math.sin(t * 0.0012 + i * 2.1);
+                const alpha = (0.35 + 0.65 * tw) * moonAlpha;
+                if (i % 5 === 0) {
+                    const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 9);
+                    glow.addColorStop(0, `rgba(200,220,255,${0.5 * alpha})`);
+                    glow.addColorStop(1, 'rgba(200,220,255,0)');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, size * 9, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                drawSparkle(sx, sy, size, alpha);
+            }
+            // Dense small sparkles for the milky depth
+            for (let i = 0; i < 120; i++) {
+                const sx = rand(i + 200) * width;
+                const sy = rand(i + 300) * hy * 0.8;
+                const tw = 0.5 + 0.5 * Math.sin(t * 0.0018 + i * 3.1);
+                const alpha = (0.18 + 0.4 * tw) * moonAlpha;
+                drawSparkle(sx, sy, 0.55 + (i % 3) * 0.3, alpha);
+            }
+        };
+
+        const drawSky = (t, dayLight) => {
             const hy = horizonY();
 
             ctx.fillStyle = skyGradient(dayLight);
@@ -200,7 +252,7 @@ const MarineScene = ({ className = '' }) => {
             if (moonAlpha > 0.02) {
                 const moonX = width * 0.24;
                 const moonY = hy * 0.4;
-                const mr = Math.max(22, width * 0.026);
+                const mr = Math.max(24, width * 0.027);
 
                 // soft halo
                 const glow = ctx.createRadialGradient(moonX, moonY, 2, moonX, moonY, width * 0.2);
@@ -227,22 +279,6 @@ const MarineScene = ({ className = '' }) => {
                 ctx.beginPath();
                 ctx.arc(moonX + mr * 0.34, moonY + mr * 0.3, mr * 0.12, 0, Math.PI * 2);
                 ctx.fill();
-
-                // moonlit water path shimmer
-                const pathGrad = ctx.createLinearGradient(0, hy, 0, height);
-                pathGrad.addColorStop(0, `rgba(226,236,252,${0.22 * moonAlpha})`);
-                pathGrad.addColorStop(1, 'rgba(226,236,252,0)');
-                ctx.fillStyle = pathGrad;
-                ctx.beginPath();
-                ctx.moveTo(moonX - 26, hy);
-                for (let y = hy; y <= height; y += 8) {
-                    const w = 30 + (y - hy) * 0.28;
-                    const wob = Math.sin(y * 0.06) * 4;
-                    ctx.lineTo(moonX + wob, y);
-                    ctx.lineTo(moonX - w + wob, y + 4);
-                }
-                ctx.closePath();
-                ctx.fill();
             }
 
             // Sun: visible when it's light (dayLight > ~0.45)
@@ -260,23 +296,13 @@ const MarineScene = ({ className = '' }) => {
 
                 ctx.fillStyle = `rgba(255,250,232,${0.98 * sunAlpha})`;
                 ctx.beginPath();
-                ctx.arc(sunX, sunY, Math.max(16, width * 0.02), 0, Math.PI * 2);
+                ctx.arc(sunX, sunY, Math.max(18, width * 0.022), 0, Math.PI * 2);
                 ctx.fill();
             }
 
             // Stars: strongest at full night, fade as day returns
-            if (moonAlpha > 0.05) {
-                const hy = horizonY();
-                for (let i = 0; i < 70; i++) {
-                    const sx = ((i * 137.508) % 100) / 100 * width;
-                    const sy = ((i * 73.19) % 100) / 100 * hy * 0.85;
-                    const tw = 0.6 + 0.4 * Math.sin(startTime * 0.001 + i * 1.7);
-                    const r = (i % 3) === 0 ? 1.6 : 1.1;
-                    ctx.fillStyle = `rgba(255,255,255,${(0.25 + 0.55 * tw) * moonAlpha})`;
-                    ctx.beginPath();
-                    ctx.arc(sx, sy, r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+            if (moonAlpha > 0.04) {
+                drawStars(t, moonAlpha);
             }
 
             // Haze at the horizon (dimmer at night)
@@ -288,22 +314,26 @@ const MarineScene = ({ className = '' }) => {
             ctx.fillRect(0, hy - 14, width, 20);
         };
 
-        const waveY = (x, depth, t) => {
+        /** Organic ocean surface: long swell + shorter chop, per-row relief. */
+        const waveY = (x, d, t) => {
             const hy = horizonY();
-            const base = hy + (height - hy) * Math.pow(depth, 2.5);
-            const amp = 1 + depth * depth * 17;
-            const wl = 46 + depth * depth * 230;
-            const speed = 0.00055 + depth * 0.0011;
-            const phase = t * speed + depth * 6.3;
-            return base + Math.sin((x / wl) * Math.PI * 2 + phase) * amp;
+            const base = hy + (height - hy) * Math.pow(d, 2.3);
+            const amp = 2 + d * d * 26;
+            const wl = 70 + d * d * 280;
+            const speed = 0.00042 + d * 0.0011;
+            const phase = t * speed + d * 6.3;
+            const a = Math.sin((x / wl) * Math.PI * 2 + phase);
+            const b = Math.sin((x / (wl * 0.33)) * Math.PI * 2 + phase * 1.6 + 2.0) * 0.5;
+            return base + (a + b) * amp;
         };
 
         const drawSea = (t, dayLight) => {
             const hy = horizonY();
-            const rows = 36;
+            const rows = 44;
             // Blend day/night sea palettes
             const horizonC = mix([150, 198, 220], [40, 78, 108], 1 - dayLight);
             const deepC = mix([8, 36, 68], [3, 12, 28], 1 - dayLight);
+            const crestC = mix([190, 226, 238], [70, 110, 140], 1 - dayLight);
 
             const base = ctx.createLinearGradient(0, hy, 0, height);
             base.addColorStop(0, rgba(mix([63, 134, 173], [28, 66, 100], 1 - dayLight), 1));
@@ -312,27 +342,65 @@ const MarineScene = ({ className = '' }) => {
             ctx.fillStyle = base;
             ctx.fillRect(0, hy, width, height - hy);
 
+            // Wave bands with crest relief (lighter at the crest facing us)
             for (let i = 0; i < rows; i++) {
-                const d0 = i / (rows - 1);
-                const d1 = (i + 1) / (rows - 1);
-                const colTop = mix(horizonC, deepC, d0);
-                const colBot = mix(horizonC, deepC, d1);
+                const d0 = i / rows;
+                const d1 = (i + 1) / rows;
+                const topC = mix(horizonC, deepC, d0);
+                const botC = mix(crestC, deepC, d1);
 
                 ctx.beginPath();
-                let started = false;
-                for (let x = -6; x <= width + 6; x += 6) {
+                for (let x = -8; x <= width + 8; x += 6) {
                     const y = waveY(x, d0, t);
-                    if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+                    if (x === -8) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 }
-                for (let x = width + 6; x >= -6; x -= 6) {
+                for (let x = width + 8; x >= -8; x -= 6) {
                     ctx.lineTo(x, waveY(x, d1, t));
                 }
                 ctx.closePath();
-                const band = ctx.createLinearGradient(0, waveY(0, d0, t), 0, waveY(0, d1, t) + 2);
-                band.addColorStop(0, rgba(colTop, 0.96));
-                band.addColorStop(1, rgba(colBot, 1));
-                ctx.fillStyle = band;
+                const g = ctx.createLinearGradient(0, waveY(0, d0, t), 0, waveY(0, d1, t) + 2);
+                g.addColorStop(0, rgba(topC, 0.92));
+                g.addColorStop(0.6, rgba(topC, 0.98));
+                g.addColorStop(1, rgba(botC, 1));
+                ctx.fillStyle = g;
                 ctx.fill();
+            }
+
+            // Foam crests: broken white caps, more visible up close
+            ctx.setLineDash([3, 8]);
+            for (let i = 6; i < rows; i++) {
+                const d = i / rows;
+                const foamA = (0.05 + d * 0.38) * (0.35 + 0.65 * dayLight);
+                if (foamA < 0.02) continue;
+                ctx.beginPath();
+                for (let x = -8; x <= width + 8; x += 8) {
+                    const y = waveY(x, d, t) - 1;
+                    if (x === -8) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = `rgba(240,250,255,${foamA})`;
+                ctx.lineWidth = 0.8 + d * 1.6;
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Sun/moon glitter: sparkling dashes clustered around the light path
+            const lightX = dayLight > 0.5 ? width * 0.72 : width * 0.24;
+            for (let i = 0; i < 180; i++) {
+                const rx = rand(i);
+                const ry = rand(i + 90);
+                const x = lightX + (rx - 0.5) * width * 0.55;
+                const y = hy + ry * (height - hy) * 0.96;
+                const d = ry;
+                const tw = 0.5 + 0.5 * Math.sin(t * 0.003 + i * 2.3);
+                const len = 5 + d * 26;
+                const a = (0.06 + 0.34 * d) * tw * (0.25 + 0.75 * dayLight);
+                if (a < 0.03) continue;
+                ctx.strokeStyle = `rgba(255,255,255,${a})`;
+                ctx.lineWidth = 1 + d;
+                ctx.beginPath();
+                ctx.moveTo(x - len / 2, y);
+                ctx.lineTo(x + len / 2, y);
+                ctx.stroke();
             }
         };
 
@@ -368,7 +436,7 @@ const MarineScene = ({ className = '' }) => {
             const t = performance.now() - startTime;
             const dayLight = getDayLight();
             ctx.clearRect(0, 0, width, height);
-            drawSky(dayLight);
+            drawSky(t, dayLight);
             drawSea(t, dayLight);
             drawRipples();
             rafId = requestAnimationFrame(render);
@@ -401,12 +469,14 @@ const MarineScene = ({ className = '' }) => {
     ];
 
     // The 3D fleet: job cargo ships sail left→right, course sailboats sail right→left,
-    // each at a different depth (scale + translateZ) so the sea feels deep.
+    // spread across foreground, mid and background so the sea has depth.
+    // Larger sizes overall; far boats are smaller and ride near the horizon.
     const fleet = [
-        { kind: 'jobs', cls: 'marine-vessel--job-a', w: 260, h: 128, dur: 64, delay: -8, depth: 1 },
-        { kind: 'courses', cls: 'marine-vessel--course-a', w: 230, h: 118, dur: 82, delay: -30, depth: 0.78 },
-        { kind: 'jobs', cls: 'marine-vessel--job-b', w: 180, h: 92, dur: 104, delay: -46, depth: 0.55 },
-        { kind: 'courses', cls: 'marine-vessel--course-b', w: 150, h: 78, dur: 122, delay: -70, depth: 0.42 },
+        { kind: 'jobs', cls: 'marine-vessel--job-a', w: 340, h: 166, dur: 60, delay: -8, depth: 1 },
+        { kind: 'courses', cls: 'marine-vessel--course-a', w: 296, h: 148, dur: 78, delay: -30, depth: 0.8 },
+        { kind: 'jobs', cls: 'marine-vessel--job-b', w: 224, h: 112, dur: 100, delay: -46, depth: 0.58 },
+        { kind: 'courses', cls: 'marine-vessel--course-b', w: 188, h: 96, dur: 118, delay: -66, depth: 0.45 },
+        { kind: 'courses', cls: 'marine-vessel--course-c', w: 132, h: 68, dur: 142, delay: -88, depth: 0.32 },
     ];
 
     return (

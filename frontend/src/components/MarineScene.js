@@ -318,8 +318,8 @@ const MarineScene = ({ className = '' }) => {
         const waveY = (x, d, t) => {
             const hy = horizonY();
             const base = hy + (height - hy) * Math.pow(d, 2.3);
-            const amp = 2 + d * d * 26;
-            const wl = 70 + d * d * 280;
+            const amp = 3 + d * d * 36;
+            const wl = 60 + d * d * 260;
             const speed = 0.00042 + d * 0.0011;
             const phase = t * speed + d * 6.3;
             const a = Math.sin((x / wl) * Math.PI * 2 + phase);
@@ -371,11 +371,26 @@ const MarineScene = ({ className = '' }) => {
                 ctx.fill();
             }
 
+            // Crest highlight ridges (the bright lip of each wave)
+            for (let i = 4; i < rows; i++) {
+                const d = i / rows;
+                const hiA = (0.08 + d * 0.4) * (0.45 + 0.55 * dayLight + 0.2 * moonAlpha);
+                if (hiA < 0.03) continue;
+                ctx.beginPath();
+                for (let x = -8; x <= width + 8; x += 6) {
+                    const y = waveY(x, d, t) - 2;
+                    if (x === -8) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = `rgba(214,236,248,${hiA})`;
+                ctx.lineWidth = 1 + d * 2.4;
+                ctx.stroke();
+            }
+
             // Foam crests: persistent broken white caps, moonlit at night too
             ctx.setLineDash([3, 8]);
             for (let i = 5; i < rows; i++) {
                 const d = i / rows;
-                const foamA = (0.07 + d * 0.45) * (0.5 + 0.5 * dayLight + 0.25 * moonAlpha);
+                const foamA = (0.08 + d * 0.5) * (0.5 + 0.5 * dayLight + 0.28 * moonAlpha);
                 if (foamA < 0.03) continue;
                 ctx.beginPath();
                 for (let x = -8; x <= width + 8; x += 8) {
@@ -392,14 +407,15 @@ const MarineScene = ({ className = '' }) => {
             if (moonAlpha > 0.1) {
                 const moonX = width * 0.24;
                 const pathGrad = ctx.createLinearGradient(0, hy, 0, height);
-                pathGrad.addColorStop(0, `rgba(226,236,252,${0.3 * moonAlpha})`);
+                pathGrad.addColorStop(0, `rgba(226,236,252,${0.45 * moonAlpha})`);
+                pathGrad.addColorStop(0.4, `rgba(214,228,248,${0.2 * moonAlpha})`);
                 pathGrad.addColorStop(1, 'rgba(226,236,252,0)');
                 ctx.fillStyle = pathGrad;
                 ctx.beginPath();
-                ctx.moveTo(moonX - 30, hy);
+                ctx.moveTo(moonX - 34, hy);
                 for (let y = hy; y <= height; y += 10) {
-                    const w = 34 + (y - hy) * 0.32;
-                    const wob = Math.sin(y * 0.05 + t * 0.001) * 6;
+                    const w = 40 + (y - hy) * 0.38;
+                    const wob = Math.sin(y * 0.05 + t * 0.001) * 7;
                     ctx.lineTo(moonX + wob, y);
                     ctx.lineTo(moonX - w + wob, y + 5);
                 }

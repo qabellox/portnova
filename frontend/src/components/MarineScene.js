@@ -326,13 +326,18 @@ const MarineScene = ({ className = '' }) => {
             ctx.fillStyle = base;
             ctx.fillRect(0, hy, width, height - hy);
 
-            // Perspective wave bands: fill each as a smooth shaded swell
-            const rows = 52;
+            // Perspective wave bands drawn as TRANSLUCENT layers that fade to
+            // transparent at the top of each band, so every wave blends into the
+            // one behind it. No opaque color seams: just one continuous rolling
+            // ocean with a lit crest on each wave facing the viewer.
+            const rows = 46;
             for (let i = 0; i < rows; i++) {
                 const d0 = i / rows;
                 const d1 = (i + 1) / rows;
-                const topC = mix(horizonC, deepC, d0);
-                const botC = mix(crestC, deepC, d1);
+                const y0 = waveY(0, d0, t);
+                const y1 = waveY(0, d1, t);
+                const bandA = (0.04 + d0 * 0.22) * (0.5 + 0.5 * dayLight + 0.2 * moonAlpha);
+                if (bandA < 0.02) continue;
 
                 ctx.beginPath();
                 for (let x = -10; x <= width + 10; x += 5) {
@@ -343,25 +348,26 @@ const MarineScene = ({ className = '' }) => {
                     ctx.lineTo(x, waveY(x, d1, t));
                 }
                 ctx.closePath();
-                const g = ctx.createLinearGradient(0, waveY(0, d0, t), 0, waveY(0, d1, t) + 3);
-                g.addColorStop(0, rgba(topC, 0.9));
-                g.addColorStop(0.72, rgba(topC, 0.96));
-                g.addColorStop(1, rgba(botC, 1));
+
+                const g = ctx.createLinearGradient(0, y0, 0, y1 + 2);
+                g.addColorStop(0, rgba(deepC, 0));
+                g.addColorStop(0.55, rgba(deepC, bandA * 0.35));
+                g.addColorStop(1, rgba(crestC, bandA));
                 ctx.fillStyle = g;
                 ctx.fill();
             }
 
             // Soft specular glints on the wave faces (gentle sheen, not lines)
             const glintC = dayLight > 0.5 ? '255,255,255' : '190,215,245';
-            for (let i = 0; i < 90; i++) {
+            for (let i = 0; i < 60; i++) {
                 const rx = rand(i);
                 const ry = rand(i + 60);
                 const x = rx * width;
                 const y = hy + Math.pow(ry, 1.4) * (height - hy) * 0.95;
                 const d = ry;
                 const tw = 0.5 + 0.5 * Math.sin(t * 0.0024 + i * 1.9);
-                const r = (2 + d * 14) * (0.6 + 0.4 * tw);
-                const alpha = (0.04 + 0.16 * d) * (0.3 + 0.7 * dayLight) * tw;
+                const r = (2 + d * 12) * (0.6 + 0.4 * tw);
+                const alpha = (0.03 + 0.12 * d) * (0.3 + 0.7 * dayLight) * tw;
                 if (alpha < 0.02) continue;
                 const gl = ctx.createRadialGradient(x, y, 0, x, y, r);
                 gl.addColorStop(0, `rgba(${glintC},${alpha})`);
@@ -369,25 +375,6 @@ const MarineScene = ({ className = '' }) => {
                 ctx.fillStyle = gl;
                 ctx.beginPath();
                 ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Soft moonlight column under the moon (fade with the waves)
-            if (moonAlpha > 0.1) {
-                const moonX = width * 0.24;
-                const colGrad = ctx.createLinearGradient(0, hy, 0, height);
-                colGrad.addColorStop(0, `rgba(200,222,248,${0.2 * moonAlpha})`);
-                colGrad.addColorStop(1, 'rgba(200,222,248,0)');
-                ctx.fillStyle = colGrad;
-                ctx.beginPath();
-                ctx.moveTo(moonX - 26, hy);
-                for (let y = hy; y <= height; y += 12) {
-                    const w = 24 + (y - hy) * 0.22;
-                    const wob = Math.sin(y * 0.06 + t * 0.0008) * 8;
-                    ctx.lineTo(moonX + wob, y);
-                    ctx.lineTo(moonX - w + wob, y + 6);
-                }
-                ctx.closePath();
                 ctx.fill();
             }
         };

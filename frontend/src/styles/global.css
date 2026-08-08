@@ -205,10 +205,10 @@ img {
 
 .brand__logo-wrap {
     flex: 0 0 auto;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 1rem;
-    padding: 0.25rem;
+    width: 4.2rem;
+    height: 4.2rem;
+    border-radius: 1.25rem;
+    padding: 0.35rem;
     background: rgba(10, 37, 64, 0.5);
     border: 1px solid rgba(13, 148, 136, 0.22);
     box-shadow:

@@ -27,12 +27,6 @@ const featureCards = [
     },
 ];
 
-const highlightBars = [
-    { labelKey: 'barEngagement', value: 92 },
-    { labelKey: 'barMatches', value: 88 },
-    { labelKey: 'barEnrollments', value: 79 },
-];
-
 const Home = () => {
     const { t } = useLanguage();
 
@@ -98,22 +92,7 @@ const Home = () => {
                 </div>
             </section>
 
-            <section className="section-block split-grid">
-                <GlassCard>
-                    <SectionHeading kicker={t('resultsKicker')} title={t('resultsTitle')} subtitle={t('resultsSubtitle')} />
-                    <div className="mini-bars">
-                        {highlightBars.map((bar) => (
-                            <div key={bar.labelKey} className="mini-bars__row">
-                                <span className="muted">{t(bar.labelKey)}</span>
-                                <div className="mini-bars__track">
-                                    <div className="mini-bars__fill" style={{ width: `${bar.value}%` }} />
-                                </div>
-                                <strong>{bar.value}%</strong>
-                            </div>
-                        ))}
-                    </div>
-                </GlassCard>
-
+            <section className="section-block">
                 <GlassCard>
                     <SectionHeading kicker={t('startKicker')} title={t('startTitle')} subtitle={t('startSubtitle')} />
                     <div className="inline-actions">

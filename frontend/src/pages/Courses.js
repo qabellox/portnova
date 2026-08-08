@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Badge, BilingualLine, GlassCard, PremiumButton, ProgressBar, SectionHeading } from '../components/PremiumUI';
+import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
 const courses = [
@@ -85,14 +85,6 @@ const Courses = () => {
 
                             <div className="card-meta">
                                 <Badge tone="blue">{t(`level${course.level}`)}</Badge>
-                            </div>
-
-                            <div style={{ marginTop: '1rem' }}>
-                                <div className="upload-meter__label">
-                                    <span>{t('completion')}</span>
-                                    <strong>{course.progress}%</strong>
-                                </div>
-                                <ProgressBar value={course.progress} />
                             </div>
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>

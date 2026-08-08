@@ -112,6 +112,11 @@ export const messages = {
         boatJobs: 'وظائف',
         boatCourses: 'دورات',
         boatCv: 'سيرة ذاتية',
+
+        // About
+        aboutTitle: 'من نحن',
+        aboutKicker: 'من نحن',
+        aboutEmpty: 'المحتوى هنا سيُضاف لاحقًا.',
     },
 
     en: {
@@ -219,5 +224,10 @@ export const messages = {
         boatJobs: 'Jobs',
         boatCourses: 'Courses',
         boatCv: 'CV',
+
+        // About
+        aboutTitle: 'About Us',
+        aboutKicker: 'About',
+        aboutEmpty: 'Content will be added here later.',
     },
 };

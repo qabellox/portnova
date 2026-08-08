@@ -1,49 +1,55 @@
-import React from 'react';
+﻿import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Badge, BilingualLine, GlassCard, PremiumButton, ProgressBar, SectionHeading, StatCounter } from '../components/PremiumUI';
+import { supabase } from '../services/supabase';
+import { Badge, BilingualLine, GlassCard, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
-const roleContent = {
-    youth: {
-        ar: 'تابع الوظائف والدورات ودعم السيرة الذاتية من مساحة واحدة.',
-        en: 'Track jobs, courses, and CV support from one workspace.',
-    },
-    expert: {
-        ar: 'أدر دعم الخبراء وراجع طلبات الخدمة من مكان واحد.',
-        en: 'Manage expert support and review service requests.',
-    },
-    company: {
-        ar: 'انشر الوظائف وراجع الطلبات من لوحة التوظيف الخاصة بك.',
-        en: 'Post jobs and review applications from your hiring dashboard.',
-    },
-    admin: {
-        ar: 'اشرف على المستخدمين والمحتوى وحوكمة المنصة.',
-        en: 'Oversee users, content, and platform governance.',
-    },
-};
+const getInitials = (name = 'PN') =>
+    name
+        .split(/[\s._-]+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join('') || 'PN';
 
+/* Merged Dashboard + Profile.
+   Keeps the real functionality: your profile details (saved to your account)
+   and quick links to the services. Fake metrics are removed — real ones come
+   once the backend data exists. */
 const Dashboard = () => {
     const { user } = useAuth();
     const { isArabic } = useLanguage();
-    const role = user?.user_metadata?.role || user?.app_metadata?.role || 'youth';
-    const fullName = user?.user_metadata?.fullName || user?.email || 'User';
-    const metrics = role === 'company'
-        ? [
-            { label: 'Active jobs', value: 18, suffix: '+' },
-            { label: 'Applicants', value: 84, suffix: '+' },
-            { label: 'Shortlisted', value: 27, suffix: '' },
-        ]
-        : role === 'expert'
-            ? [
-                { label: 'CV requests', value: 42, suffix: '+' },
-                { label: 'Delivered', value: 33, suffix: '' },
-                { label: 'Pending', value: 9, suffix: '' },
-            ]
-            : [
-                { label: 'Jobs matched', value: 64, suffix: '+' },
-                { label: 'Courses active', value: 12, suffix: '' },
-                { label: 'CV score', value: 92, suffix: '%' },
-            ];
+
+    const meta = user?.user_metadata || {};
+    const role = meta.role || 'youth';
+    const email = user?.email || '';
+    const [fullName, setFullName] = useState(meta.fullName || '');
+    const [headline, setHeadline] = useState(meta.headline || '');
+    const [location, setLocation] = useState(meta.location || '');
+    const [bio, setBio] = useState(meta.bio || '');
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+
+    const handleSave = async (event) => {
+        event.preventDefault();
+        setSaving(true);
+        setMessage('');
+        setError('');
+
+        const { error: updateError } = await supabase.auth.updateUser({
+            data: { fullName, headline, location, bio },
+        });
+
+        setSaving(false);
+
+        if (updateError) {
+            setError(updateError.message || (isArabic ? 'فشل حفظ الملف.' : 'Failed to save profile.'));
+            return;
+        }
+
+        setMessage(isArabic ? 'تم حفظ ملفك الشخصي.' : 'Your profile was saved.');
+    };
 
     return (
         <div className="page-shell page-shell__grid">
@@ -52,87 +58,57 @@ const Dashboard = () => {
                     <div>
                         <div className="hero__kicker">{isArabic ? 'لوحة التحكم' : 'Dashboard'}</div>
                         <h1 className="hero__title">
-                            {isArabic ? 'أهلًا' : 'Welcome'}, <span className="gradient-text">{fullName}</span>.
+                            {isArabic ? 'أهلًا' : 'Welcome'}, <span className="gradient-text">{fullName || email}</span>.
                         </h1>
                         <BilingualLine
                             as="p"
                             className="hero__lead"
-                            ar={(roleContent[role] || roleContent.youth).ar}
-                            en={(roleContent[role] || roleContent.youth).en}
+                            ar="هنا ملفك وروابطك السريعة — كل ما يخصك في مكان واحد."
+                            en="Your profile and quick links — everything about you in one place."
                         />
                         <div className="status-strip">
-                            <Badge tone="gold">{isArabic ? role : role}</Badge>
+                            <Badge tone="gold">{role}</Badge>
+                            <Badge tone="blue">{isArabic ? 'جلسة نشطة' : 'Active session'}</Badge>
                         </div>
                     </div>
 
                     <GlassCard className="hero__orbital hero__orbital--primary">
-                        <div className="upload-meter__label">
-                            <span>{isArabic ? 'اكتمال الملف' : 'Profile completion'}</span>
-                            <strong>94%</strong>
+                        <div className="profile-avatar" style={{ width: '4rem', height: '4rem', fontSize: '1.4rem' }}>
+                            {getInitials(fullName || email)}
                         </div>
-                        <ProgressBar value={94} />
-                        <div className="card-copy" style={{ marginTop: '1rem' }}>
-                            {isArabic
-                                ? 'أكمل بيانات ملفك لتظهر بوضوح لأصحاب العمل والمنصة.'
-                                : 'Complete your profile so it shows clearly to employers and the platform.'}
+                        <div className="muted" style={{ marginTop: '0.75rem' }}>{email}</div>
+                        <div className="inline-actions" style={{ marginTop: '1rem' }}>
+                            <PremiumButton variant="gold" to="/cv-service">
+                                {isArabic ? 'خدمة السيرة الذاتية' : 'CV service'}
+                            </PremiumButton>
+                            <PremiumButton variant="ghost" to="/jobs">
+                                {isArabic ? 'الوظائف' : 'Jobs'}
+                            </PremiumButton>
                         </div>
                     </GlassCard>
                 </div>
             </section>
 
-            <div className="stats-grid">
-                {metrics.map((metric) => (
-                    <StatCounter key={metric.label} label={metric.label} value={metric.value} suffix={metric.suffix || ''} />
-                ))}
-            </div>
-
-            <div className="split-grid">
-                <GlassCard>
-                    <SectionHeading kicker={isArabic ? 'لقطة سريعة' : 'Snapshot'} title={isArabic ? 'النشاط الأخير' : 'Recent activity'} subtitle={isArabic ? 'أحدث التحديثات على حسابك.' : 'Latest updates on your account.'} />
-                    <div className="activity-feed">
-                        {[
-                            isArabic ? 'تم تحديث ملفك الشخصي.' : 'Your profile was updated.',
-                            isArabic ? 'طلب سيرة ذاتية قيد المراجعة.' : 'A CV request is under review.',
-                            isArabic ? 'تقدّم جديد في إحدى دوراتك.' : 'New progress in one of your courses.',
-                        ].map((entry) => (
-                            <div key={entry} className="activity-item">
-                                <div className="activity-dot" />
-                                <div>
-                                    <strong>{entry}</strong>
-                                    <div className="muted">{isArabic ? 'الآن' : 'Just now'}</div>
-                                </div>
-                            </div>
-                        ))}
+            <GlassCard>
+                <SectionHeading
+                    kicker={isArabic ? 'الملف' : 'Profile'}
+                    title={isArabic ? 'عدّل بياناتك' : 'Edit your details'}
+                    subtitle={isArabic ? 'بياناتك تُحفظ في حسابك وتظهر في كل المنصة.' : 'Your details are saved to your account and used across the platform.'}
+                />
+                {message ? <p className="muted" style={{ color: '#bbf7d0' }}>{message}</p> : null}
+                {error ? <p className="muted" style={{ color: '#fecaca' }}>{error}</p> : null}
+                <form onSubmit={handleSave}>
+                    <div className="field-group">
+                        <input className="field" type="text" placeholder={isArabic ? 'الاسم الكامل' : 'Full name'} value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                        <input className="field" type="text" placeholder={isArabic ? 'العنوان المهني' : 'Headline'} value={headline} onChange={(e) => setHeadline(e.target.value)} />
+                        <input className="field" type="text" placeholder={isArabic ? 'الموقع' : 'Location'} value={location} onChange={(e) => setLocation(e.target.value)} />
+                        <textarea className="textarea" placeholder={isArabic ? 'نبذة عنك' : 'Short bio'} value={bio} onChange={(e) => setBio(e.target.value)} />
+                        <LoaderButton type="submit" variant="gold" loading={saving}>
+                            {saving ? (isArabic ? 'جارٍ الحفظ...' : 'Saving...') : isArabic ? 'حفظ التغييرات' : 'Save changes'}
+                        </LoaderButton>
                     </div>
-                </GlassCard>
-
-                <GlassCard>
-                    <SectionHeading kicker={isArabic ? 'أداء' : 'Performance'} title={isArabic ? 'مؤشراتك' : 'Your indicators'} subtitle={isArabic ? 'متابعة سريعة لأهم الأرقام.' : 'A quick look at your key numbers.'} />
-                    <div className="mini-bars">
-                        {[
-                            { label: isArabic ? 'التركيز' : 'Focus', value: 92 },
-                            { label: isArabic ? 'الزخم' : 'Momentum', value: 78 },
-                            { label: isArabic ? 'التسليم' : 'Delivery', value: 88 },
-                        ].map((bar) => (
-                            <div key={bar.label} className="mini-bars__row">
-                                <span className="muted">{bar.label}</span>
-                                <div className="mini-bars__track">
-                                    <div className="mini-bars__fill" style={{ width: `${bar.value}%` }} />
-                                </div>
-                                <strong>{bar.value}%</strong>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                        <PremiumButton variant="gold" to="/cv-service">
-                            {isArabic ? 'افتح خدمة السيرة الذاتية' : 'Open CV service'}
-                        </PremiumButton>
-                        <PremiumButton variant="ghost" to="/jobs">
-                            {isArabic ? 'تصفح الوظائف' : 'Browse jobs'}
-                        </PremiumButton>
-                    </div>
-                </GlassCard>
-            </div>
+                </form>
+            </GlassCard>
         </div>
     );
 };

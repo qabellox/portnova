@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Badge, BilingualLine, GlassCard, PremiumButton, ProgressBar, SectionHeading } from '../components/PremiumUI';
+import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
 const jobs = [
@@ -101,14 +101,6 @@ const Jobs = () => {
 
                             <div className="card-meta">
                                 <Badge tone={job.tone}>{t(`cat${job.category}`)}</Badge>
-                            </div>
-
-                            <div style={{ marginTop: '1rem' }}>
-                                <div className="upload-meter__label">
-                                    <span>{t('fitScore')}</span>
-                                    <strong>{job.fit}%</strong>
-                                </div>
-                                <ProgressBar value={job.fit} />
                             </div>
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>

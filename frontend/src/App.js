@@ -10,8 +10,8 @@ import CVService from './pages/CVService';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
 import Admin from './pages/Admin';
+import About from './pages/About';
 import { useEffect } from 'react';
 
 const RequireAuth = ({ children }) => {
@@ -35,7 +35,7 @@ const navItems = [
     { to: '/courses', ar: 'الدورات', en: 'Courses' },
     { to: '/cv-service', ar: 'خدمة السيرة الذاتية', en: 'CV Service' },
     { to: '/dashboard', ar: 'لوحة التحكم', en: 'Dashboard' },
-    { to: '/profile', ar: 'الملف الشخصي', en: 'Profile' },
+    { to: '/about', ar: 'من نحن', en: 'About' },
 ];
 
 const getInitials = (email = 'PN') =>
@@ -76,9 +76,6 @@ const UserMenu = () => {
                     <div className="badge badge--gold">{user.user_metadata?.role || 'youth'}</div>
                     <p className="user-menu__email">{user.email}</p>
                     <div className="user-menu__links">
-                        <NavLink to="/profile" className="user-menu__link" onClick={() => setOpen(false)}>
-                            {isArabic ? 'الملف الشخصي' : 'Profile'}
-                        </NavLink>
                         <NavLink to="/dashboard" className="user-menu__link" onClick={() => setOpen(false)}>
                             {isArabic ? 'لوحة التحكم' : 'Dashboard'}
                         </NavLink>
@@ -177,11 +174,9 @@ function Shell() {
                         }
                     />
                     <Route
-                        path="/profile"
+                        path="/about"
                         element={
-                            <RequireAuth>
-                                <div key={location.pathname}><Profile /></div>
-                            </RequireAuth>
+                            <div key={location.pathname}><About /></div>
                         }
                     />
                     <Route

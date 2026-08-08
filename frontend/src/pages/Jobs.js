@@ -111,7 +111,7 @@ const Jobs = () => {
                             </div>
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                                <PremiumButton variant="primary">{t('apply')}</PremiumButton>
+                                <PremiumButton variant="gold">{t('apply')}</PremiumButton>
                             </div>
                         </GlassCard>
                     ))}

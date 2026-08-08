@@ -95,7 +95,7 @@ const Courses = () => {
                             </div>
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                                <PremiumButton variant="primary">{t('enroll')}</PremiumButton>
+                                <PremiumButton variant="gold">{t('enroll')}</PremiumButton>
                             </div>
                         </GlassCard>
                     ))}

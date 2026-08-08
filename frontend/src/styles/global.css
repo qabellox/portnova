@@ -1062,16 +1062,14 @@ body[dir='rtl'] .user-menu__link:hover {
     transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
 }
 
-/* Foam-light top edge + wave-sheen that sweeps across on hover */
+/* Wave-sheen that sweeps across the button on hover */
 .btn::before,
 .premium-button::before {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 0;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 30%),
-        linear-gradient(115deg, transparent 24%, rgba(204, 251, 241, 0.4) 46%, rgba(255, 255, 255, 0.5) 52%, rgba(204, 251, 241, 0.4) 58%, transparent 78%);
+    background: linear-gradient(115deg, transparent 24%, rgba(204, 251, 241, 0.4) 46%, rgba(255, 255, 255, 0.5) 52%, rgba(204, 251, 241, 0.4) 58%, transparent 78%);
     transform: translateX(-130%);
     transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
     pointer-events: none;
@@ -1147,6 +1145,48 @@ body[dir='rtl'] .user-menu__link:hover {
 .btn__content {
     position: relative;
     z-index: 1;
+}
+
+/* Global click waves — fire on every click, anywhere */
+.click-wave-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.click-wave {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    margin-top: -5px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(204, 251, 241, 0.55);
+    animation: clickWaveExpand 1.1s ease-out forwards;
+}
+
+.click-wave--ring2 {
+    border-color: rgba(212, 175, 55, 0.45);
+    animation-delay: 0.06s;
+}
+
+.click-wave--ring3 {
+    border-color: rgba(125, 211, 252, 0.4);
+    animation-delay: 0.12s;
+}
+
+@keyframes clickWaveExpand {
+    0% {
+        transform: scale(0.4);
+        opacity: 0.9;
+    }
+
+    100% {
+        transform: scale(9);
+        opacity: 0;
+    }
 }
 
 .form-shell {
@@ -2094,7 +2134,8 @@ body[dir='rtl'] .metric-card__note {
     .backdrop__light,
     .backdrop__waves,
     .backdrop__glint,
-    .hero__orbital {
+    .hero__orbital,
+    .click-wave {
         animation: none !important;
     }
 

@@ -1,5 +1,5 @@
 ﻿/* ============================================================
-   MARINE SCENE — front-view live ocean (canvas + interactive boat)
+   MARINE SCENE — photoreal live wallpaper (real ocean photo)
    ============================================================ */
 .marine-scene {
    position: absolute;
@@ -11,6 +11,27 @@
    background: #0c4a6e;
 }
 
+/* Real ocean photo base with slow cinematic drift */
+.marine-photo {
+   position: absolute;
+   inset: -8%;
+   background: center 62% / cover no-repeat;
+   animation: marineKenBurns 60s ease-in-out infinite alternate;
+   will-change: transform;
+}
+
+.marine-photo--tint {
+   animation: none;
+   background: linear-gradient(180deg, rgba(8, 24, 42, 0.22) 0%, rgba(8, 24, 42, 0.05) 34%, rgba(6, 20, 36, 0.18) 62%, rgba(5, 18, 32, 0.6) 100%);
+}
+
+@keyframes marineKenBurns {
+   0% { transform: scale(1.02) translate3d(0, 0, 0); }
+   50% { transform: scale(1.1) translate3d(-1.2%, -0.8%, 0); }
+   100% { transform: scale(1.06) translate3d(1.2%, 0.8%, 0); }
+}
+
+/* Light + interactive ripple overlay */
 .marine-canvas {
    position: absolute;
    inset: 0;
@@ -19,23 +40,60 @@
    display: block;
    pointer-events: auto;
    cursor: crosshair;
+   z-index: 2;
+}
+
+/* Slow, realistic gulls */
+.marine-gulls {
+   position: absolute;
+   inset: 0;
+   z-index: 1;
+   pointer-events: none;
+}
+
+.marine-gull {
+   position: absolute;
+   display: block;
+   animation: gullDrift linear infinite;
+   will-change: transform;
+}
+
+.marine-gull svg {
+   display: block;
+   filter: drop-shadow(0 2px 4px rgba(4, 16, 32, 0.35));
+   animation: gullBob 7s ease-in-out infinite;
+}
+
+.marine-gull--1 { top: 10%; left: -15%; animation-duration: 55s; }
+.marine-gull--2 { top: 18%; left: -15%; animation-duration: 70s; animation-delay: -18s; opacity: 0.8; }
+.marine-gull--3 { top: 6%; left: -15%; animation-duration: 85s; animation-delay: -40s; opacity: 0.6; }
+
+@keyframes gullDrift {
+   0% { transform: translateX(0) translateY(0); }
+   50% { transform: translateX(60vw) translateY(-2vh); }
+   100% { transform: translateX(120vw) translateY(1vh); }
+}
+
+@keyframes gullBob {
+   0%, 100% { transform: translateY(0) rotate(0deg); }
+   50% { transform: translateY(-3px) rotate(-1deg); }
 }
 
 /* Interactive vessel with app shortcuts */
 .marine-boat {
    position: absolute;
    left: -18%;
-   bottom: 10%;
+   bottom: 8%;
    z-index: 3;
    pointer-events: auto;
-   animation: boatSail 64s linear infinite;
+   animation: boatSail 70s linear infinite;
    will-change: transform;
    filter: drop-shadow(0 24px 40px rgba(3, 12, 26, 0.5));
 }
 
 .marine-boat__svg {
    display: block;
-   animation: boatBobbing 7s ease-in-out infinite;
+   animation: boatBobbing 8s ease-in-out infinite;
    will-change: transform;
 }
 
@@ -90,19 +148,12 @@
    50% { transform: translateY(-3px) rotate(0.4deg); }
 }
 
-/* Overlay scrim keeps text readable over water */
-.marine-overlay {
-   position: absolute;
-   inset: 0;
-   pointer-events: none;
-   background: linear-gradient(180deg, rgba(8, 24, 42, 0.2) 0%, rgba(8, 24, 42, 0) 34%, rgba(6, 20, 36, 0.15) 62%, rgba(5, 18, 32, 0.82) 100%);
-   z-index: 2;
-}
-
 @media (prefers-reduced-motion: reduce) {
-   .marine-canvas,
+   .marine-photo,
+   .marine-gull,
    .marine-boat,
-   .marine-boat__svg {
+   .marine-boat__svg,
+   .marine-canvas {
       animation: none !important;
    }
 }

@@ -10,6 +10,9 @@ import { useLanguage } from '../context/LanguageContext';
  *   - Cargo ships (⚓) advertise JOBS, sailing left to right.
  *   - Sailboats (🧭) advertise COURSES, sailing right to left.
  * Hover (or focus) a boat to reveal its info card with a direct link.
+ *
+ * The sky is time-responsive: at night a moon and stars appear over a dark
+ * sea; during the day a glowing sun returns. The transition is smooth.
  */
 
 const JobShip = () => (
@@ -157,32 +160,129 @@ const MarineScene = ({ className = '' }) => {
             Math.round(c1[2] + (c2[2] - c1[2]) * t),
         ];
         const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+        const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
         const horizonY = () => height * 0.36;
 
-        const drawSky = () => {
+        /**
+         * Time of day: 0 at midnight, 0.5 at noon, 1 back to midnight.
+         * dayLight = 1 during full day, 0 at full night (smooth cosine).
+         */
+        const getDayLight = () => {
+            const now = new Date();
+            const mins = now.getHours() * 60 + now.getMinutes();
+            const t = mins / 1440; // 0..1 over 24h
+            // peak at noon (t=0.5), trough at midnight (t=0/1)
+            return (Math.cos((t - 0.5) * Math.PI * 2) + 1) / 2;
+        };
+
+        // Day and night sky palettes (top → horizon)
+        const skyDay = [[10, 46, 82], [29, 92, 138], [90, 158, 192], [168, 210, 226]];
+        const skyNight = [[2, 5, 13], [7, 18, 36], [16, 39, 66], [28, 58, 88]];
+
+        const skyGradient = (dayLight) => {
+            const g = ctx.createLinearGradient(0, 0, 0, horizonY());
+            g.addColorStop(0, rgba(mix(skyNight[0], skyDay[0], dayLight), 1));
+            g.addColorStop(0.4, rgba(mix(skyNight[1], skyDay[1], dayLight), 1));
+            g.addColorStop(0.75, rgba(mix(skyNight[2], skyDay[2], dayLight), 1));
+            g.addColorStop(1, rgba(mix(skyNight[3], skyDay[3], dayLight), 1));
+            return g;
+        };
+
+        const drawSky = (dayLight) => {
             const hy = horizonY();
-            const g = ctx.createLinearGradient(0, 0, 0, hy);
-            g.addColorStop(0, '#0a2e52');
-            g.addColorStop(0.55, '#1d5c8a');
-            g.addColorStop(0.85, '#5a9ec0');
-            g.addColorStop(1, '#a8d2e2');
-            ctx.fillStyle = g;
+
+            ctx.fillStyle = skyGradient(dayLight);
             ctx.fillRect(0, 0, width, hy);
 
-            const sunX = width * 0.7;
-            const sunY = hy - 4;
-            const glow = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, width * 0.26);
-            glow.addColorStop(0, 'rgba(255,246,214,0.95)');
-            glow.addColorStop(0.18, 'rgba(255,232,178,0.55)');
-            glow.addColorStop(0.5, 'rgba(255,224,160,0.16)');
-            glow.addColorStop(1, 'rgba(255,224,160,0)');
-            ctx.fillStyle = glow;
-            ctx.fillRect(0, 0, width, hy + 2);
+            // Moon: visible when it's dark (dayLight < ~0.5)
+            const moonAlpha = clamp01((0.55 - dayLight) / 0.22);
+            if (moonAlpha > 0.02) {
+                const moonX = width * 0.24;
+                const moonY = hy * 0.4;
+                const mr = Math.max(22, width * 0.026);
 
+                // soft halo
+                const glow = ctx.createRadialGradient(moonX, moonY, 2, moonX, moonY, width * 0.2);
+                glow.addColorStop(0, `rgba(226,236,252,${0.6 * moonAlpha})`);
+                glow.addColorStop(0.35, `rgba(190,210,240,${0.2 * moonAlpha})`);
+                glow.addColorStop(1, 'rgba(190,210,240,0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(0, 0, width, hy + 2);
+
+                // moon disc (warm full-moon white)
+                ctx.fillStyle = `rgba(244,248,255,${0.98 * moonAlpha})`;
+                ctx.beginPath();
+                ctx.arc(moonX, moonY, mr, 0, Math.PI * 2);
+                ctx.fill();
+
+                // crater shading for depth
+                ctx.fillStyle = `rgba(160,180,210,${0.22 * moonAlpha})`;
+                ctx.beginPath();
+                ctx.arc(moonX - mr * 0.25, moonY + mr * 0.18, mr * 0.24, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(moonX + mr * 0.22, moonY - mr * 0.22, mr * 0.17, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(moonX + mr * 0.34, moonY + mr * 0.3, mr * 0.12, 0, Math.PI * 2);
+                ctx.fill();
+
+                // moonlit water path shimmer
+                const pathGrad = ctx.createLinearGradient(0, hy, 0, height);
+                pathGrad.addColorStop(0, `rgba(226,236,252,${0.22 * moonAlpha})`);
+                pathGrad.addColorStop(1, 'rgba(226,236,252,0)');
+                ctx.fillStyle = pathGrad;
+                ctx.beginPath();
+                ctx.moveTo(moonX - 26, hy);
+                for (let y = hy; y <= height; y += 8) {
+                    const w = 30 + (y - hy) * 0.28;
+                    const wob = Math.sin(y * 0.06) * 4;
+                    ctx.lineTo(moonX + wob, y);
+                    ctx.lineTo(moonX - w + wob, y + 4);
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Sun: visible when it's light (dayLight > ~0.45)
+            const sunAlpha = clamp01((dayLight - 0.45) / 0.22);
+            if (sunAlpha > 0.02) {
+                const sunX = width * 0.72;
+                const sunY = hy - 6;
+                const glow = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, width * 0.26);
+                glow.addColorStop(0, `rgba(255,246,214,${0.95 * sunAlpha})`);
+                glow.addColorStop(0.18, `rgba(255,232,178,${0.55 * sunAlpha})`);
+                glow.addColorStop(0.5, `rgba(255,224,160,${0.16 * sunAlpha})`);
+                glow.addColorStop(1, 'rgba(255,224,160,0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(0, 0, width, hy + 2);
+
+                ctx.fillStyle = `rgba(255,250,232,${0.98 * sunAlpha})`;
+                ctx.beginPath();
+                ctx.arc(sunX, sunY, Math.max(16, width * 0.02), 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Stars: strongest at full night, fade as day returns
+            if (moonAlpha > 0.05) {
+                const hy = horizonY();
+                for (let i = 0; i < 70; i++) {
+                    const sx = ((i * 137.508) % 100) / 100 * width;
+                    const sy = ((i * 73.19) % 100) / 100 * hy * 0.85;
+                    const tw = 0.6 + 0.4 * Math.sin(startTime * 0.001 + i * 1.7);
+                    const r = (i % 3) === 0 ? 1.6 : 1.1;
+                    ctx.fillStyle = `rgba(255,255,255,${(0.25 + 0.55 * tw) * moonAlpha})`;
+                    ctx.beginPath();
+                    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Haze at the horizon (dimmer at night)
             const haze = ctx.createLinearGradient(0, hy - 14, 0, hy + 6);
             haze.addColorStop(0, 'rgba(200,226,238,0)');
-            haze.addColorStop(0.5, 'rgba(214,236,244,0.5)');
+            haze.addColorStop(0.5, `rgba(214,236,244,${0.5 * (0.35 + dayLight * 0.65)})`);
             haze.addColorStop(1, 'rgba(214,236,244,0)');
             ctx.fillStyle = haze;
             ctx.fillRect(0, hy - 14, width, 20);
@@ -198,16 +298,17 @@ const MarineScene = ({ className = '' }) => {
             return base + Math.sin((x / wl) * Math.PI * 2 + phase) * amp;
         };
 
-        const drawSea = (t) => {
+        const drawSea = (t, dayLight) => {
             const hy = horizonY();
             const rows = 36;
-            const horizonC = [150, 198, 220];
-            const deepC = [8, 36, 68];
+            // Blend day/night sea palettes
+            const horizonC = mix([150, 198, 220], [40, 78, 108], 1 - dayLight);
+            const deepC = mix([8, 36, 68], [3, 12, 28], 1 - dayLight);
 
             const base = ctx.createLinearGradient(0, hy, 0, height);
-            base.addColorStop(0, '#3f86ad');
-            base.addColorStop(0.5, '#164a78');
-            base.addColorStop(1, '#0a2c50');
+            base.addColorStop(0, rgba(mix([63, 134, 173], [28, 66, 100], 1 - dayLight), 1));
+            base.addColorStop(0.5, rgba(mix([22, 74, 120], [8, 26, 52], 1 - dayLight), 1));
+            base.addColorStop(1, rgba(mix([10, 44, 80], [3, 12, 28], 1 - dayLight), 1));
             ctx.fillStyle = base;
             ctx.fillRect(0, hy, width, height - hy);
 
@@ -265,9 +366,10 @@ const MarineScene = ({ className = '' }) => {
 
         const render = () => {
             const t = performance.now() - startTime;
+            const dayLight = getDayLight();
             ctx.clearRect(0, 0, width, height);
-            drawSky();
-            drawSea(t);
+            drawSky(dayLight);
+            drawSea(t, dayLight);
             drawRipples();
             rafId = requestAnimationFrame(render);
         };

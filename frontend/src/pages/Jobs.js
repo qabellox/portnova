@@ -1,4 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -13,11 +14,26 @@ const jobs = [
 
 const Jobs = () => {
     const { t } = useLanguage();
+    const [searchParams] = useSearchParams();
+    const focusRole = searchParams.get('focus');
     const [query, setQuery] = useState('');
     const [location, setLocation] = useState('All');
     const [category, setCategory] = useState('All');
     const [cvName, setCvName] = useState('');
     const cvInputRef = useRef(null);
+    const focusRef = useRef(null);
+
+    useEffect(() => {
+        if (!focusRole) return;
+        // clear filters so the focused card is visible
+        setQuery('');
+        setLocation('All');
+        setCategory('All');
+        const id = window.setTimeout(() => {
+            focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 250);
+        return () => window.clearTimeout(id);
+    }, [focusRole]);
 
     const onPickCv = (event) => {
         const file = event.target.files?.[0];
@@ -118,7 +134,12 @@ const Jobs = () => {
             {filtered.length ? (
                 <div className="card-grid card-grid--compact">
                     {filtered.map((job) => (
-                        <GlassCard key={job.role} interactive className="data-card">
+                        <GlassCard
+                            key={job.role}
+                            interactive
+                            className={`data-card${focusRole === job.role ? ' data-card--focused' : ''}`}
+                            ref={focusRole === job.role ? focusRef : undefined}
+                        >
                             <div className="course-cover" aria-hidden="true">{job.emoji}</div>
                             <div className="card-head">
                                 <div>

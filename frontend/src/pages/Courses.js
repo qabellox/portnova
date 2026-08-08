@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -13,8 +14,21 @@ const courses = [
 
 const Courses = () => {
     const { t } = useLanguage();
+    const [searchParams] = useSearchParams();
+    const focusTitle = searchParams.get('focus');
     const [query, setQuery] = useState('');
     const [level, setLevel] = useState('All');
+    const focusRef = useRef(null);
+
+    useEffect(() => {
+        if (!focusTitle) return;
+        setQuery('');
+        setLevel('All');
+        const id = window.setTimeout(() => {
+            focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 250);
+        return () => window.clearTimeout(id);
+    }, [focusTitle]);
 
     const levels = useMemo(() => ['All', ...new Set(courses.map((c) => c.level))], []);
 
@@ -71,7 +85,12 @@ const Courses = () => {
             {filtered.length ? (
                 <div className="card-grid card-grid--compact">
                     {filtered.map((course) => (
-                        <GlassCard key={course.title} interactive>
+                        <GlassCard
+                            key={course.title}
+                            interactive
+                            className={`${focusTitle === course.title ? ' data-card--focused' : ''}`}
+                            ref={focusTitle === course.title ? focusRef : undefined}
+                        >
                             <div className="course-cover" aria-hidden="true">{course.emoji}</div>
                             <div className="card-head">
                                 <div>

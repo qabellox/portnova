@@ -851,6 +851,35 @@ body[dir='rtl'] .user-menu__link:hover {
     transform: translateX(120%);
 }
 
+/* Focused card reached from a boat deep-link: gold wave ring + soft pulse */
+.data-card--focused {
+    border-color: rgba(212, 175, 55, 0.7) !important;
+    box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.4), 0 24px 70px rgba(6, 16, 30, 0.55), 0 0 46px rgba(212, 175, 55, 0.28) !important;
+    animation: focusWave 2.2s ease-in-out infinite;
+    transform: translateY(-4px) scale(1.015);
+}
+
+@keyframes focusWave {
+    0% {
+        box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.45), 0 24px 70px rgba(6, 16, 30, 0.55), 0 0 34px rgba(212, 175, 55, 0.25);
+    }
+
+    50% {
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.65), 0 24px 70px rgba(6, 16, 30, 0.55), 0 0 54px rgba(212, 175, 55, 0.4);
+    }
+
+    100% {
+        box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.45), 0 24px 70px rgba(6, 16, 30, 0.55), 0 0 34px rgba(212, 175, 55, 0.25);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .data-card--focused {
+        animation: none;
+        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.6), 0 24px 70px rgba(6, 16, 30, 0.55);
+    }
+}
+
 .stat-card__label,
 .metric-card__label,
 .feature-card__label,

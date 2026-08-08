@@ -51,8 +51,13 @@
    will-change: transform;
 }
 
-.marine-gull__wing--l { animation-name: gullWingL; }
-.marine-gull__wing--r { animation-name: gullWingR; }
+.marine-gull__wing--l {
+   animation-name: gullWingL;
+}
+
+.marine-gull__wing--r {
+   animation-name: gullWingR;
+}
 
 .marine-gull__body {
    animation: gullBob 1.8s ease-in-out infinite;
@@ -60,31 +65,90 @@
 }
 
 @keyframes gullWingL {
-   0% { transform: rotate(6deg); }
-   100% { transform: rotate(-34deg); }
+   0% {
+      transform: rotate(6deg);
+   }
+
+   100% {
+      transform: rotate(-34deg);
+   }
 }
 
 @keyframes gullWingR {
-   0% { transform: rotate(-6deg); }
-   100% { transform: rotate(34deg); }
+   0% {
+      transform: rotate(-6deg);
+   }
+
+   100% {
+      transform: rotate(34deg);
+   }
 }
 
 @keyframes gullBob {
-   0%, 100% { transform: translateY(0); }
-   50% { transform: translateY(-1px); }
+
+   0%,
+   100% {
+      transform: translateY(0);
+   }
+
+   50% {
+      transform: translateY(-1px);
+   }
 }
 
-.marine-gull--1 { top: 7%;  left: -16%; animation-duration: 52s; }
-.marine-gull--2 { top: 13%; left: -16%; animation-duration: 66s; animation-delay: -24s; }
-.marine-gull--3 { top: 4%;  left: -16%; animation-duration: 78s; animation-delay: -40s; }
-.marine-gull--4 { top: 20%; left: -16%; animation-duration: 60s; animation-delay: -12s; }
-.marine-gull--5 { top: 10%; left: -16%; animation-duration: 88s; animation-delay: -55s; }
-.marine-gull--6 { top: 25%; left: -16%; animation-duration: 70s; animation-delay: -32s; }
+.marine-gull--1 {
+   top: 7%;
+   left: -16%;
+   animation-duration: 52s;
+}
+
+.marine-gull--2 {
+   top: 13%;
+   left: -16%;
+   animation-duration: 66s;
+   animation-delay: -24s;
+}
+
+.marine-gull--3 {
+   top: 4%;
+   left: -16%;
+   animation-duration: 78s;
+   animation-delay: -40s;
+}
+
+.marine-gull--4 {
+   top: 20%;
+   left: -16%;
+   animation-duration: 60s;
+   animation-delay: -12s;
+}
+
+.marine-gull--5 {
+   top: 10%;
+   left: -16%;
+   animation-duration: 88s;
+   animation-delay: -55s;
+}
+
+.marine-gull--6 {
+   top: 25%;
+   left: -16%;
+   animation-duration: 70s;
+   animation-delay: -32s;
+}
 
 @keyframes gullDrift {
-   0%   { transform: translateX(0) translateY(0); }
-   50%  { transform: translateX(62vw) translateY(-2.5vh); }
-   100% { transform: translateX(124vw) translateY(1.5vh); }
+   0% {
+      transform: translateX(0) translateY(0);
+   }
+
+   50% {
+      transform: translateX(62vw) translateY(-2.5vh);
+   }
+
+   100% {
+      transform: translateX(124vw) translateY(1.5vh);
+   }
 }
 
 /* ============================================================
@@ -107,6 +171,13 @@
    transform: translateZ(calc(var(--depth) * 40px)) scale(var(--depth));
    transform-style: preserve-3d;
    will-change: transform;
+   z-index: 1;
+}
+
+/* A hovered/focused boat (and its info card) rises above any boat it overlaps */
+.marine-vessel:hover,
+.marine-vessel:focus-within {
+   z-index: 20;
 }
 
 .marine-vessel__rig {
@@ -134,25 +205,56 @@
 
 /* Depth lanes: foreground big & low, background small & near the horizon.
    Larger gaps put background boats clearly behind the foreground ones. */
-.marine-vessel--job-a    { bottom: 5%; }
-.marine-vessel--course-a { bottom: 14%; }
-.marine-vessel--job-b    { bottom: 32%; }
-.marine-vessel--course-b { bottom: 44%; }
-.marine-vessel--course-c { bottom: 54%; }
+.marine-vessel--job-a {
+   bottom: 5%;
+}
+
+.marine-vessel--course-a {
+   bottom: 14%;
+}
+
+.marine-vessel--job-b {
+   bottom: 32%;
+}
+
+.marine-vessel--course-b {
+   bottom: 44%;
+}
+
+.marine-vessel--course-c {
+   bottom: 54%;
+}
 
 @keyframes fleetSailRight {
-   0%   { transform: translateX(-120%); }
-   100% { transform: translateX(130vw); }
+   0% {
+      transform: translateX(-120%);
+   }
+
+   100% {
+      transform: translateX(130vw);
+   }
 }
 
 @keyframes fleetSailLeft {
-   0%   { transform: translateX(130vw); }
-   100% { transform: translateX(-120%); }
+   0% {
+      transform: translateX(130vw);
+   }
+
+   100% {
+      transform: translateX(-120%);
+   }
 }
 
 @keyframes vesselBobbing {
-   0%, 100% { transform: translateY(0) rotate(0deg); }
-   50%      { transform: translateY(-3px) rotate(0.4deg); }
+
+   0%,
+   100% {
+      transform: translateY(0) rotate(0deg);
+   }
+
+   50% {
+      transform: translateY(-3px) rotate(0.4deg);
+   }
 }
 
 /* Info card. Lives inside the rig so it sails with its boat, and is
@@ -250,6 +352,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
    .marine-canvas,
    .marine-gull,
    .marine-gull__wing,

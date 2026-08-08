@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -201,11 +201,12 @@ export const PremiumButton = ({
     );
 };
 
-export const GlassCard = ({ children, className = '', interactive = false, ...rest }) => (
-    <div className={`glass-card ${interactive ? 'glow-border' : ''} ${className}`.trim()} {...rest}>
+export const GlassCard = forwardRef(({ children, className = '', interactive = false, ...rest }, ref) => (
+    <div ref={ref} className={`glass-card ${interactive ? 'glow-border' : ''} ${className}`.trim()} {...rest}>
         {children}
     </div>
-);
+));
+GlassCard.displayName = 'GlassCard';
 
 export const SectionHeading = ({ kicker, title, subtitle, align = 'start', className = '' }) => (
     <div className={`section-header ${className}`.trim()} style={{ textAlign: align }}>

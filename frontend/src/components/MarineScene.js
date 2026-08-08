@@ -511,13 +511,14 @@ const MarineScene = ({ className = '' }) => {
 
     // The 3D fleet: job cargo ships sail left→right, course sailboats sail right→left,
     // spread across foreground, mid and background so the sea has depth.
-    // Larger sizes overall; far boats are smaller and ride near the horizon.
+    // Each boat advertises ONE real job/course (focus = its exact role/title in the
+    // data, so the deep link lands on that exact card).
     const fleet = [
-        { kind: 'jobs', cls: 'marine-vessel--job-a', w: 340, h: 166, dur: 60, delay: -8, depth: 1 },
-        { kind: 'courses', cls: 'marine-vessel--course-a', w: 296, h: 148, dur: 78, delay: -30, depth: 0.8 },
-        { kind: 'jobs', cls: 'marine-vessel--job-b', w: 224, h: 112, dur: 100, delay: -46, depth: 0.58 },
-        { kind: 'courses', cls: 'marine-vessel--course-b', w: 188, h: 96, dur: 118, delay: -66, depth: 0.45 },
-        { kind: 'courses', cls: 'marine-vessel--course-c', w: 132, h: 68, dur: 142, delay: -88, depth: 0.32 },
+        { kind: 'jobs', cls: 'marine-vessel--job-a', w: 340, h: 166, dur: 60, delay: -8, depth: 1, focus: 'Frontend Product Intern', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
+        { kind: 'courses', cls: 'marine-vessel--course-a', w: 296, h: 148, dur: 78, delay: -30, depth: 0.8, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
+        { kind: 'jobs', cls: 'marine-vessel--job-b', w: 224, h: 112, dur: 100, delay: -46, depth: 0.58, focus: 'Operations Coordinator', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
+        { kind: 'courses', cls: 'marine-vessel--course-b', w: 188, h: 96, dur: 118, delay: -66, depth: 0.45, focus: 'Startup Operations', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
+        { kind: 'courses', cls: 'marine-vessel--course-c', w: 132, h: 68, dur: 142, delay: -88, depth: 0.32, focus: 'Career Readiness', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
     ];
 
     return (
@@ -558,14 +559,18 @@ const MarineScene = ({ className = '' }) => {
                                     {vessel.kind === 'jobs' ? t('boatJobs') : t('boatCourses')}
                                 </span>
                                 <strong className="marine-vessel__title">
-                                    {vessel.kind === 'jobs' ? t('jobBoatTitle') : t('courseBoatTitle')}
+                                    {t(vessel.titleKey)}
                                 </strong>
                                 <span className="marine-vessel__desc">
-                                    {vessel.kind === 'jobs' ? t('jobBoatDesc') : t('courseBoatDesc')}
+                                    {t(vessel.descKey)}
                                 </span>
                                 <Link
                                     className="marine-vessel__btn"
-                                    to={vessel.kind === 'jobs' ? '/jobs' : '/courses'}
+                                    to={
+                                        vessel.kind === 'jobs'
+                                            ? `/jobs?focus=${encodeURIComponent(vessel.focus)}`
+                                            : `/courses?focus=${encodeURIComponent(vessel.focus)}`
+                                    }
                                     tabIndex="0"
                                 >
                                     {vessel.kind === 'jobs' ? t('boatSeeJobs') : t('boatSeeCourses')}

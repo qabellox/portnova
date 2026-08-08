@@ -138,6 +138,16 @@ export const messages = {
         courseBoatDesc: 'دورات عملية لتطوير مهاراتك.',
         boatSeeJobs: 'تصفح الوظائف',
         boatSeeCourses: 'تصفح الدورات',
+        fleetJob1Title: 'متدرب منتجات واجهات أمامية',
+        fleetJob1Desc: 'انضم إلى Nova Labs كمتدرب منتجات وتعلّم بناء المنتجات الرقمية.',
+        fleetJob2Title: 'منسق عمليات',
+        fleetJob2Desc: 'فرصة دوام كامل في HarborX لإدارة العمليات والتنسيق.',
+        fleetCourse1Title: 'سباق تصميم المنتجات',
+        fleetCourse1Desc: 'دورة عملية من أكاديمية بورتنوفا لتصميم المنتجات الرقمية.',
+        fleetCourse2Title: 'تشغيل الشركات الناشئة',
+        fleetCourse2Desc: 'تعلّم أساسيات إدارة وتشغيل الشركات الناشئة مع مدرسة هاربر.',
+        fleetCourse3Title: 'الجاهزية المهنية',
+        fleetCourse3Desc: 'دورة مجانية من FutureBridge لتجهيزك لسوق العمل.',
 
         // About
         aboutTitle: 'من نحن',
@@ -316,6 +326,16 @@ export const messages = {
         courseBoatDesc: 'Practical courses to grow your skills.',
         boatSeeJobs: 'Browse jobs',
         boatSeeCourses: 'Browse courses',
+        fleetJob1Title: 'Frontend Product Intern',
+        fleetJob1Desc: 'Join Nova Labs as a product intern and learn to build digital products.',
+        fleetJob2Title: 'Operations Coordinator',
+        fleetJob2Desc: 'A full-time opportunity at HarborX managing operations and coordination.',
+        fleetCourse1Title: 'Product Design Sprint',
+        fleetCourse1Desc: 'A hands-on course from PortNova Academy on digital product design.',
+        fleetCourse2Title: 'Startup Operations',
+        fleetCourse2Desc: 'Learn the fundamentals of running and managing startups with Harbor School.',
+        fleetCourse3Title: 'Career Readiness',
+        fleetCourse3Desc: 'A free course from FutureBridge to prepare you for the job market.',
 
         // About
         aboutTitle: 'About Us',

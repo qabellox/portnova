@@ -256,7 +256,7 @@ export const StatCounter = ({ value, suffix = '', decimals = 0, duration = 1400,
     );
 };
 
-export const Timeline = ({ steps = [], currentIndex = 0 }) => (
+export const Timeline = ({ steps = [], currentIndex = 0, nowLabel = 'now' }) => (
     <div className="timeline">
         {steps.map((step, index) => (
             <div className="timeline__item" key={step.title}>
@@ -264,7 +264,7 @@ export const Timeline = ({ steps = [], currentIndex = 0 }) => (
                 <div className="timeline__body">
                     <h4>
                         {step.title}{' '}
-                        <span className="muted">{index === currentIndex ? 'now' : ''}</span>
+                        <span className="muted">{index === currentIndex ? nowLabel : ''}</span>
                     </h4>
                     <p>{step.description}</p>
                 </div>

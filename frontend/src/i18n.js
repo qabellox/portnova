@@ -76,6 +76,16 @@ export const messages = {
         cvAttached: 'تم إرفاق سيرتك الذاتية',
         cvRemove: 'إزالة',
         cvNoFile: 'لم تُرفق سيرة ذاتية بعد، ارفع واحدة للمتابعة.',
+        cvStepPending: 'قيد الانتظار',
+        cvStepPendingDesc: 'تم الرفع وينتظر اهتمام الخبير.',
+        cvStepAssigned: 'تم الإسناد',
+        cvStepAssignedDesc: 'تم إسناد الطلب إلى خبير.',
+        cvStepCompleted: 'اكتمل الإعداد',
+        cvStepCompletedDesc: 'السيرة المنسقة جاهزة للتسليم.',
+        cvStepDelivered: 'تم التسليم',
+        cvStepDeliveredDesc: 'تم تسليم النسخة النهائية.',
+        cvStepNow: 'الآن',
+        cvChooseFile: 'اختر ملفًا',
 
         // Courses
         coursesKicker: 'التعلم',
@@ -264,6 +274,16 @@ export const messages = {
         cvAttached: 'Your CV is attached',
         cvRemove: 'Remove',
         cvNoFile: 'No CV attached yet, upload one to continue.',
+        cvStepPending: 'Pending',
+        cvStepPendingDesc: 'Uploaded and waiting for an expert.',
+        cvStepAssigned: 'Assigned',
+        cvStepAssignedDesc: 'Assigned to an expert.',
+        cvStepCompleted: 'Completed',
+        cvStepCompletedDesc: 'Your formatted CV is ready for delivery.',
+        cvStepDelivered: 'Delivered',
+        cvStepDeliveredDesc: 'The final version was delivered.',
+        cvStepNow: 'now',
+        cvChooseFile: 'Choose file',
 
         // Courses
         coursesKicker: 'Learning',

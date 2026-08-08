@@ -4,11 +4,11 @@ import { supabase } from '../services/supabase';
 import { Badge, BilingualLine, GlassCard, LoaderButton, PremiumButton, ProgressBar, SectionHeading, Timeline } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
-const statusSteps = [
-    { title: 'pending', description: 'تم الرفع وينتظر اهتمام الخبير.' },
-    { title: 'assigned', description: 'تم إسناد الطلب إلى خبير.' },
-    { title: 'completed', description: 'السيرة المنسقة جاهزة للتسليم.' },
-    { title: 'delivered', description: 'تم تسليم النسخة النهائية.' },
+const statusStepKeys = [
+    { key: 'pending', titleKey: 'cvStepPending', descKey: 'cvStepPendingDesc' },
+    { key: 'assigned', titleKey: 'cvStepAssigned', descKey: 'cvStepAssignedDesc' },
+    { key: 'completed', titleKey: 'cvStepCompleted', descKey: 'cvStepCompletedDesc' },
+    { key: 'delivered', titleKey: 'cvStepDelivered', descKey: 'cvStepDeliveredDesc' },
 ];
 
 const CVService = () => {
@@ -25,13 +25,22 @@ const CVService = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
+    const statusSteps = useMemo(
+        () =>
+            statusStepKeys.map((step) => ({
+                title: t(step.titleKey),
+                description: t(step.descKey),
+            })),
+        [t]
+    );
+
     const currentStep = useMemo(() => {
         if (!requests.length) {
             return 0;
         }
 
         const latest = requests[0]?.status || 'pending';
-        return statusSteps.findIndex((step) => step.title === latest);
+        return statusStepKeys.findIndex((step) => step.key === latest);
     }, [requests]);
 
     useEffect(() => {
@@ -167,7 +176,7 @@ const CVService = () => {
                         </div>
                         <ProgressBar value={uploadProgress} />
                         <div className="timeline-card" style={{ marginTop: '1rem', padding: '1rem' }}>
-                            <Timeline steps={statusSteps} currentIndex={currentStep >= 0 ? currentStep : 0} />
+                            <Timeline steps={statusSteps} currentIndex={currentStep >= 0 ? currentStep : 0} nowLabel={t('cvStepNow')} />
                         </div>
                     </GlassCard>
                 </div>
@@ -195,12 +204,19 @@ const CVService = () => {
                                 <h3 className="card-title">{t('dragTitle')}</h3>
                                 <BilingualLine ar="PDF وDOC وDOCX مدعومة. اختر ملفًا أو أسقطه هنا." en="PDF, DOC, and DOCX are supported. Choose a file or drop it here." className="card-copy" />
                                 <input
-                                    className="field"
-                                    style={{ marginTop: '1rem' }}
+                                    id="cv-file-input"
+                                    style={{ display: 'none' }}
                                     type="file"
                                     accept=".pdf,.doc,.docx"
                                     onChange={(event) => setFile(event.target.files[0])}
                                 />
+                                <label
+                                    className="premium-button premium-button--gold"
+                                    htmlFor="cv-file-input"
+                                    style={{ marginTop: '1rem', cursor: 'pointer' }}
+                                >
+                                    {t('cvChooseFile')}
+                                </label>
                                 {file ? <p className="muted" style={{ marginBottom: 0 }}>{file.name}</p> : null}
                             </div>
                         </div>
@@ -227,7 +243,7 @@ const CVService = () => {
 
                 <GlassCard className="auth-card">
                     <SectionHeading kicker={t('workflowKicker')} title={t('workflowTitle')} subtitle={t('workflowSubtitle')} />
-                    <Timeline steps={statusSteps} currentIndex={currentStep >= 0 ? currentStep : 0} />
+                    <Timeline steps={statusSteps} currentIndex={currentStep >= 0 ? currentStep : 0} nowLabel={t('cvStepNow')} />
 
                     <div className="section-block">
                         <SectionHeading kicker={t('pricingKicker')} title={t('pricingTitle')} subtitle={t('pricingSubtitle')}

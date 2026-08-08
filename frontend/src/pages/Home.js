@@ -36,25 +36,24 @@ const Home = () => (
     <div className="page-shell page-shell__grid">
         <section className="hero hero--local hero--marine">
             <MarineScene />
-            <div className="hero__nautical" aria-hidden="true">
-                <span className="hero__nautical--anchor">⚓</span>
-                <span className="hero__nautical--fish">🐟</span>
-            </div>
-            <div className="hero__grid">
-                <div>
-                    <div className="hero__kicker">
-                        <span className="nautical-tile" aria-hidden="true">🧭</span>
-                        منصة بورسعيد للشباب
-                    </div>
-                    <h1 className="hero__title">
-                        <span className="gradient-text">منصة PortNova</span> للشباب والوظائف والتعلم.
-                    </h1>
-                    <BilingualLine
-                        as="p"
-                        className="hero__lead"
-                        ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
-                        en="Between the sea, the market and the corniche — your gateway to jobs, courses and CV support in Port Said."
-                    />
+            <div className="marine-overlay" aria-hidden="true" />
+
+            {/* Content sits at the bottom so the sea stays visible */}
+            <div className="hero__dock">
+                <div className="hero__kicker">
+                    <span className="nautical-tile" aria-hidden="true">🧭</span>
+                    منصة بورسعيد للشباب
+                </div>
+                <h1 className="hero__title">
+                    <span className="gradient-text">PortNova</span> — بوابة شباب بورسعيد للمستقبل
+                </h1>
+                <BilingualLine
+                    as="p"
+                    className="hero__lead"
+                    ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
+                    en="Between the sea, the market and the corniche — your gateway to jobs, courses and CV support in Port Said."
+                />
+                <div className="hero__dock-row">
                     <div className="hero__actions">
                         <PremiumButton to="/register" variant="gold">
                             ابدأ الآن / Start
@@ -63,40 +62,14 @@ const Home = () => (
                             تسجيل الدخول / Sign in
                         </PremiumButton>
                     </div>
-                    <div className="status-strip">
-                        <Badge tone="gold">بورسعيد أولاً / Port Said first</Badge>
-                        <Badge tone="blue">الوظائف / Jobs</Badge>
-                        <Badge tone="success">السيرة الذاتية / CV</Badge>
+                    <div className="stats-grid stats-grid--inline">
+                        <StatCounter label="شباب / Youth" value={1200} suffix="+" />
+                        <StatCounter label="وظائف / Jobs" value={320} suffix="+" />
+                        <StatCounter label="دورات / Courses" value={86} suffix="+" />
+                        <StatCounter label="سير ذاتية / CVs" value={540} suffix="+" />
                     </div>
                 </div>
-
-                <div className="hero__visual">
-                    <div className="hero__halo" />
-                    <GlassCard className="hero__orbital hero__orbital--primary">
-                        <div className="chip-row">
-                            <Badge tone="gold">مباشر / Live</Badge>
-                            <Badge tone="blue">ثقة عالية / Trust</Badge>
-                        </div>
-                        <h3 className="card-title" style={{ marginTop: '0.9rem' }}>
-                            بورسعيد تتحرك. وهنا يبدأ الإيقاع.
-                        </h3>
-                        <p className="card-copy">A fresh local experience with a clean workflow story and visible momentum.</p>
-                        <div style={{ marginTop: '1rem' }}>
-                            <ProgressBar value={84} />
-                        </div>
-                    </GlassCard>
-                    <GlassCard className="hero__orbital hero__orbital--secondary">
-                        <div className="stats-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                            <StatCounter label="شباب / Youth" value={1200} suffix="+" />
-                            <StatCounter label="وظائف / Jobs" value={320} suffix="+" />
-                            <StatCounter label="دورات / Courses" value={86} suffix="+" />
-                            <StatCounter label="سير ذاتية / CVs" value={540} suffix="+" />
-                        </div>
-                    </GlassCard>
-                    <span className="hero__orbital hero__orbital--spotlight" />
-                </div>
             </div>
-            <div className="wave-divider" aria-hidden="true" />
         </section>
 
         <section className="section-block">

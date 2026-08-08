@@ -394,50 +394,70 @@ body[dir='rtl'] .user-menu__link:hover {
 .hero--marine {
     background: none;
     border: 1px solid rgba(13, 148, 136, 0.22);
-    min-height: 30rem;
+    min-height: min(92vh, 42rem);
+    height: auto;
 }
 
 .hero--marine::before {
-    background: linear-gradient(90deg, rgba(5, 24, 42, 0.78) 0%, rgba(5, 24, 42, 0.45) 42%, rgba(5, 24, 42, 0.12) 72%, rgba(5, 24, 42, 0.3) 100%);
-    animation: none;
-    z-index: 1;
+    display: none;
 }
 
 .hero--marine::after {
     display: none;
 }
 
-.hero--marine .hero__nautical {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
+.hero--marine .marine-scene {
     z-index: 1;
 }
 
-.hero--marine .hero__nautical--anchor {
-    position: absolute;
-    right: 5%;
-    bottom: 9%;
-    font-size: 6rem;
-    color: rgba(248, 250, 252, 0.22);
-    transform: rotate(-8deg);
-    filter: drop-shadow(0 0 24px rgba(13, 148, 136, 0.35));
-    animation: buoyFloat 9s ease-in-out infinite;
-}
-
-.hero--marine .hero__nautical--fish {
-    position: absolute;
-    left: 3%;
-    top: 20%;
-    font-size: 3rem;
-    color: rgba(253, 224, 71, 0.3);
-    transform: rotate(14deg);
-    animation: fishSwim 12s ease-in-out infinite;
-}
-
-.hero--marine .hero__grid {
+.hero--marine .marine-overlay {
     z-index: 2;
+}
+
+/* Bottom dock: content floats over the sea without blocking the view */
+.hero__dock {
+    position: relative;
+    z-index: 3;
+    display: grid;
+    gap: 0.85rem;
+    padding: 1.6rem 1.75rem 1.25rem;
+    margin-top: clamp(8rem, 18vh, 16rem);
+    border-radius: calc(var(--radius-xl) + 4px);
+    background: linear-gradient(180deg, rgba(8, 26, 46, 0.72), rgba(6, 20, 36, 0.88));
+    backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(13, 148, 136, 0.22);
+    box-shadow: 0 24px 70px rgba(4, 14, 26, 0.5);
+}
+
+.hero__dock .hero__title {
+    font-size: clamp(2rem, 4.4vw, 3.6rem);
+}
+
+.hero__dock-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.stats-grid--inline {
+    grid-template-columns: repeat(4, minmax(0, auto));
+    gap: 0.6rem;
+}
+
+.stats-grid--inline .stat-card {
+    padding: 0.7rem 0.9rem;
+    min-width: 6rem;
+}
+
+@media (max-width: 1100px) {
+    .hero__dock-row {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid--inline {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .hero::before,

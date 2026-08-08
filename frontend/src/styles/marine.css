@@ -1,5 +1,5 @@
 ﻿/* ============================================================
-   MARINE SCENE — front-view shader-style live seascape
+   MARINE SCENE — 3D live seascape with interactive boat fleet
    ============================================================ */
 .marine-scene {
    position: absolute;
@@ -43,7 +43,7 @@
    filter: drop-shadow(0 2px 3px rgba(4, 14, 26, 0.4));
 }
 
-/* Each wing swings from the body — realistic flapping, not teleporting */
+/* Each wing swings from the body — realistic flapping */
 .marine-gull__wing {
    transform-box: view-box;
    transform-origin: 30px 12px;
@@ -51,13 +51,8 @@
    will-change: transform;
 }
 
-.marine-gull__wing--l {
-   animation-name: gullWingL;
-}
-
-.marine-gull__wing--r {
-   animation-name: gullWingR;
-}
+.marine-gull__wing--l { animation-name: gullWingL; }
+.marine-gull__wing--r { animation-name: gullWingR; }
 
 .marine-gull__body {
    animation: gullBob 1.8s ease-in-out infinite;
@@ -65,177 +60,166 @@
 }
 
 @keyframes gullWingL {
-   0% {
-      transform: rotate(6deg);
-   }
-
-   100% {
-      transform: rotate(-34deg);
-   }
+   0% { transform: rotate(6deg); }
+   100% { transform: rotate(-34deg); }
 }
 
 @keyframes gullWingR {
-   0% {
-      transform: rotate(-6deg);
-   }
-
-   100% {
-      transform: rotate(34deg);
-   }
+   0% { transform: rotate(-6deg); }
+   100% { transform: rotate(34deg); }
 }
 
 @keyframes gullBob {
-
-   0%,
-   100% {
-      transform: translateY(0);
-   }
-
-   50% {
-      transform: translateY(-1px);
-   }
+   0%, 100% { transform: translateY(0); }
+   50% { transform: translateY(-1px); }
 }
 
-.marine-gull--1 {
-   top: 7%;
-   left: -16%;
-   animation-duration: 52s;
-}
-
-.marine-gull--2 {
-   top: 13%;
-   left: -16%;
-   animation-duration: 66s;
-   animation-delay: -24s;
-}
-
-.marine-gull--3 {
-   top: 4%;
-   left: -16%;
-   animation-duration: 78s;
-   animation-delay: -40s;
-}
-
-.marine-gull--4 {
-   top: 20%;
-   left: -16%;
-   animation-duration: 60s;
-   animation-delay: -12s;
-}
-
-.marine-gull--5 {
-   top: 10%;
-   left: -16%;
-   animation-duration: 88s;
-   animation-delay: -55s;
-}
-
-.marine-gull--6 {
-   top: 25%;
-   left: -16%;
-   animation-duration: 70s;
-   animation-delay: -32s;
-}
+.marine-gull--1 { top: 7%;  left: -16%; animation-duration: 52s; }
+.marine-gull--2 { top: 13%; left: -16%; animation-duration: 66s; animation-delay: -24s; }
+.marine-gull--3 { top: 4%;  left: -16%; animation-duration: 78s; animation-delay: -40s; }
+.marine-gull--4 { top: 20%; left: -16%; animation-duration: 60s; animation-delay: -12s; }
+.marine-gull--5 { top: 10%; left: -16%; animation-duration: 88s; animation-delay: -55s; }
+.marine-gull--6 { top: 25%; left: -16%; animation-duration: 70s; animation-delay: -32s; }
 
 @keyframes gullDrift {
-   0% {
-      transform: translateX(0) translateY(0);
-   }
-
-   50% {
-      transform: translateX(62vw) translateY(-2.5vh);
-   }
-
-   100% {
-      transform: translateX(124vw) translateY(1.5vh);
-   }
+   0%   { transform: translateX(0) translateY(0); }
+   50%  { transform: translateX(62vw) translateY(-2.5vh); }
+   100% { transform: translateX(124vw) translateY(1.5vh); }
 }
 
-/* Felucca sailing across the foreground, looping seamlessly:
-   fully off-screen at both 0% and 100% so it exits right and
-   re-enters left with no visible jump. */
-.marine-boat {
+/* ============================================================
+   3D FLEET — boats sailing at different depths
+   ============================================================ */
+.marine-fleet {
    position: absolute;
-   left: 0;
-   bottom: 3.5%;
+   inset: 0;
    z-index: 4;
-   pointer-events: auto;
-   animation: boatSail 78s linear infinite;
-   will-change: transform;
-   filter: drop-shadow(0 26px 40px rgba(3, 12, 26, 0.55));
+   perspective: 1400px;
+   perspective-origin: 50% 62%;
+   pointer-events: none;
 }
 
-.marine-boat__svg {
-   display: block;
-   animation: boatBobbing 7.5s ease-in-out infinite;
-   will-change: transform;
-}
-
-/* Glass console on the felucca deck holding the app shortcuts */
-.marine-boat__icons {
+.marine-vessel {
    position: absolute;
-   top: 138px;
-   left: 250px;
-   display: flex;
-   gap: 0.4rem;
-   padding: 0.35rem 0.5rem;
-   border-radius: 0.85rem;
-   background: linear-gradient(160deg, rgba(248, 250, 252, 0.9), rgba(214, 232, 244, 0.78));
-   border: 1px solid rgba(255, 255, 255, 0.75);
-   box-shadow: 0 8px 20px rgba(6, 16, 30, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+   bottom: 6%;
+   left: 0;
    pointer-events: auto;
+   transform: translateZ(calc(var(--depth) * 40px)) scale(var(--depth));
+   transform-style: preserve-3d;
+   will-change: transform;
 }
 
-.marine-boat__icon {
-   display: inline-flex;
+.marine-vessel__rig {
+   animation: fleetSail var(--dur) linear infinite;
+   animation-delay: var(--delay);
+   will-change: transform;
+}
+
+.marine-vessel__svg {
+   display: block;
+   animation: vesselBobbing 6s ease-in-out infinite;
+   filter: drop-shadow(0 22px 26px rgba(3, 12, 26, 0.55));
+}
+
+/* Jobs cargo ships sail left → right */
+.marine-vessel--jobs .marine-vessel__rig {
+   animation-name: fleetSailRight;
+}
+
+/* Courses sailboats sail right → left */
+.marine-vessel--courses .marine-vessel__rig {
+   animation-name: fleetSailLeft;
+}
+
+/* Depth lanes: foreground big, background small & higher on the sea */
+.marine-vessel--job-a   { bottom: 6%; }
+.marine-vessel--course-a { bottom: 13%; }
+.marine-vessel--job-b   { bottom: 22%; }
+.marine-vessel--course-b { bottom: 30%; }
+
+@keyframes fleetSailRight {
+   0%   { transform: translateX(-120%); }
+   100% { transform: translateX(130vw); }
+}
+
+@keyframes fleetSailLeft {
+   0%   { transform: translateX(130vw); }
+   100% { transform: translateX(-120%); }
+}
+
+@keyframes vesselBobbing {
+   0%, 100% { transform: translateY(0) rotate(0deg); }
+   50%      { transform: translateY(-3px) rotate(0.4deg); }
+}
+
+/* Hover/focus reveal card on each boat */
+.marine-vessel__card {
+   position: absolute;
+   left: 50%;
+   bottom: 118%;
+   transform: translateX(-50%) translateY(10px);
+   width: 15rem;
+   max-width: 70vw;
+   display: flex;
    flex-direction: column;
-   align-items: center;
-   gap: 0.05rem;
-   padding: 0.22rem 0.34rem;
-   border-radius: 0.6rem;
-   text-decoration: none;
-   color: #0c4a6e;
-   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background 0.25s ease;
+   gap: 0.3rem;
+   padding: 0.8rem 0.95rem;
+   border-radius: 1rem;
+   background: linear-gradient(160deg, rgba(10, 40, 66, 0.94), rgba(8, 30, 50, 0.97));
+   border: 1px solid rgba(125, 211, 252, 0.35);
+   box-shadow: 0 18px 46px rgba(3, 12, 26, 0.6), 0 0 0 1px rgba(212, 175, 55, 0.15);
+   opacity: 0;
+   pointer-events: none;
+   transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+   z-index: 6;
 }
 
-.marine-boat__icon:hover {
-   transform: translateY(-4px) scale(1.12);
-   background: rgba(255, 255, 255, 0.95);
-   box-shadow: 0 8px 18px rgba(6, 16, 30, 0.4), 0 0 0 1px rgba(13, 148, 136, 0.45);
+.marine-vessel:hover .marine-vessel__card,
+.marine-vessel:focus-within .marine-vessel__card {
+   opacity: 1;
+   pointer-events: auto;
+   transform: translateX(-50%) translateY(0);
 }
 
-.marine-boat__icon-mark {
-   font-size: 1rem;
-   line-height: 1;
-}
-
-.marine-boat__icon-label {
-   font-size: 0.52rem;
+.marine-vessel__kicker {
+   font-size: 0.68rem;
    font-weight: 800;
-   letter-spacing: 0.04em;
+   letter-spacing: 0.08em;
    text-transform: uppercase;
+   color: #fcd34d;
 }
 
-@keyframes boatSail {
-   0% {
-      transform: translateX(-460px);
-   }
-
-   100% {
-      transform: translateX(calc(100vw + 460px));
-   }
+.marine-vessel__title {
+   font-size: 0.98rem;
+   font-weight: 800;
+   color: #f8fafc;
 }
 
-@keyframes boatBobbing {
+.marine-vessel__desc {
+   font-size: 0.8rem;
+   color: rgba(226, 232, 240, 0.85);
+   line-height: 1.4;
+}
 
-   0%,
-   100% {
-      transform: translateY(0) rotate(0deg);
-   }
+.marine-vessel__btn {
+   margin-top: 0.3rem;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   padding: 0.5rem 0.85rem;
+   border-radius: 999px;
+   text-decoration: none;
+   font-size: 0.82rem;
+   font-weight: 800;
+   color: #fff7d6;
+   background: linear-gradient(135deg, #a97f1f 0%, #d4af37 55%, #e6c767 100%);
+   box-shadow: 0 10px 22px rgba(212, 175, 55, 0.3);
+   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-   50% {
-      transform: translateY(-3px) rotate(0.35deg);
-   }
+.marine-vessel__btn:hover {
+   transform: translateY(-2px);
+   box-shadow: 0 14px 28px rgba(212, 175, 55, 0.42);
 }
 
 /* Keep the overlay from blocking sea clicks */
@@ -244,13 +228,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
    .marine-canvas,
    .marine-gull,
    .marine-gull__wing,
    .marine-gull__body,
-   .marine-boat,
-   .marine-boat__svg {
+   .marine-vessel,
+   .marine-vessel__rig,
+   .marine-vessel__svg {
       animation: none !important;
    }
 }

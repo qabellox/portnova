@@ -3,14 +3,129 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 
 /**
- * MarineScene: front-view shader-style live seascape.
+ * MarineScene: 3D live seascape.
  *
- * Everything is drawn on a canvas with real perspective: a sky with a soft
- * sun glow and a horizon, and animated waves that roll toward the viewer.
- * Click on the sea to spawn realistic ripples, a felucca with app shortcuts
- * sails slowly across (looping seamlessly), and a flock of gulls drifts
- * high in the sky.
+ * The sea is drawn on a canvas (perspective waves rolling toward the viewer).
+ * On top of it, a 3D fleet sails across at different depths:
+ *   - Cargo ships (⚓) advertise JOBS, sailing left to right.
+ *   - Sailboats (🧭) advertise COURSES, sailing right to left.
+ * Hover (or focus) a boat to reveal its info card with a direct link.
  */
+
+const JobShip = () => (
+    <svg viewBox="0 0 460 220" width="100%" height="100%">
+        <defs>
+            <linearGradient id="jhull" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#35506b" />
+                <stop offset="55%" stopColor="#22364c" />
+                <stop offset="100%" stopColor="#101c2a" />
+            </linearGradient>
+            <linearGradient id="jdeck" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#d7e3ec" />
+                <stop offset="100%" stopColor="#9fb4c4" />
+            </linearGradient>
+        </defs>
+
+        {/* waterline reflection */}
+        <ellipse cx="230" cy="196" rx="200" ry="14" fill="rgba(5,16,28,0.35)" />
+
+        {/* hull */}
+        <path
+            d="M22 176 C 70 150, 160 138, 260 142 C 350 146, 410 158, 442 172 L 436 198 C 320 182, 150 178, 34 200 Z"
+            fill="url(#jhull)"
+        />
+        {/* deck */}
+        <path
+            d="M30 170 C 130 148, 330 148, 432 170 L 436 178 C 340 160, 150 158, 34 182 Z"
+            fill="url(#jdeck)"
+            opacity="0.9"
+        />
+        {/* cargo containers */}
+        <rect x="90" y="118" width="42" height="38" rx="3" fill="#d97706" />
+        <rect x="138" y="118" width="42" height="38" rx="3" fill="#0ea5e9" />
+        <rect x="186" y="118" width="42" height="38" rx="3" fill="#d94f4f" />
+        <rect x="90" y="82" width="42" height="38" rx="3" fill="#0d9488" />
+        <rect x="138" y="82" width="42" height="38" rx="3" fill="#e7d35c" />
+        <rect x="90" y="48" width="42" height="36" rx="3" fill="#f8fafc" opacity="0.9" />
+        {/* container top highlights for a subtle 3D feel */}
+        <rect x="90" y="116" width="42" height="4" fill="rgba(255,255,255,0.35)" />
+        <rect x="138" y="116" width="42" height="4" fill="rgba(255,255,255,0.35)" />
+        <rect x="186" y="116" width="42" height="4" fill="rgba(255,255,255,0.35)" />
+        <rect x="90" y="80" width="42" height="4" fill="rgba(255,255,255,0.35)" />
+        {/* bridge + funnel */}
+        <rect x="250" y="96" width="110" height="46" rx="5" fill="#eef4f8" />
+        <rect x="258" y="104" width="20" height="16" rx="2" fill="#7dd3fc" />
+        <rect x="284" y="104" width="20" height="16" rx="2" fill="#7dd3fc" />
+        <rect x="310" y="104" width="20" height="16" rx="2" fill="#7dd3fc" />
+        <rect x="332" y="60" width="26" height="42" rx="4" fill="#22364c" />
+        <rect x="326" y="50" width="38" height="14" rx="6" fill="#0c4a6e" />
+        {/* mast + flag */}
+        <path d="M120 48 L120 20" stroke="#3a4a5c" strokeWidth="4" strokeLinecap="round" />
+        <path d="M120 22 L146 30 L120 38 Z" fill="#0ea5e9" />
+    </svg>
+);
+
+const CourseBoat = () => (
+    <svg viewBox="0 0 460 220" width="100%" height="100%">
+        <defs>
+            <linearGradient id="csail" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#f6efdd" />
+                <stop offset="60%" stopColor="#e7d9b6" />
+                <stop offset="100%" stopColor="#c9b789" />
+            </linearGradient>
+            <linearGradient id="chull" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#8a5a34" />
+                <stop offset="55%" stopColor="#6b4024" />
+                <stop offset="100%" stopColor="#3a2314" />
+            </linearGradient>
+        </defs>
+
+        {/* waterline reflection */}
+        <ellipse cx="230" cy="196" rx="185" ry="13" fill="rgba(5,16,28,0.3)" />
+
+        {/* billowing lateen sail */}
+        <path
+            d="M258 14 C 200 40, 120 96, 54 158 C 108 132, 178 122, 258 132 C 258 92, 258 54, 258 14 Z"
+            fill="url(#csail)"
+            stroke="#b8a878"
+            strokeWidth="1"
+            opacity="0.95"
+        />
+        {/* red stripe on the sail */}
+        <path
+            d="M54 158 C 108 132, 178 122, 258 132 L 258 122 C 178 112, 112 122, 62 146 Z"
+            fill="#b03a24"
+            opacity="0.85"
+        />
+        {/* mast + yard */}
+        <path d="M258 8 L258 152" stroke="#4a2f1a" strokeWidth="4" strokeLinecap="round" />
+        <path d="M258 14 L48 164" stroke="#5a3a22" strokeWidth="3" strokeLinecap="round" />
+        {/* pennant */}
+        <path d="M258 8 L236 12 L258 16 Z" fill="#b03a24" />
+        {/* hull */}
+        <path
+            d="M18 150 C 76 138, 150 132, 230 136 C 306 140, 368 148, 418 158 L 410 178 C 330 168, 150 162, 34 178 Z"
+            fill="url(#chull)"
+        />
+        {/* gunwale */}
+        <path
+            d="M22 150 C 78 139, 152 133, 232 137 C 306 141, 366 149, 414 159"
+            fill="none"
+            stroke="#c9a468"
+            strokeWidth="2"
+            opacity="0.85"
+        />
+        {/* waterline */}
+        <path
+            d="M36 168 C 150 160, 330 162, 410 170 L 410 178 C 330 168, 150 162, 34 178 Z"
+            fill="#10283c"
+            opacity="0.6"
+        />
+        {/* bowsprit */}
+        <path d="M18 150 L 4 158" stroke="#5a3a22" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+);
+
 const MarineScene = ({ className = '' }) => {
     const { t } = useLanguage();
     const canvasRef = useRef(null);
@@ -55,7 +170,6 @@ const MarineScene = ({ className = '' }) => {
             ctx.fillStyle = g;
             ctx.fillRect(0, 0, width, hy);
 
-            // Sun: soft warm glow near the horizon (diffuse, not a hard disc)
             const sunX = width * 0.7;
             const sunY = hy - 4;
             const glow = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, width * 0.26);
@@ -66,7 +180,6 @@ const MarineScene = ({ className = '' }) => {
             ctx.fillStyle = glow;
             ctx.fillRect(0, 0, width, hy + 2);
 
-            // Haze right above the horizon
             const haze = ctx.createLinearGradient(0, hy - 14, 0, hy + 6);
             haze.addColorStop(0, 'rgba(200,226,238,0)');
             haze.addColorStop(0.5, 'rgba(214,236,244,0.5)');
@@ -91,7 +204,6 @@ const MarineScene = ({ className = '' }) => {
             const horizonC = [150, 198, 220];
             const deepC = [8, 36, 68];
 
-            // Sea base gradient
             const base = ctx.createLinearGradient(0, hy, 0, height);
             base.addColorStop(0, '#3f86ad');
             base.addColorStop(0.5, '#164a78');
@@ -99,7 +211,6 @@ const MarineScene = ({ className = '' }) => {
             ctx.fillStyle = base;
             ctx.fillRect(0, hy, width, height - hy);
 
-            // Perspective wave bands
             for (let i = 0; i < rows; i++) {
                 const d0 = i / (rows - 1);
                 const d1 = (i + 1) / (rows - 1);
@@ -187,9 +298,17 @@ const MarineScene = ({ className = '' }) => {
         { cls: 'marine-gull--6', size: 32, top: 25, dur: 70, delay: -32, op: 0.65 },
     ];
 
+    // The 3D fleet: job cargo ships sail left→right, course sailboats sail right→left,
+    // each at a different depth (scale + translateZ) so the sea feels deep.
+    const fleet = [
+        { kind: 'jobs', cls: 'marine-vessel--job-a', w: 260, h: 128, dur: 64, delay: -8, depth: 1 },
+        { kind: 'courses', cls: 'marine-vessel--course-a', w: 230, h: 118, dur: 82, delay: -30, depth: 0.78 },
+        { kind: 'jobs', cls: 'marine-vessel--job-b', w: 180, h: 92, dur: 104, delay: -46, depth: 0.55 },
+        { kind: 'courses', cls: 'marine-vessel--course-b', w: 150, h: 78, dur: 122, delay: -70, depth: 0.42 },
+    ];
+
     return (
         <div className={`marine-scene ${className}`.trim()}>
-            {/* Front-view animated seascape: sky, horizon, rolling waves, interaction */}
             <canvas ref={canvasRef} className="marine-canvas" aria-hidden="true" />
 
             {/* Flock of gulls: wings swing with life while gliding */}
@@ -205,84 +324,40 @@ const MarineScene = ({ className = '' }) => {
                 ))}
             </div>
 
-            {/* Realistic felucca with app shortcuts on its deck console */}
-            <div className="marine-boat">
-                <svg className="marine-boat__svg" viewBox="0 0 420 210" width="420" height="210">
-                    <defs>
-                        <linearGradient id="feluccaSail" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#f6efdd" />
-                            <stop offset="60%" stopColor="#e7d9b6" />
-                            <stop offset="100%" stopColor="#cbb889" />
-                        </linearGradient>
-                        <linearGradient id="feluccaHull" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#8a5a34" />
-                            <stop offset="55%" stopColor="#6b4024" />
-                            <stop offset="100%" stopColor="#3a2314" />
-                        </linearGradient>
-                        <linearGradient id="feluccaStripe" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor="#b03a24" />
-                            <stop offset="100%" stopColor="#8a2418" />
-                        </linearGradient>
-                    </defs>
-
-                    {/* Lateen sail with a gentle billow */}
-                    <path
-                        d="M 244 12 C 200 34, 128 96, 66 150 C 112 130, 176 122, 246 128 C 246 88, 245 50, 244 12 Z"
-                        fill="url(#feluccaSail)"
-                        stroke="#b8a878"
-                        strokeWidth="1"
-                        opacity="0.94"
-                    />
-                    {/* Red stripe near the sail foot */}
-                    <path
-                        d="M 66 150 C 112 130, 176 122, 246 128 L 246 118 C 176 112, 112 120, 72 140 Z"
-                        fill="url(#feluccaStripe)"
-                        opacity="0.9"
-                    />
-                    {/* Mast */}
-                    <path d="M 244 6 L 244 152" stroke="#4a2f1a" strokeWidth="4" strokeLinecap="round" />
-                    {/* Yard arm */}
-                    <path d="M 244 12 L 60 156" stroke="#5a3a22" strokeWidth="3" strokeLinecap="round" />
-                    {/* Small pennant */}
-                    <path d="M 244 6 L 224 10 L 244 14 Z" fill="#b03a24" />
-
-                    {/* Hull */}
-                    <path
-                        d="M 22 148 C 80 136, 150 132, 220 136 C 290 140, 350 146, 396 156 L 390 176 C 320 166, 150 160, 40 176 Z"
-                        fill="url(#feluccaHull)"
-                    />
-                    {/* Gunwale */}
-                    <path
-                        d="M 26 148 C 84 137, 152 133, 222 137 C 290 141, 348 147, 392 157"
-                        fill="none"
-                        stroke="#c9a468"
-                        strokeWidth="2"
-                        opacity="0.85"
-                    />
-                    {/* Waterline */}
-                    <path
-                        d="M 40 166 C 150 158, 320 160, 390 168 L 390 176 C 320 166, 150 160, 40 176 Z"
-                        fill="#10283c"
-                        opacity="0.6"
-                    />
-                    {/* Bowsprit */}
-                    <path d="M 22 148 L 6 156" stroke="#5a3a22" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-
-                <nav className="marine-boat__icons" aria-label="Boat shortcuts">
-                    <Link to="/jobs" className="marine-boat__icon" title={t('boatJobs')}>
-                        <span className="marine-boat__icon-mark">⚓</span>
-                        <span className="marine-boat__icon-label">{t('boatJobs')}</span>
-                    </Link>
-                    <Link to="/courses" className="marine-boat__icon" title={t('boatCourses')}>
-                        <span className="marine-boat__icon-mark">🧭</span>
-                        <span className="marine-boat__icon-label">{t('boatCourses')}</span>
-                    </Link>
-                    <Link to="/cv-service" className="marine-boat__icon" title={t('boatCv')}>
-                        <span className="marine-boat__icon-mark">📄</span>
-                        <span className="marine-boat__icon-label">{t('boatCv')}</span>
-                    </Link>
-                </nav>
+            {/* 3D fleet of boats advertising jobs & courses */}
+            <div className="marine-fleet" aria-hidden="true">
+                {fleet.map((vessel) => (
+                    <div
+                        key={vessel.cls}
+                        className={`marine-vessel marine-vessel--${vessel.kind} ${vessel.cls}`}
+                        style={{ '--dur': `${vessel.dur}s`, '--delay': `${vessel.delay}s`, '--depth': vessel.depth }}
+                    >
+                        <div className="marine-vessel__rig">
+                            <div className="marine-vessel__svg" style={{ width: vessel.w, height: vessel.h }}>
+                                {vessel.kind === 'jobs' ? <JobShip /> : <CourseBoat />}
+                            </div>
+                        </div>
+                        <div className="marine-vessel__card">
+                            <span className="marine-vessel__kicker">
+                                {vessel.kind === 'jobs' ? '⚓ ' : '🧭 '}
+                                {vessel.kind === 'jobs' ? t('boatJobs') : t('boatCourses')}
+                            </span>
+                            <strong className="marine-vessel__title">
+                                {vessel.kind === 'jobs' ? t('jobBoatTitle') : t('courseBoatTitle')}
+                            </strong>
+                            <span className="marine-vessel__desc">
+                                {vessel.kind === 'jobs' ? t('jobBoatDesc') : t('courseBoatDesc')}
+                            </span>
+                            <Link
+                                className="marine-vessel__btn"
+                                to={vessel.kind === 'jobs' ? '/jobs' : '/courses'}
+                                tabIndex="0"
+                            >
+                                {vessel.kind === 'jobs' ? t('boatSeeJobs') : t('boatSeeCourses')}
+                            </Link>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

@@ -128,10 +128,16 @@ export const messages = {
         claim: 'استلم الطلب',
         noPending: 'لا توجد طلبات معلقة حاليًا.',
 
-        // Boat shortcuts (MarineScene)
+        // Boat fleet (MarineScene)
         boatJobs: 'وظائف',
         boatCourses: 'دورات',
         boatCv: 'سيرة ذاتية',
+        jobBoatTitle: 'سفينة الوظائف',
+        jobBoatDesc: 'وظائف متاحة الآن لشباب بورسعيد.',
+        courseBoatTitle: 'مركب الدورات',
+        courseBoatDesc: 'دورات عملية لتطوير مهاراتك.',
+        boatSeeJobs: 'تصفح الوظائف',
+        boatSeeCourses: 'تصفح الدورات',
 
         // About
         aboutTitle: 'من نحن',
@@ -300,10 +306,16 @@ export const messages = {
         claim: 'Claim',
         noPending: 'No pending requests right now.',
 
-        // Boat shortcuts (MarineScene)
+        // Boat fleet (MarineScene)
         boatJobs: 'Jobs',
         boatCourses: 'Courses',
         boatCv: 'CV',
+        jobBoatTitle: 'The jobs ship',
+        jobBoatDesc: 'Jobs available now for Port Said youth.',
+        courseBoatTitle: 'The courses boat',
+        courseBoatDesc: 'Practical courses to grow your skills.',
+        boatSeeJobs: 'Browse jobs',
+        boatSeeCourses: 'Browse courses',
 
         // About
         aboutTitle: 'About Us',

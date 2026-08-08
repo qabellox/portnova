@@ -467,7 +467,7 @@ const MarineScene = ({ className = '' }) => {
                 ))}
             </div>
 
-            <div className="marine-fleet" aria-hidden="true">
+            <div className="marine-fleet">
                 {fleet.map((vessel) => (
                     <div
                         key={vessel.cls}

@@ -473,6 +473,13 @@ const MarineScene = ({ className = '' }) => {
                         key={vessel.cls}
                         className={`marine-vessel marine-vessel--${vessel.kind} ${vessel.cls}`}
                         style={{ '--dur': `${vessel.dur}s`, '--delay': `${vessel.delay}s`, '--depth': vessel.depth, '--bob': `${6 + vessel.depth * 12}px` }}
+                        tabIndex="0"
+                        role="button"
+                        aria-label={t(vessel.titleKey)}
+                        onClick={(event) => event.currentTarget.focus()}
+                        onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') event.currentTarget.focus();
+                        }}
                     >
                         <div className="marine-vessel__rig">
                             <div className="marine-vessel__svg" style={{ width: vessel.w, height: vessel.h }}>

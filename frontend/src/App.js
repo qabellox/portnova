@@ -103,6 +103,15 @@ const UserMenu = () => {
 const ShellNav = () => {
     const { session } = useAuth();
     const { isArabic } = useLanguage();
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const closeMenu = () => setMenuOpen(false);
+        window.addEventListener('scroll', closeMenu, { passive: true });
+        return () => window.removeEventListener('scroll', closeMenu);
+    }, []);
+
+    const closeMenu = () => setMenuOpen(false);
 
     return (
         <header className="shell-nav">
@@ -129,6 +138,37 @@ const ShellNav = () => {
                 ))}
                 <LanguageToggle />
             </nav>
+
+            <button
+                className="nav-burger"
+                type="button"
+                aria-label={isArabic ? 'القائمة' : 'Menu'}
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((current) => !current)}
+            >
+                <span className="nav-burger__bar" />
+                <span className="nav-burger__bar" />
+                <span className="nav-burger__bar" />
+            </button>
+
+            {menuOpen ? (
+                <div className="nav-mobile">
+                    {navItems.map((item) => (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            end={item.end}
+                            className={({ isActive }) => `nav-mobile__link ${isActive ? 'nav-mobile__link--active' : ''}`.trim()}
+                            onClick={closeMenu}
+                        >
+                            {isArabic ? item.ar : item.en}
+                        </NavLink>
+                    ))}
+                    <div className="nav-mobile__toggle">
+                        <LanguageToggle />
+                    </div>
+                </div>
+            ) : null}
 
             <div className="nav-actions">
                 {session ? (

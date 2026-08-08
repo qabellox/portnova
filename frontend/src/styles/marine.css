@@ -49,8 +49,13 @@
    will-change: transform;
 }
 
-.marine-gull__wing--l { animation-name: gullWingL; }
-.marine-gull__wing--r { animation-name: gullWingR; }
+.marine-gull__wing--l {
+   animation-name: gullWingL;
+}
+
+.marine-gull__wing--r {
+   animation-name: gullWingR;
+}
 
 .marine-gull__body {
    animation: gullBob 1.8s ease-in-out infinite;
@@ -58,31 +63,90 @@
 }
 
 @keyframes gullWingL {
-   0% { transform: rotate(6deg); }
-   100% { transform: rotate(-34deg); }
+   0% {
+      transform: rotate(6deg);
+   }
+
+   100% {
+      transform: rotate(-34deg);
+   }
 }
 
 @keyframes gullWingR {
-   0% { transform: rotate(-6deg); }
-   100% { transform: rotate(34deg); }
+   0% {
+      transform: rotate(-6deg);
+   }
+
+   100% {
+      transform: rotate(34deg);
+   }
 }
 
 @keyframes gullBob {
-   0%, 100% { transform: translateY(0); }
-   50% { transform: translateY(-1px); }
+
+   0%,
+   100% {
+      transform: translateY(0);
+   }
+
+   50% {
+      transform: translateY(-1px);
+   }
 }
 
-.marine-gull--1 { top: 7%;  left: -16%; animation-duration: 52s; }
-.marine-gull--2 { top: 13%; left: -16%; animation-duration: 66s; animation-delay: -24s; }
-.marine-gull--3 { top: 4%;  left: -16%; animation-duration: 78s; animation-delay: -40s; }
-.marine-gull--4 { top: 20%; left: -16%; animation-duration: 60s; animation-delay: -12s; }
-.marine-gull--5 { top: 10%; left: -16%; animation-duration: 88s; animation-delay: -55s; }
-.marine-gull--6 { top: 25%; left: -16%; animation-duration: 70s; animation-delay: -32s; }
+.marine-gull--1 {
+   top: 7%;
+   left: -16%;
+   animation-duration: 52s;
+}
+
+.marine-gull--2 {
+   top: 13%;
+   left: -16%;
+   animation-duration: 66s;
+   animation-delay: -24s;
+}
+
+.marine-gull--3 {
+   top: 4%;
+   left: -16%;
+   animation-duration: 78s;
+   animation-delay: -40s;
+}
+
+.marine-gull--4 {
+   top: 20%;
+   left: -16%;
+   animation-duration: 60s;
+   animation-delay: -12s;
+}
+
+.marine-gull--5 {
+   top: 10%;
+   left: -16%;
+   animation-duration: 88s;
+   animation-delay: -55s;
+}
+
+.marine-gull--6 {
+   top: 25%;
+   left: -16%;
+   animation-duration: 70s;
+   animation-delay: -32s;
+}
 
 @keyframes gullDrift {
-   0%   { transform: translateX(0) translateY(0); }
-   50%  { transform: translateX(62vw) translateY(-2.5vh); }
-   100% { transform: translateX(124vw) translateY(1.5vh); }
+   0% {
+      transform: translateX(0) translateY(0);
+   }
+
+   50% {
+      transform: translateX(62vw) translateY(-2.5vh);
+   }
+
+   100% {
+      transform: translateX(124vw) translateY(1.5vh);
+   }
 }
 
 /* ============================================================
@@ -131,11 +195,27 @@
 }
 
 @keyframes vesselRide {
-   0%, 100% { transform: translateY(calc(var(--bob, 10px) * 0.15)) rotate(-2.2deg); }
-   20%      { transform: translateY(calc(var(--bob, 10px) * -0.4)) rotate(1.6deg); }
-   40%      { transform: translateY(calc(var(--bob, 10px) * 0.5)) rotate(-1.1deg); }
-   60%      { transform: translateY(calc(var(--bob, 10px) * -0.85)) rotate(2.4deg); }
-   80%      { transform: translateY(calc(var(--bob, 10px) * 0.35)) rotate(-1.8deg); }
+
+   0%,
+   100% {
+      transform: translateY(calc(var(--bob, 10px) * 0.15)) rotate(-2.2deg);
+   }
+
+   20% {
+      transform: translateY(calc(var(--bob, 10px) * -0.4)) rotate(1.6deg);
+   }
+
+   40% {
+      transform: translateY(calc(var(--bob, 10px) * 0.5)) rotate(-1.1deg);
+   }
+
+   60% {
+      transform: translateY(calc(var(--bob, 10px) * -0.85)) rotate(2.4deg);
+   }
+
+   80% {
+      transform: translateY(calc(var(--bob, 10px) * 0.35)) rotate(-1.8deg);
+   }
 }
 
 /* Jobs cargo ships sail left → right */
@@ -149,20 +229,44 @@
 }
 
 /* Depth lanes: foreground big & low, background small & near the horizon */
-.marine-vessel--job-a    { bottom: 5%; }
-.marine-vessel--course-a { bottom: 14%; }
-.marine-vessel--job-b    { bottom: 32%; }
-.marine-vessel--course-b { bottom: 44%; }
-.marine-vessel--course-c { bottom: 54%; }
+.marine-vessel--job-a {
+   bottom: 5%;
+}
+
+.marine-vessel--course-a {
+   bottom: 14%;
+}
+
+.marine-vessel--job-b {
+   bottom: 32%;
+}
+
+.marine-vessel--course-b {
+   bottom: 44%;
+}
+
+.marine-vessel--course-c {
+   bottom: 54%;
+}
 
 @keyframes fleetSailRight {
-   0%   { transform: translateX(-120%); }
-   100% { transform: translateX(130vw); }
+   0% {
+      transform: translateX(-120%);
+   }
+
+   100% {
+      transform: translateX(130vw);
+   }
 }
 
 @keyframes fleetSailLeft {
-   0%   { transform: translateX(130vw); }
-   100% { transform: translateX(-120%); }
+   0% {
+      transform: translateX(130vw);
+   }
+
+   100% {
+      transform: translateX(-120%);
+   }
 }
 
 /* Info card: readable fixed size, anchored above the boat */
@@ -255,7 +359,60 @@
    pointer-events: none;
 }
 
+/* ============================================================
+   MOBILE — phones have no hover, so cards reveal on tap/focus
+   and the fleet is scaled to avoid overlapping boats.
+   ============================================================ */
+@media (max-width: 720px) {
+   .marine-fleet {
+      perspective-origin: 50% 70%;
+   }
+
+   /* Pull lanes up toward the horizon so a short hero shows
+      foreground + mid + background boats without covering each other. */
+   .marine-vessel--job-a {
+      bottom: 8%;
+   }
+
+   .marine-vessel--course-a {
+      bottom: 30%;
+   }
+
+   .marine-vessel--job-b {
+      bottom: 46%;
+   }
+
+   .marine-vessel--course-b {
+      bottom: 58%;
+   }
+
+   .marine-vessel--course-c {
+      bottom: 68%;
+   }
+
+   /* Card stays a readable fixed size, anchored above the boat. */
+   .marine-vessel__card {
+      width: 13rem;
+      max-width: 60vw;
+      bottom: calc(100% + 10px);
+   }
+
+   .marine-vessel__title {
+      font-size: 0.95rem;
+   }
+
+   .marine-vessel__desc {
+      font-size: 0.8rem;
+   }
+
+   .marine-vessel__btn {
+      font-size: 0.8rem;
+      padding: 0.5rem 0.85rem;
+   }
+}
+
 @media (prefers-reduced-motion: reduce) {
+
    .marine-canvas,
    .marine-gull,
    .marine-gull__wing,

@@ -3,12 +3,12 @@ import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '
 import { useLanguage } from '../context/LanguageContext';
 
 const jobs = [
-    { company: 'Nova Labs', role: 'Frontend Product Intern', salary: '$450/mo', location: 'Port Said', category: 'Tech', fit: 94, tone: 'blue' },
-    { company: 'HarborX', role: 'Operations Coordinator', salary: '$700/mo', location: 'Hybrid', category: 'Business', fit: 87, tone: 'gold' },
-    { company: 'BlueWave', role: 'Community Designer', salary: '$600/mo', location: 'Remote', category: 'Design', fit: 91, tone: 'success' },
-    { company: 'Atlas Port', role: 'Business Analyst', salary: '$900/mo', location: 'Onsite', category: 'Business', fit: 84, tone: 'blue' },
-    { company: 'Sunrise Digital', role: 'Junior Marketing Specialist', salary: '$420/mo', location: 'Remote', category: 'Marketing', fit: 88, tone: 'gold' },
-    { company: 'Porta Tech', role: 'Data Entry & Support', salary: '$380/mo', location: 'Port Said', category: 'Business', fit: 79, tone: 'blue' },
+    { company: 'Nova Labs', role: 'Frontend Product Intern', salary: '$450/mo', location: 'Port Said', category: 'Tech', type: 'intern', experience: 'entry', posted: 2, tone: 'blue', emoji: '💻' },
+    { company: 'HarborX', role: 'Operations Coordinator', salary: '$700/mo', location: 'Hybrid', category: 'Business', type: 'full', experience: 'mid', posted: 4, tone: 'gold', emoji: '⚓' },
+    { company: 'BlueWave', role: 'Community Designer', salary: '$600/mo', location: 'Remote', category: 'Design', type: 'full', experience: 'mid', posted: 1, tone: 'success', emoji: '🎨' },
+    { company: 'Atlas Port', role: 'Business Analyst', salary: '$900/mo', location: 'Onsite', category: 'Business', type: 'contract', experience: 'senior', posted: 6, tone: 'blue', emoji: '📊' },
+    { company: 'Sunrise Digital', role: 'Junior Marketing Specialist', salary: '$420/mo', location: 'Remote', category: 'Marketing', type: 'part', experience: 'entry', posted: 3, tone: 'gold', emoji: '📣' },
+    { company: 'Porta Tech', role: 'Data Entry & Support', salary: '$380/mo', location: 'Port Said', category: 'Business', type: 'full', experience: 'entry', posted: 8, tone: 'blue', emoji: '🗂' },
 ];
 
 const Jobs = () => {
@@ -84,9 +84,10 @@ const Jobs = () => {
                 <div className="card-grid card-grid--compact">
                     {filtered.map((job) => (
                         <GlassCard key={job.role} interactive className="data-card">
+                            <div className="course-cover" aria-hidden="true">{job.emoji}</div>
                             <div className="card-head">
                                 <div>
-                                    <div className="company-mark">{job.company.slice(0, 2)}</div>
+                                    <Badge tone={job.tone}>{job.salary}</Badge>
                                     <h3 className="card-title" style={{ marginTop: '0.85rem' }}>
                                         {job.role}
                                     </h3>
@@ -96,11 +97,17 @@ const Jobs = () => {
                                         className="card-copy"
                                     />
                                 </div>
-                                <Badge tone={job.tone}>{job.salary}</Badge>
                             </div>
 
                             <div className="card-meta">
                                 <Badge tone={job.tone}>{t(`cat${job.category}`)}</Badge>
+                            </div>
+
+                            <div className="course-detail">
+                                <span className="course-detail__item">💼 <strong>{t(`jobType${job.type === 'intern' ? 'Intern' : job.type === 'full' ? 'Full' : job.type === 'part' ? 'Part' : 'Contract'}`)}</strong></span>
+                                <span className="course-detail__item">🎓 <strong>{t(`jobExp${job.experience === 'entry' ? 'Entry' : job.experience === 'mid' ? 'Mid' : 'Senior'}`)}</strong></span>
+                                <span className="course-detail__item">📍 {job.location}</span>
+                                <span className="course-detail__item">📅 {job.posted === 1 ? t('jobPostedToday') : t('jobPostedDays', { n: job.posted })}</span>
                             </div>
 
                             <div className="inline-actions" style={{ marginTop: '1rem' }}>

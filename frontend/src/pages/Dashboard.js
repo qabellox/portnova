@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
-import { Badge, BilingualLine, GlassCard, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
+import { Badge, GlassCard, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
 const getInitials = (name = 'PN') =>
@@ -12,24 +12,38 @@ const getInitials = (name = 'PN') =>
         .map((part) => part[0]?.toUpperCase())
         .join('') || 'PN';
 
-/* Merged Dashboard + Profile.
-   Keeps the real functionality: your profile details (saved to your account)
-   and quick links to the services. Fake metrics are removed — real ones come
-   once the backend data exists. */
+const roleInfo = {
+    youth: { key: 'roleSeeker', tag: 'roleSeekerTag', icon: '🎓' },
+    company: { key: 'roleHirer', tag: 'roleHirerTag', icon: '🏢' },
+    expert: { key: 'roleProvider', tag: 'roleProviderTag', icon: '📚' },
+};
+
 const Dashboard = () => {
     const { user } = useAuth();
-    const { isArabic } = useLanguage();
+    const { isArabic, t } = useLanguage();
+    const fileRef = useRef(null);
 
     const meta = user?.user_metadata || {};
     const role = meta.role || 'youth';
     const email = user?.email || '';
+    const info = roleInfo[role] || roleInfo.youth;
+
     const [fullName, setFullName] = useState(meta.fullName || '');
     const [headline, setHeadline] = useState(meta.headline || '');
     const [location, setLocation] = useState(meta.location || '');
     const [bio, setBio] = useState(meta.bio || '');
+    const [avatar, setAvatar] = useState(meta.avatarUrl || '');
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+
+    const onPickImage = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => setAvatar(String(reader.result || ''));
+        reader.readAsDataURL(file);
+    };
 
     const handleSave = async (event) => {
         event.preventDefault();
@@ -38,7 +52,7 @@ const Dashboard = () => {
         setError('');
 
         const { error: updateError } = await supabase.auth.updateUser({
-            data: { fullName, headline, location, bio },
+            data: { fullName, headline, location, bio, avatarUrl: avatar },
         });
 
         setSaving(false);
@@ -48,7 +62,7 @@ const Dashboard = () => {
             return;
         }
 
-        setMessage(isArabic ? 'تم حفظ ملفك الشخصي.' : 'Your profile was saved.');
+        setMessage(t('dashSaved'));
     };
 
     return (
@@ -60,29 +74,41 @@ const Dashboard = () => {
                         <h1 className="hero__title">
                             {isArabic ? 'أهلًا' : 'Welcome'}, <span className="gradient-text">{fullName || email}</span>.
                         </h1>
-                        <BilingualLine
-                            as="p"
-                            className="hero__lead"
-                            ar="هنا ملفك وروابطك السريعة — كل ما يخصك في مكان واحد."
-                            en="Your profile and quick links — everything about you in one place."
-                        />
+                        <p className="hero__lead">{t('dashRoleHint')}</p>
                         <div className="status-strip">
-                            <Badge tone="gold">{role}</Badge>
-                            <Badge tone="blue">{isArabic ? 'جلسة نشطة' : 'Active session'}</Badge>
+                            <Badge tone="gold">{info.icon} {t(info.key)}</Badge>
+                            <Badge tone="blue">{t(info.tag)}</Badge>
                         </div>
                     </div>
 
                     <GlassCard className="hero__orbital hero__orbital--primary">
-                        <div className="profile-avatar" style={{ width: '4rem', height: '4rem', fontSize: '1.4rem' }}>
-                            {getInitials(fullName || email)}
+                        <SectionHeading kicker={t('dashProfileTitle')} title="" />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            {avatar ? (
+                                <img className="profile-avatar profile-avatar--img" src={avatar} alt={fullName || 'avatar'} />
+                            ) : (
+                                <div className="profile-avatar" style={{ width: '4.5rem', height: '4.5rem', fontSize: '1.5rem' }}>
+                                    {getInitials(fullName || email)}
+                                </div>
+                            )}
+                            <div>
+                                <div className="card-title">{fullName || email}</div>
+                                <div className="muted">{headline || (isArabic ? 'أضف عنوانًا مهنيًا' : 'Add a headline')}</div>
+                                <div className="muted">{location || email}</div>
+                            </div>
                         </div>
-                        <div className="muted" style={{ marginTop: '0.75rem' }}>{email}</div>
+                        <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickImage} />
                         <div className="inline-actions" style={{ marginTop: '1rem' }}>
+                            <PremiumButton variant="ghost" onClick={() => fileRef.current?.click()}>
+                                {t('dashUploadAvatar')}
+                            </PremiumButton>
+                            {avatar ? (
+                                <PremiumButton variant="ghost" onClick={() => setAvatar('')}>
+                                    {t('dashRemove')}
+                                </PremiumButton>
+                            ) : null}
                             <PremiumButton variant="gold" to="/cv-service">
                                 {isArabic ? 'خدمة السيرة الذاتية' : 'CV service'}
-                            </PremiumButton>
-                            <PremiumButton variant="ghost" to="/jobs">
-                                {isArabic ? 'الوظائف' : 'Jobs'}
                             </PremiumButton>
                         </div>
                     </GlassCard>
@@ -91,23 +117,37 @@ const Dashboard = () => {
 
             <GlassCard>
                 <SectionHeading
-                    kicker={isArabic ? 'الملف' : 'Profile'}
-                    title={isArabic ? 'عدّل بياناتك' : 'Edit your details'}
-                    subtitle={isArabic ? 'بياناتك تُحفظ في حسابك وتظهر في كل المنصة.' : 'Your details are saved to your account and used across the platform.'}
+                    kicker={t('dashRoleLabel')}
+                    title={t('dashRoleHint')}
+                    subtitle={`${info.icon} ${t(info.key)} — ${t(info.tag)}`}
                 />
-                {message ? <p className="muted" style={{ color: '#bbf7d0' }}>{message}</p> : null}
-                {error ? <p className="muted" style={{ color: '#fecaca' }}>{error}</p> : null}
-                <form onSubmit={handleSave}>
-                    <div className="field-group">
-                        <input className="field" type="text" placeholder={isArabic ? 'الاسم الكامل' : 'Full name'} value={fullName} onChange={(e) => setFullName(e.target.value)} />
-                        <input className="field" type="text" placeholder={isArabic ? 'العنوان المهني' : 'Headline'} value={headline} onChange={(e) => setHeadline(e.target.value)} />
-                        <input className="field" type="text" placeholder={isArabic ? 'الموقع' : 'Location'} value={location} onChange={(e) => setLocation(e.target.value)} />
-                        <textarea className="textarea" placeholder={isArabic ? 'نبذة عنك' : 'Short bio'} value={bio} onChange={(e) => setBio(e.target.value)} />
-                        <LoaderButton type="submit" variant="gold" loading={saving}>
-                            {saving ? (isArabic ? 'جارٍ الحفظ...' : 'Saving...') : isArabic ? 'حفظ التغييرات' : 'Save changes'}
-                        </LoaderButton>
+                <div className="split-grid">
+                    <div>
+                        <div className="field-group">
+                            <label className="filter-label" style={{ textTransform: 'none' }}>{t('dashFullName')}</label>
+                            <input className="field" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                            <label className="filter-label" style={{ textTransform: 'none' }}>{t('dashHeadline')}</label>
+                            <input className="field" type="text" placeholder={t('dashHeadlinePlaceholder')} value={headline} onChange={(e) => setHeadline(e.target.value)} />
+                            <label className="filter-label" style={{ textTransform: 'none' }}>{t('dashLocation')}</label>
+                            <input className="field" type="text" placeholder={isArabic ? 'بورسعيد' : 'Port Said'} value={location} onChange={(e) => setLocation(e.target.value)} />
+                            <label className="filter-label" style={{ textTransform: 'none' }}>{t('dashBio')}</label>
+                            <textarea className="textarea" placeholder={t('dashBioPlaceholder')} value={bio} onChange={(e) => setBio(e.target.value)} />
+                            {message ? <p className="muted" style={{ color: '#bbf7d0' }}>{message}</p> : null}
+                            {error ? <p className="muted" style={{ color: '#fecaca' }}>{error}</p> : null}
+                            <LoaderButton type="button" variant="gold" loading={saving} onClick={handleSave}>
+                                {saving ? (isArabic ? 'جارٍ الحفظ...' : 'Saving...') : t('dashSave')}
+                            </LoaderButton>
+                        </div>
                     </div>
-                </form>
+                    <GlassCard>
+                        <SectionHeading kicker={t('dashQuick')} title={isArabic ? 'ابدأ الآن' : 'Get started'} />
+                        <div className="inline-actions">
+                            <PremiumButton variant="primary" to="/jobs">{isArabic ? 'تصفح الوظائف' : 'Browse jobs'}</PremiumButton>
+                            <PremiumButton variant="primary" to="/courses">{isArabic ? 'تصفح الدورات' : 'Browse courses'}</PremiumButton>
+                            <PremiumButton variant="gold" to="/cv-service">{isArabic ? 'خدمة السيرة الذاتية' : 'CV service'}</PremiumButton>
+                        </div>
+                    </GlassCard>
+                </div>
             </GlassCard>
         </div>
     );

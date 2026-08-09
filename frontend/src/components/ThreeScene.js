@@ -123,14 +123,16 @@ const SkyDome = () => {
 
     useFrame((state) => {
         if (!mat.current) return;
-        const { skyLight, sunDir, sunColor, warmth, sunGlow } = getCelestial();
+        const { skyLight, sunDir, moonDir, sunColor, warmth, sunGlow, moonVisible } = getCelestial();
         const aspect = state.size.width / state.size.height;
-        // Keep the sun inside the visible sky on every screen
+        // Keep the sun & moon inside the visible sky on every screen
         const viewDir = (d) => fitToView(d, aspect);
         mat.current.uniforms.uDayLight.value = skyLight;
         mat.current.uniforms.uDusk.value = warmth;
         mat.current.uniforms.uSunGlow.value = sunGlow;
+        mat.current.uniforms.uMoonVisible.value = moonVisible;
         mat.current.uniforms.uSunDir.value.copy(viewDir(sunDir));
+        mat.current.uniforms.uMoonDir.value.copy(viewDir(moonDir));
         mat.current.uniforms.uSunColor.value.copy(sunColor);
     });
 
@@ -145,7 +147,9 @@ const SkyDome = () => {
                     uDayLight: { value: getDayLight() },
                     uDusk: { value: 0 },
                     uSunGlow: { value: 1 },
+                    uMoonVisible: { value: 0 },
                     uSunDir: { value: new THREE.Vector3(0, 1.15, -1).normalize() },
+                    uMoonDir: { value: new THREE.Vector3(0, 1.15, -1).normalize() },
                     uSunColor: { value: new THREE.Color('#fff2cf') },
                 }}
                 vertexShader={`
@@ -159,7 +163,9 @@ const SkyDome = () => {
                     uniform float uDayLight;
                     uniform float uDusk;
                     uniform float uSunGlow;
+                    uniform float uMoonVisible;
                     uniform vec3 uSunDir;
+                    uniform vec3 uMoonDir;
                     uniform vec3 uSunColor;
                     varying vec3 vDir;
 
@@ -184,6 +190,11 @@ const SkyDome = () => {
                         col += uSunColor * pow(s, 4.0) * (0.15 + 0.8 * uDusk) * uSunGlow;
                         col += uSunColor * smoothstep(0.9960, 0.9990, s) * 2.4 * uSunGlow;
                         col += uSunColor * pow(s, 20.0) * 1.0 * uSunGlow;
+
+                        // faint cool iris halo around the 3D moon in the night sky
+                        float m = max(dot(d, uMoonDir), 0.0);
+                        col += vec3(0.78, 0.85, 1.0) * pow(m, 5.0) * 0.3 * uMoonVisible;
+                        col += vec3(0.82, 0.88, 1.0) * pow(m, 18.0) * 0.45 * uMoonVisible;
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -511,12 +522,25 @@ const Moon3D = () => {
                             float diff = max(dot(n, light), 0.0);
                             float term = smoothstep(-0.1, 0.25, diff);
 
-                            // clean pearl-silver body with a gentle falloff
-                            vec3 col = vec3(0.86, 0.89, 0.96) * (term * 1.3 + 0.06);
+                            // distance from the moon's disc centre + iris angle
+                            float d = length(n.xy);
+                            float ang = atan(n.y, n.x);
 
-                            // soft silver rim glow
+                            // pearl-silver 3D body
+                            vec3 body = vec3(0.87, 0.90, 0.97) * (term * 1.2 + 0.05);
+
+                            // iris-style luminous layers: bright core, soft halo,
+                            // six fine rays — like the sun, but cool and silver
+                            float core = smoothstep(0.5, 0.0, d);
+                            float glow = exp(-d * 2.4);
+                            float rays = pow(abs(sin(ang * 6.0)), 20.0) * exp(-d * 3.0);
+                            vec3 iris = vec3(0.84, 0.89, 1.0) * (core * 1.6 + glow * 0.55 + rays * 0.9);
+
+                            vec3 col = body + iris * (0.15 + 0.85 * term);
+
+                            // faint cool rim
                             float rim = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
-                            col += vec3(0.75, 0.82, 1.0) * rim * 0.35;
+                            col += vec3(0.75, 0.82, 1.0) * rim * 0.3;
 
                             col *= uVisible;
                             gl_FragColor = vec4(col, uVisible);

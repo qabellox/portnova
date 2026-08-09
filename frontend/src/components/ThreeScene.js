@@ -520,6 +520,33 @@ const WOOD_DARK = '#5c4033';
 const DECK = '#d4a373';
 const SAIL = '#f8fafc';
 
+/* Clash-Royale-style identity banner: a pole + a bright pennant that
+   clearly labels the boat. color = flag tint, glyph = emoji-like shape. */
+const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.1 }) => (
+    <group>
+        {/* pole */}
+        <mesh position={[0, poleH / 2, 0]}>
+            <cylinderGeometry args={[0.035, 0.045, poleH, 8]} />
+            <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
+        </mesh>
+        {/* pennant */}
+        <mesh position={[length / 2, topY, 0.02]}>
+            <planeGeometry args={[length, 0.62]} />
+            <meshStandardMaterial color={color} metalness={0.1} roughness={0.5} side={THREE.DoubleSide} />
+        </mesh>
+        {/* pennant tail notch */}
+        <mesh position={[length * 0.82, topY - 0.14, 0.03]} rotation={[0, 0, 0.5]}>
+            <planeGeometry args={[length * 0.34, 0.24]} />
+            <meshStandardMaterial color={color} metalness={0.1} roughness={0.5} side={THREE.DoubleSide} />
+        </mesh>
+        {/* pennant tip */}
+        <mesh position={[length * 0.05, topY + 0.3, 0.02]}>
+            <sphereGeometry args={[0.07, 10, 10]} />
+            <meshStandardMaterial color="#fcd34d" metalness={0.2} roughness={0.4} />
+        </mesh>
+    </group>
+);
+
 const CargoShipMesh = () => (
     <group>
         {/* chined hull (dark blue steel) — deck at local y≈0.34 above waterline */}
@@ -558,15 +585,10 @@ const CargoShipMesh = () => (
             <boxGeometry args={[0.6, 0.24, 0.55]} />
             <meshStandardMaterial color="#3fa785" metalness={0.25} roughness={0.45} />
         </mesh>
-        {/* foremast + flag */}
-        <mesh position={[-1.4, 1.05, 0]}>
-            <cylinderGeometry args={[0.028, 0.028, 1.5, 8]} />
-            <meshStandardMaterial color="#3a4a5c" metalness={0.45} roughness={0.45} />
-        </mesh>
-        <mesh position={[-1.4, 1.85, 0.04]} rotation={[0, 0, 0.35]}>
-            <planeGeometry args={[0.6, 0.34]} />
-            <meshStandardMaterial color="#1f9ac4" metalness={0.1} roughness={0.6} side={THREE.DoubleSide} />
-        </mesh>
+        {/* identity banner (blue) at the stern */}
+        <group position={[-1.35, 0.32, 0]}>
+            <Banner color="#1f9ac4" poleH={2.1} topY={1.7} length={1.15} />
+        </group>
     </group>
 );
 
@@ -610,11 +632,10 @@ const SailboatMesh = () => (
             <planeGeometry args={[1.05, 0.18]} />
             <meshStandardMaterial color="#b03a24" metalness={0.03} roughness={0.7} side={THREE.DoubleSide} />
         </mesh>
-        {/* pennant */}
-        <mesh position={[0.45, 2.05, 0]} rotation={[0, 0, 0.5]}>
-            <planeGeometry args={[0.55, 0.13]} />
-            <meshStandardMaterial color="#b03a24" metalness={0.03} roughness={0.6} side={THREE.DoubleSide} />
-        </mesh>
+        {/* identity banner (gold) at the bow */}
+        <group position={[-0.35, 0.22, 0]}>
+            <Banner color="#d4af37" poleH={2.2} topY={1.8} length={1.2} />
+        </group>
     </group>
 );
 
@@ -628,8 +649,10 @@ const waveH = (x, z, t) => {
     return w;
 };
 
-/* Sailing fleet: 3D ships riding the waves. Projects each boat's real
-   screen position into positionsRef so the DOM cards can follow it. */
+/* Sailing fleet: 3D ships riding the waves. Each boat sails steadily
+   FORWARD (never reverses), gently bobbing on the water like Clash Royale
+   clan boats. Projects each boat's real screen position into positionsRef
+   so the DOM cards can follow it. */
 const Fleet = ({ fleet, positionsRef }) => {
     const groups = useRef([]);
     const v = useRef(new THREE.Vector3());
@@ -641,24 +664,24 @@ const Fleet = ({ fleet, positionsRef }) => {
         fleet.forEach((b, i) => {
             const g = groups.current[i];
             if (!g || !pos) return;
-            const range = b.range || 14;
-            const raw = (t * b.speed + b.phase) % (2 * range);
-            const x = raw > range ? 2 * range - raw : raw;
-            const xs = x - range;
+            const span = b.range || 14;
+            // Continuous forward progress in the boat's direction; wraps
+            // seamlessly (boat never reverses). dir=1 sails right, -1 left.
+            const raw = (t * b.speed * b.dir + b.phase) % (span * 2);
+            const xs = raw - span;
             const z = b.z;
 
-            // Surface height + local slopes -> the boat truly rides the waves
+            // Gentle heave + subtle pitch/roll so it rides, not rocks violently
             const eps = 0.35;
             const h0 = waveH(xs, z, t);
             const hx = waveH(xs + eps, z, t) - waveH(xs - eps, z, t);
             const hz = waveH(xs, z + eps, t) - waveH(xs, z - eps, t);
-            const y = -0.35 + h0 * 0.7;
+            const y = -0.35 + h0 * 0.45;
 
             g.position.set(xs, y, z);
-            // pitch (X slope) and roll (Z slope) follow the wave face
-            g.rotation.z = Math.atan(hx) * 0.55;
-            g.rotation.x = Math.atan(hz) * 0.55;
-            g.rotation.y = b.dir > 0 ? 0 : Math.PI;
+            g.rotation.z = Math.atan(hx) * 0.3; // gentle pitch
+            g.rotation.x = Math.atan(hz) * 0.22; // gentle roll
+            g.rotation.y = b.dir > 0 ? 0 : Math.PI; // fixed facing, never flips
 
             // project center to screen (%)
             v.current.set(xs, y + b.anchorY, z);

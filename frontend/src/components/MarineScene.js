@@ -20,11 +20,11 @@ import ThreeScene from './ThreeScene';
    the boat travels before wrapping (hides the wrap). lift raises the hull
    above the waterline so it floats with real freeboard. */
 const FLEET = [
-    { id: 'job-a', kind: 'jobs', w: 3.4, z: -2, speed: 0.6, dir: 1, phase: 0.15, margin: 2.3, scale: 0.8, lift: 0.28, anchorY: 1.8, focus: 'Frontend Product Intern', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
-    { id: 'course-a', kind: 'courses', w: 2.6, z: -5.5, speed: 0.75, dir: -1, phase: 0.85, margin: 2.0, scale: 0.68, lift: 0.4, anchorY: 2.3, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
-    { id: 'job-b', kind: 'jobs', w: 3.4, z: -9, speed: 0.5, dir: 1, phase: 0.4, margin: 2.3, scale: 0.56, lift: 0.28, anchorY: 1.8, focus: 'Operations Coordinator', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
-    { id: 'course-b', kind: 'courses', w: 2.6, z: -13, speed: 0.4, dir: -1, phase: 0.65, margin: 2.0, scale: 0.46, lift: 0.4, anchorY: 2.3, focus: 'Startup Operations', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
-    { id: 'course-c', kind: 'courses', w: 2.6, z: -18, speed: 0.3, dir: 1, phase: 0.5, margin: 2.0, scale: 0.38, lift: 0.4, anchorY: 2.3, focus: 'Career Readiness', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
+    { id: 'job-a', kind: 'jobs', w: 3.4, z: -2, speed: 0.6, dir: 1, phase: 0.15, margin: 2.3, scale: 0.8, lift: 0.28, anchorY: 1.8, focus: 'Frontend Product Intern', kickerKey: 'fleetJob1Kicker', orgKey: 'fleetJob1Org', metaKey: 'fleetJob1Meta', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
+    { id: 'course-a', kind: 'courses', w: 2.6, z: -5.5, speed: 0.75, dir: -1, phase: 0.85, margin: 2.0, scale: 0.68, lift: 0.4, anchorY: 2.3, focus: 'Product Design Sprint', kickerKey: 'fleetCourse1Kicker', orgKey: 'fleetCourse1Org', metaKey: 'fleetCourse1Meta', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
+    { id: 'job-b', kind: 'jobs', w: 3.4, z: -9, speed: 0.5, dir: 1, phase: 0.4, margin: 2.3, scale: 0.56, lift: 0.28, anchorY: 1.8, focus: 'Operations Coordinator', kickerKey: 'fleetJob2Kicker', orgKey: 'fleetJob2Org', metaKey: 'fleetJob2Meta', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
+    { id: 'course-b', kind: 'courses', w: 2.6, z: -13, speed: 0.4, dir: -1, phase: 0.65, margin: 2.0, scale: 0.46, lift: 0.4, anchorY: 2.3, focus: 'Startup Operations', kickerKey: 'fleetCourse2Kicker', orgKey: 'fleetCourse2Org', metaKey: 'fleetCourse2Meta', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
+    { id: 'course-c', kind: 'courses', w: 2.6, z: -18, speed: 0.3, dir: 1, phase: 0.5, margin: 2.0, scale: 0.38, lift: 0.4, anchorY: 2.3, focus: 'Career Readiness', kickerKey: 'fleetCourse3Kicker', orgKey: 'fleetCourse3Org', metaKey: 'fleetCourse3Meta', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
 ];
 
 const MarineScene = ({ className = '' }) => {
@@ -43,7 +43,7 @@ const MarineScene = ({ className = '' }) => {
                 if (!el || !p) return;
                 el.style.left = `${p.x}%`;
                 el.style.top = `${p.y}%`;
-                el.style.width = `${Math.max(p.w * 1.6, 96)}px`;
+                el.style.width = `${Math.max(p.w * 1.6, 160)}px`;
                 el.style.opacity = p.visible ? '' : '0';
                 el.style.pointerEvents = p.visible ? 'auto' : 'none';
             });
@@ -104,9 +104,12 @@ const MarineScene = ({ className = '' }) => {
                         <div className="marine-vessel__card">
                             <span className="marine-vessel__kicker">
                                 {vessel.kind === 'jobs' ? '⚓ ' : '🧭 '}
-                                {vessel.kind === 'jobs' ? t('boatJobs') : t('boatCourses')}
+                                {t(vessel.kickerKey)}
                             </span>
                             <strong className="marine-vessel__title">{t(vessel.titleKey)}</strong>
+                            <span className="marine-vessel__meta">
+                                {t(vessel.orgKey)} · {t(vessel.metaKey)}
+                            </span>
                             <span className="marine-vessel__desc">{t(vessel.descKey)}</span>
                             <Link
                                 className="marine-vessel__btn"

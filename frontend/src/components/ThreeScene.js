@@ -721,6 +721,21 @@ const Fleet = ({ fleet, positionsRef }) => {
             v.current.project(cam);
             const wPct = Math.abs(((v.current.x + 1) / 2) - sx) * 100;
             const visible = v.current.z < 1 && sx > -0.2 && sx < 1.2 && sy > -0.2 && sy < 1.2;
+
+            // Dissolve the hull near the screen edges: the ship fades in as it
+            // enters from the border and fades out as it leaves — a smooth
+            // transition instead of a hard pop at the wall.
+            const edge = 0.12;
+            const fade = Math.min(1, Math.max(0, Math.min(sx / edge, (1 - sx) / edge)));
+            if (fade < 1) {
+                g.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        const mats = Array.isArray(child.material) ? child.material : [child.material];
+                        mats.forEach((m) => { m.transparent = true; m.opacity = fade; });
+                    }
+                });
+            }
+
             pos[b.id] = { x: sx * 100, y: sy * 100, w: Math.max(wPct, 7), visible };
         });
     });

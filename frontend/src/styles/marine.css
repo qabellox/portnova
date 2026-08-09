@@ -171,7 +171,8 @@
    top: 0;
    left: 0;
    transform: translate(-50%, -115%);
-   height: 34px;
+   height: 84px;
+   min-width: 110px;
    pointer-events: auto;
    cursor: pointer;
    border-radius: 10px;
@@ -185,49 +186,36 @@
    z-index: 20;
 }
 
-/* Info card anchored above the boat — the compact label is ALWAYS visible
-   (so every ship clearly points to its job/course); hovering / tapping /
-   focusing expands it to show the description and the deep-link button. */
+/* Info card anchored above the boat — hidden by default. The vessel is a
+   generous hover zone that travels with the ship, so the card appears ONLY
+   when the pointer gets close to the boat, then fades/slides in smoothly. */
 .marine-vessel__card {
    position: absolute;
    left: 50%;
    bottom: 100%;
-   width: 15rem;
-   max-width: 70vw;
+   width: 16.5rem;
+   max-width: 72vw;
    display: flex;
    flex-direction: column;
-   gap: 0.3rem;
-   padding: 0.55rem 0.9rem;
-   border-radius: 0.9rem;
-   background: linear-gradient(160deg, rgba(10, 40, 66, 0.94), rgba(8, 30, 50, 0.97));
+   gap: 0.35rem;
+   padding: 0.8rem 1rem;
+   border-radius: 1rem;
+   background: linear-gradient(160deg, rgba(10, 40, 66, 0.97), rgba(8, 30, 50, 0.99));
    border: 1px solid rgba(125, 211, 252, 0.5);
-   box-shadow: 0 12px 30px rgba(3, 12, 26, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.25);
-   opacity: 1;
-   pointer-events: auto;
-   transform: translateX(-50%) translateY(0);
-   transition: background 0.2s ease, border-color 0.2s ease;
+   box-shadow: 0 18px 44px rgba(3, 12, 26, 0.6), 0 0 0 1px rgba(212, 175, 55, 0.3);
+   opacity: 0;
+   pointer-events: none;
+   transform: translateX(-50%) translateY(12px) scale(0.95);
+   transition: opacity 0.22s ease, transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
    z-index: 6;
-}
-
-/* Details fold away until the card is hovered / tapped / focused */
-.marine-vessel__desc,
-.marine-vessel__btn {
-   display: none;
-}
-
-.marine-vessel:hover .marine-vessel__desc,
-.marine-vessel:focus .marine-vessel__desc,
-.marine-vessel:focus-within .marine-vessel__desc,
-.marine-vessel:hover .marine-vessel__btn,
-.marine-vessel:focus .marine-vessel__btn,
-.marine-vessel:focus-within .marine-vessel__btn {
-   display: flex;
 }
 
 .marine-vessel:hover .marine-vessel__card,
 .marine-vessel:focus .marine-vessel__card,
 .marine-vessel:focus-within .marine-vessel__card {
-   background: linear-gradient(160deg, rgba(10, 40, 66, 0.98), rgba(8, 30, 50, 0.99));
+   opacity: 1;
+   pointer-events: auto;
+   transform: translateX(-50%) translateY(0) scale(1);
    border-color: rgba(212, 175, 55, 0.6);
 }
 
@@ -258,6 +246,14 @@
    font-weight: 800;
    color: #f8fafc;
    line-height: 1.25;
+}
+
+.marine-vessel__meta {
+   font-size: 0.74rem;
+   font-weight: 700;
+   letter-spacing: 0.02em;
+   color: #fcd34d;
+   opacity: 0.92;
 }
 
 .marine-vessel__desc {
@@ -296,17 +292,21 @@
    ============================================================ */
 @media (max-width: 720px) {
    .marine-vessel {
-      height: 44px;
+      height: 64px;
    }
 
    .marine-vessel__card {
-      width: 11.5rem;
-      max-width: 56vw;
-      padding: 0.45rem 0.7rem;
+      width: 13.5rem;
+      max-width: 58vw;
+      padding: 0.6rem 0.8rem;
    }
 
    .marine-vessel__title {
-      font-size: 0.92rem;
+      font-size: 0.95rem;
+   }
+
+   .marine-vessel__meta {
+      font-size: 0.68rem;
    }
 
    .marine-vessel__desc {

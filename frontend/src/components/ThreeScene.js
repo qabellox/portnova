@@ -125,25 +125,27 @@ const SceneContents = () => {
             {/* Warm ambient + low golden sun + a cool sparkle light */}
             <ambientLight intensity={0.45} color="#ffedcc" />
             <directionalLight
-                position={[6, 3, -5]}
-                intensity={2.2}
-                color="#ffd9a0"
+                position={[1.2, 1.6, -5]}
+                intensity={2.4}
+                color="#ffcf8e"
             />
             <pointLight position={[-3, 2.2, 3]} intensity={10} distance={16} color="#ffe9c9" />
 
-            {/* Procedural golden-hour sky + low sun */}
+            {/* Warm golden-hour sky: low sun toward the viewer, soft haze */}
             <Sky
                 distance={450000}
-                sunPosition={[6, 1.6, -5]}
-                turbidity={9}
-                rayleigh={2.2}
-                mieCoefficient={0.012}
-                mieDirectionalG={0.82}
+                sunPosition={[1.2, 0.9, -6]}
+                turbidity={10}
+                rayleigh={1.4}
+                mieCoefficient={0.02}
+                mieDirectionalG={0.85}
             />
-            <mesh position={[6, 1.6, -5]}>
-                <sphereGeometry args={[1.1, 24, 24]} />
-                <meshBasicMaterial color="#ffe9b8" toneMapped={false} />
+            <mesh position={[1.2, 0.9, -6]}>
+                <sphereGeometry args={[1.4, 24, 24]} />
+                <meshBasicMaterial color="#ffdfa0" toneMapped={false} />
             </mesh>
+            {/* Warm atmosphere haze to unify the scene */}
+            <fog attach="fog" args={['#f3b26b', 14, 42]} />
 
             {/* Reflective sea */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>

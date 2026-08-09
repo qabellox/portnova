@@ -49,6 +49,19 @@ const getCelestial = () => {
     return { t, dayLight, sunDir, sunAlt, sunSize, moonDir, moonAlt, moonSize };
 };
 
+/* Keep a celestial body inside the visible sky on narrow (phone) screens,
+   preserving its elevation. On wide screens the full rise/fall sweep is used. */
+const fitToView = (dir, aspect) => {
+    const halfH = Math.atan(Math.tan(THREE.MathUtils.degToRad(46 / 2)) * aspect);
+    const az = Math.atan2(dir.x, -dir.z);
+    const maxAz = halfH * 0.8;
+    const cl = Math.max(-maxAz, Math.min(maxAz, az));
+    const el = Math.atan2(dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z));
+    const cosE = Math.cos(el);
+    const sinE = Math.sin(el);
+    return new THREE.Vector3(Math.sin(cl) * cosE, sinE, -Math.cos(cl) * cosE);
+};
+
 /* ------------------------------------------------------------------ */
 /* Sky dome: warm golden near horizon, Mediterranean blue overhead.     */
 /* ------------------------------------------------------------------ */
@@ -58,9 +71,12 @@ const SkyDome = () => {
     useFrame((state) => {
         if (!mat.current) return;
         const { dayLight, sunDir, moonDir } = getCelestial();
+        const aspect = state.size.width / state.size.height;
+        // Phones: pull the sun/moon into the visible sky (desktop unchanged)
+        const viewDir = aspect < 0.9 ? (d) => fitToView(d, aspect) : (d) => d;
         mat.current.uniforms.uDayLight.value = dayLight;
-        mat.current.uniforms.uSunDir.value.copy(sunDir);
-        mat.current.uniforms.uMoonDir.value.copy(moonDir);
+        mat.current.uniforms.uSunDir.value.copy(viewDir(sunDir));
+        mat.current.uniforms.uMoonDir.value.copy(viewDir(moonDir));
         mat.current.uniforms.uTime.value = state.clock.elapsedTime;
     });
 
@@ -107,17 +123,16 @@ const SkyDome = () => {
                         vec3 col = mix(hor, top, smoothstep(0.0, 0.55, h));
                         col = mix(col, dayMid, smoothstep(0.18, 0.5, h) * uDayLight * 0.4);
 
-                        // ONE sun: crisp disc + soft warm halo (drawn in the sky
-                        // itself — no separate billboard, no square glow edge)
+                        // ONE sun: a clearly visible warm disc + soft halo
                         float s = max(dot(d, uSunDir), 0.0);
-                        col += vec3(1.0, 0.98, 0.92) * smoothstep(0.9960, 0.9992, s) * 1.6 * uDayLight;
-                        col += vec3(1.0, 0.68, 0.38) * pow(s, 6.0) * 0.5 * uDayLight;
-                        col += vec3(1.0, 0.88, 0.66) * pow(s, 28.0) * 0.85 * uDayLight;
+                        col += vec3(1.0, 0.98, 0.92) * smoothstep(0.9945, 0.9988, s) * 2.2 * uDayLight;
+                        col += vec3(1.0, 0.66, 0.36) * pow(s, 6.0) * 0.7 * uDayLight;
+                        col += vec3(1.0, 0.9, 0.68) * pow(s, 22.0) * 1.15 * uDayLight;
 
                         // ONE moon: cool disc + halo at night
                         float m = max(dot(d, uMoonDir), 0.0);
-                        col += vec3(0.9, 0.95, 1.0) * smoothstep(0.9965, 0.9992, m) * 1.2 * (1.0 - uDayLight);
-                        col += vec3(0.62, 0.72, 0.95) * pow(m, 8.0) * 0.35 * (1.0 - uDayLight);
+                        col += vec3(0.9, 0.95, 1.0) * smoothstep(0.9950, 0.9988, m) * 1.5 * (1.0 - uDayLight);
+                        col += vec3(0.62, 0.72, 0.95) * pow(m, 8.0) * 0.45 * (1.0 - uDayLight);
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -137,10 +152,13 @@ const Water = () => {
     useFrame((state) => {
         if (!mat.current) return;
         const { dayLight, sunDir, moonDir } = getCelestial();
+        const aspect = state.size.width / state.size.height;
+        // Phones: keep the sun/moon glint matching the visible sun/moon
+        const viewDir = aspect < 0.9 ? (d) => fitToView(d, aspect) : (d) => d;
         mat.current.uniforms.uTime.value = state.clock.elapsedTime;
         mat.current.uniforms.uDayLight.value = dayLight;
-        mat.current.uniforms.uSunDir.value.copy(sunDir);
-        mat.current.uniforms.uMoonDir.value.copy(moonDir);
+        mat.current.uniforms.uSunDir.value.copy(viewDir(sunDir));
+        mat.current.uniforms.uMoonDir.value.copy(viewDir(moonDir));
     });
 
     return (

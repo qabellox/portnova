@@ -43,15 +43,20 @@ const MarineScene = ({ className = '' }) => {
                 if (!el || !p) return;
                 let xPct = p.x;
                 let yPct = p.y;
-                // Phones only: keep the info card fully inside the screen so it
-                // never overlaps the screen border when a boat sails near an
-                // edge. Desktop layout is left completely untouched.
+                // Phones only: keep the info card fully inside the hero (the
+                // live wallpaper) so it never overlaps its borders. Desktop
+                // layout is left completely untouched.
                 if (window.innerWidth <= 720) {
+                    const fleetEl = el.closest('.marine-fleet');
+                    const fr = fleetEl ? fleetEl.getBoundingClientRect() : null;
                     const card = el.querySelector('.marine-vessel__card');
-                    const halfW = (card ? card.offsetWidth : 150) / 2;
-                    const halfPct = (halfW / window.innerWidth) * 100;
-                    xPct = Math.min(100 - halfPct, Math.max(halfPct, p.x));
-                    yPct = Math.min(90, Math.max(15, p.y));
+                    const cw = (card && card.offsetWidth ? card.offsetWidth : 184) / 2;
+                    if (fr && fr.width > 0) {
+                        const halfPct = (cw / fr.width) * 100;
+                        const marginPct = (5 / fr.width) * 100;
+                        xPct = Math.min(100 - halfPct - marginPct, Math.max(halfPct + marginPct, p.x));
+                    }
+                    yPct = Math.min(84, Math.max(10, p.y));
                 }
                 el.style.left = `${xPct}%`;
                 el.style.top = `${yPct}%`;

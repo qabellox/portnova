@@ -483,8 +483,10 @@ const buildSailGeometry = (chord, height, belly, segments = 14) => {
     return g;
 };
 
-const sailHullGeo = buildHullGeometry(2.6, 0.95, 0.5, { stations: 30, chine: 0.45, rocker: 0.08, sheerLift: 0.06, transom: 0.16 });
-const cargoHullGeo = buildHullGeometry(3.3, 1.2, 0.72, { stations: 30, chine: 0.55, rocker: 0.05, sheerLift: 0.1, transom: 0.12 });
+/* Hulls are built with the deck well ABOVE the waterline (local y≈0.3)
+   so the boat visibly floats instead of sinking to the keel. */
+const sailHullGeo = buildHullGeometry(2.6, 0.95, 0.34, { stations: 30, chine: 0.45, rocker: 0.06, sheerLift: 0.26, transom: 0.18 });
+const cargoHullGeo = buildHullGeometry(3.3, 1.2, 0.4, { stations: 30, chine: 0.55, rocker: 0.05, sheerLift: 0.34, transom: 0.14 });
 const sailGeo = buildSailGeometry(1.8, 1.6, 0.34);
 
 const WOOD = '#8b7355';
@@ -494,53 +496,48 @@ const SAIL = '#f8fafc';
 
 const CargoShipMesh = () => (
     <group>
-        {/* chined hull (dark blue steel) */}
+        {/* chined hull (dark blue steel) — deck at local y≈0.34 above waterline */}
         <mesh geometry={cargoHullGeo} position={[0, 0, 0]}>
             <meshStandardMaterial color="#1a365d" metalness={0.6} roughness={0.38} />
         </mesh>
-        {/* hull waterline stripe */}
-        <mesh position={[0, 0.02, 0]}>
-            <boxGeometry args={[3.3, 0.12, 1.2]} />
-            <meshStandardMaterial color="#b03a2e" metalness={0.3} roughness={0.5} />
-        </mesh>
-        {/* deck */}
-        <mesh position={[0, 0.1, 0]}>
-            <boxGeometry args={[3.1, 0.06, 0.98]} />
+        {/* deck sitting on the raised hull */}
+        <mesh position={[0, 0.34, 0]}>
+            <boxGeometry args={[3.1, 0.08, 1.0]} />
             <meshStandardMaterial color={DECK} metalness={0.15} roughness={0.6} />
         </mesh>
-        {/* bridge / superstructure */}
-        <mesh position={[1.05, 0.45, 0]}>
-            <boxGeometry args={[0.95, 0.62, 0.72]} />
+        {/* bridge / superstructure on the deck */}
+        <mesh position={[1.05, 0.72, 0]}>
+            <boxGeometry args={[0.95, 0.6, 0.72]} />
             <meshStandardMaterial color="#f8fafc" metalness={0.2} roughness={0.3} />
         </mesh>
-        <mesh position={[1.05, 0.55, 0.37]}>
+        <mesh position={[1.05, 0.82, 0.37]}>
             <boxGeometry args={[0.9, 0.4, 0.02]} />
             <meshStandardMaterial color="#0c4a6e" metalness={0.2} roughness={0.4} />
         </mesh>
         {/* funnel */}
-        <mesh position={[1.35, 1.05, 0]}>
+        <mesh position={[1.35, 1.32, 0]}>
             <cylinderGeometry args={[0.11, 0.16, 0.6, 14]} />
             <meshStandardMaterial color="#123048" metalness={0.55} roughness={0.35} />
         </mesh>
-        {/* cargo containers (legitimately boxes, neatly stacked) */}
-        <mesh position={[-0.85, 0.42, 0]}>
+        {/* cargo containers on the deck */}
+        <mesh position={[-0.85, 0.68, 0]}>
             <boxGeometry args={[0.6, 0.5, 0.55]} />
             <meshStandardMaterial color="#e0762a" metalness={0.25} roughness={0.45} />
         </mesh>
-        <mesh position={[-0.15, 0.42, 0]}>
+        <mesh position={[-0.15, 0.68, 0]}>
             <boxGeometry args={[0.6, 0.5, 0.55]} />
             <meshStandardMaterial color="#1f9ac4" metalness={0.25} roughness={0.45} />
         </mesh>
-        <mesh position={[-0.5, 0.74, 0]}>
+        <mesh position={[-0.5, 1.0, 0]}>
             <boxGeometry args={[0.6, 0.24, 0.55]} />
             <meshStandardMaterial color="#3fa785" metalness={0.25} roughness={0.45} />
         </mesh>
         {/* foremast + flag */}
-        <mesh position={[-1.4, 0.8, 0]}>
+        <mesh position={[-1.4, 1.05, 0]}>
             <cylinderGeometry args={[0.028, 0.028, 1.5, 8]} />
             <meshStandardMaterial color="#3a4a5c" metalness={0.45} roughness={0.45} />
         </mesh>
-        <mesh position={[-1.4, 1.6, 0.04]} rotation={[0, 0, 0.35]}>
+        <mesh position={[-1.4, 1.85, 0.04]} rotation={[0, 0, 0.35]}>
             <planeGeometry args={[0.6, 0.34]} />
             <meshStandardMaterial color="#1f9ac4" metalness={0.1} roughness={0.6} side={THREE.DoubleSide} />
         </mesh>
@@ -549,41 +546,41 @@ const CargoShipMesh = () => (
 
 const SailboatMesh = () => (
     <group>
-        {/* keel fin */}
+        {/* keel fin below the waterline */}
         <mesh position={[0, -0.42, 0]}>
             <boxGeometry args={[0.9, 0.4, 0.06]} />
             <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
         </mesh>
-        {/* rounded wooden hull */}
+        {/* rounded wooden hull — deck at local y≈0.26 above waterline */}
         <mesh geometry={sailHullGeo} position={[0, 0, 0]}>
             <meshStandardMaterial color={WOOD} metalness={0.18} roughness={0.55} />
         </mesh>
-        {/* gunwale highlight */}
-        <mesh position={[0, 0.16, 0]}>
+        {/* gunwale highlight on the raised rail */}
+        <mesh position={[0, 0.26, 0]}>
             <boxGeometry args={[2.4, 0.04, 0.7]} />
             <meshStandardMaterial color="#c9a468" metalness={0.3} roughness={0.4} />
         </mesh>
         {/* deck */}
-        <mesh position={[0, 0.12, 0]}>
+        <mesh position={[0, 0.22, 0]}>
             <boxGeometry args={[2.3, 0.04, 0.56]} />
             <meshStandardMaterial color={DECK} metalness={0.15} roughness={0.6} />
         </mesh>
         {/* small cabin */}
-        <mesh position={[-0.55, 0.26, 0]}>
+        <mesh position={[-0.55, 0.38, 0]}>
             <boxGeometry args={[0.7, 0.22, 0.5]} />
             <meshStandardMaterial color="#f8fafc" metalness={0.15} roughness={0.45} />
         </mesh>
-        {/* mast */}
+        {/* mast from the deck */}
         <mesh position={[0.45, 1.0, 0]}>
             <cylinderGeometry args={[0.035, 0.045, 2.1, 10]} />
             <meshStandardMaterial color={WOOD_DARK} metalness={0.25} roughness={0.55} />
         </mesh>
         {/* billowing cream sail */}
-        <mesh geometry={sailGeo} position={[0.45, 0.35, 0]} rotation={[0, 0, 0]}>
+        <mesh geometry={sailGeo} position={[0.45, 0.4, 0]} rotation={[0, 0, 0]}>
             <meshStandardMaterial color={SAIL} metalness={0.03} roughness={0.78} side={THREE.DoubleSide} />
         </mesh>
         {/* red sail stripe */}
-        <mesh position={[1.25, 0.78, 0.02]} rotation={[0, 0, 0.35]}>
+        <mesh position={[1.25, 0.8, 0.02]} rotation={[0, 0, 0.35]}>
             <planeGeometry args={[1.05, 0.18]} />
             <meshStandardMaterial color="#b03a24" metalness={0.03} roughness={0.7} side={THREE.DoubleSide} />
         </mesh>
@@ -679,8 +676,8 @@ const SceneContents = () => (
 
 const PostFX = () => (
     <EffectComposer>
-        <Bloom intensity={0.7} luminanceThreshold={0.55} luminanceSmoothing={0.5} mipmapBlur radius={0.7} />
-        <Vignette eskil={false} offset={0.25} darkness={0.6} />
+        <Bloom intensity={0.45} luminanceThreshold={0.6} luminanceSmoothing={0.5} mipmapBlur radius={0.6} />
+        <Vignette eskil={false} offset={0.22} darkness={0.5} />
     </EffectComposer>
 );
 

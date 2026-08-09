@@ -1,5 +1,5 @@
 ﻿/* ============================================================
-   MARINE SCENE — cinematic Three.js seascape + interactive fleet
+   MARINE SCENE — cinematic Three.js seascape + 3D boat fleet
    ============================================================ */
 .marine-scene {
    position: absolute;
@@ -11,7 +11,7 @@
    background: linear-gradient(180deg, #ffd9a0 0%, #f4a86a 40%, #1e5f7a 68%, #0e4a6b 100%);
 }
 
-/* Three.js cinematic background layer */
+/* Three.js cinematic background layer (sea, sky, sun, moon, 3D boats) */
 .three-scene {
    position: absolute;
    inset: 0;
@@ -27,17 +27,6 @@
    width: 100% !important;
    height: 100% !important;
    outline: none;
-}
-
-.marine-canvas {
-   position: absolute;
-   inset: 0;
-   width: 100%;
-   height: 100%;
-   display: block;
-   pointer-events: auto;
-   cursor: crosshair;
-   z-index: 2;
 }
 
 /* Flock of realistic gulls drifting high in the sky */
@@ -67,13 +56,8 @@
    will-change: transform;
 }
 
-.marine-gull__wing--l {
-   animation-name: gullWingL;
-}
-
-.marine-gull__wing--r {
-   animation-name: gullWingR;
-}
+.marine-gull__wing--l { animation-name: gullWingL; }
+.marine-gull__wing--r { animation-name: gullWingR; }
 
 .marine-gull__body {
    animation: gullBob 1.8s ease-in-out infinite;
@@ -81,218 +65,67 @@
 }
 
 @keyframes gullWingL {
-   0% {
-      transform: rotate(6deg);
-   }
-
-   100% {
-      transform: rotate(-34deg);
-   }
+   0% { transform: rotate(6deg); }
+   100% { transform: rotate(-34deg); }
 }
 
 @keyframes gullWingR {
-   0% {
-      transform: rotate(-6deg);
-   }
-
-   100% {
-      transform: rotate(34deg);
-   }
+   0% { transform: rotate(-6deg); }
+   100% { transform: rotate(34deg); }
 }
 
 @keyframes gullBob {
-
-   0%,
-   100% {
-      transform: translateY(0);
-   }
-
-   50% {
-      transform: translateY(-1px);
-   }
+   0%, 100% { transform: translateY(0); }
+   50% { transform: translateY(-1px); }
 }
 
-.marine-gull--1 {
-   top: 7%;
-   left: -16%;
-   animation-duration: 52s;
-}
-
-.marine-gull--2 {
-   top: 13%;
-   left: -16%;
-   animation-duration: 66s;
-   animation-delay: -24s;
-}
-
-.marine-gull--3 {
-   top: 4%;
-   left: -16%;
-   animation-duration: 78s;
-   animation-delay: -40s;
-}
-
-.marine-gull--4 {
-   top: 20%;
-   left: -16%;
-   animation-duration: 60s;
-   animation-delay: -12s;
-}
-
-.marine-gull--5 {
-   top: 10%;
-   left: -16%;
-   animation-duration: 88s;
-   animation-delay: -55s;
-}
-
-.marine-gull--6 {
-   top: 25%;
-   left: -16%;
-   animation-duration: 70s;
-   animation-delay: -32s;
-}
+.marine-gull--1 { top: 7%;  left: -16%; animation-duration: 52s; }
+.marine-gull--2 { top: 13%; left: -16%; animation-duration: 66s; animation-delay: -24s; }
+.marine-gull--3 { top: 4%;  left: -16%; animation-duration: 78s; animation-delay: -40s; }
+.marine-gull--4 { top: 20%; left: -16%; animation-duration: 60s; animation-delay: -12s; }
+.marine-gull--5 { top: 10%; left: -16%; animation-duration: 88s; animation-delay: -55s; }
+.marine-gull--6 { top: 25%; left: -16%; animation-duration: 70s; animation-delay: -32s; }
 
 @keyframes gullDrift {
-   0% {
-      transform: translateX(0) translateY(0);
-   }
-
-   50% {
-      transform: translateX(62vw) translateY(-2.5vh);
-   }
-
-   100% {
-      transform: translateX(124vw) translateY(1.5vh);
-   }
+   0%   { transform: translateX(0) translateY(0); }
+   50%  { transform: translateX(62vw) translateY(-2.5vh); }
+   100% { transform: translateX(124vw) translateY(1.5vh); }
 }
 
 /* ============================================================
-   3D FLEET — boats sailing at different depths
+   FLEET — info cards glued to the 3D boats (positioned by JS)
    ============================================================ */
 .marine-fleet {
    position: absolute;
    inset: 0;
-   z-index: 4;
-   perspective: 1400px;
-   perspective-origin: 50% 55%;
+   z-index: 5;
    pointer-events: none;
 }
 
 .marine-vessel {
    position: absolute;
-   bottom: 6%;
+   top: 0;
    left: 0;
+   transform: translate(-50%, -115%);
+   height: 34px;
    pointer-events: auto;
-   /* No scale() here: boat sizes are baked into w/h so text stays crisp */
-   transform: translateZ(calc(var(--depth) * 40px));
-   transform-style: preserve-3d;
-   will-change: transform;
-   z-index: 1;
+   cursor: pointer;
+   border-radius: 10px;
+   transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+   will-change: left, top, width;
 }
 
 .marine-vessel:hover,
+.marine-vessel:focus,
 .marine-vessel:focus-within {
    z-index: 20;
 }
 
-.marine-vessel__rig {
-   position: relative;
-   animation: fleetSail var(--dur) linear infinite;
-   animation-delay: var(--delay);
-   will-change: transform;
-}
-
-/* The boat rides the swell: bobs up/down by --bob (wave magnitude at its
-   depth) and rocks fore/aft with the wave, so it never moves in a straight
-   line. Duration is tied to the swell so it looks natural, not mechanical. */
-.marine-vessel__svg {
-   display: block;
-   animation: vesselRide 7.5s ease-in-out infinite;
-   filter: drop-shadow(0 22px 26px rgba(3, 12, 26, 0.55));
-   will-change: transform;
-}
-
-@keyframes vesselRide {
-
-   0%,
-   100% {
-      transform: translateY(calc(var(--bob, 10px) * 0.15)) rotate(-2.2deg);
-   }
-
-   20% {
-      transform: translateY(calc(var(--bob, 10px) * -0.4)) rotate(1.6deg);
-   }
-
-   40% {
-      transform: translateY(calc(var(--bob, 10px) * 0.5)) rotate(-1.1deg);
-   }
-
-   60% {
-      transform: translateY(calc(var(--bob, 10px) * -0.85)) rotate(2.4deg);
-   }
-
-   80% {
-      transform: translateY(calc(var(--bob, 10px) * 0.35)) rotate(-1.8deg);
-   }
-}
-
-/* Jobs cargo ships sail left → right */
-.marine-vessel--jobs .marine-vessel__rig {
-   animation-name: fleetSailRight;
-}
-
-/* Courses sailboats sail right → left */
-.marine-vessel--courses .marine-vessel__rig {
-   animation-name: fleetSailLeft;
-}
-
-/* Depth lanes: foreground big & low, background small & near the horizon */
-.marine-vessel--job-a {
-   bottom: 5%;
-}
-
-.marine-vessel--course-a {
-   bottom: 14%;
-}
-
-.marine-vessel--job-b {
-   bottom: 32%;
-}
-
-.marine-vessel--course-b {
-   bottom: 44%;
-}
-
-.marine-vessel--course-c {
-   bottom: 54%;
-}
-
-@keyframes fleetSailRight {
-   0% {
-      transform: translateX(-120%);
-   }
-
-   100% {
-      transform: translateX(130vw);
-   }
-}
-
-@keyframes fleetSailLeft {
-   0% {
-      transform: translateX(130vw);
-   }
-
-   100% {
-      transform: translateX(-120%);
-   }
-}
-
-/* Info card: readable fixed size, anchored above the boat */
+/* Info card anchored above the boat */
 .marine-vessel__card {
    position: absolute;
    left: 50%;
-   bottom: calc(100% + 14px);
+   bottom: 100%;
    width: 16.5rem;
    max-width: 74vw;
    display: flex;
@@ -305,9 +138,8 @@
    box-shadow: 0 20px 50px rgba(3, 12, 26, 0.65), 0 0 0 1px rgba(212, 175, 55, 0.2);
    opacity: 0;
    pointer-events: none;
-   transform: translateX(-50%) translateY(8px);
-   transform-origin: 50% 100%;
-   transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+   transform: translateX(-50%) translateY(10px);
+   transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
    z-index: 6;
 }
 
@@ -380,42 +212,16 @@
 }
 
 /* ============================================================
-   MOBILE — phones have no hover, so cards reveal on tap/focus
-   and the fleet is scaled to avoid overlapping boats.
+   MOBILE — cards are smaller and easier to tap
    ============================================================ */
 @media (max-width: 720px) {
-   .marine-fleet {
-      perspective-origin: 50% 70%;
+   .marine-vessel {
+      height: 44px;
    }
 
-   /* Keep every boat BELOW the horizon (36% from top = 64% from bottom)
-      on a short phone hero, so nothing floats in the sky, while boats
-      stay clearly separated. */
-   .marine-vessel--job-a {
-      bottom: 8%;
-   }
-
-   .marine-vessel--course-a {
-      bottom: 26%;
-   }
-
-   .marine-vessel--job-b {
-      bottom: 40%;
-   }
-
-   .marine-vessel--course-b {
-      bottom: 46%;
-   }
-
-   .marine-vessel--course-c {
-      bottom: 52%;
-   }
-
-   /* Card stays a readable fixed size, anchored above the boat. */
    .marine-vessel__card {
       width: 13rem;
       max-width: 60vw;
-      bottom: calc(100% + 10px);
    }
 
    .marine-vessel__title {
@@ -433,14 +239,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
-   .marine-canvas,
    .marine-gull,
    .marine-gull__wing,
    .marine-gull__body,
    .marine-vessel,
-   .marine-vessel__rig,
-   .marine-vessel__svg,
    .marine-vessel__card {
       animation: none !important;
    }

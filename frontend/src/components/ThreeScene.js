@@ -394,6 +394,168 @@ const SunLight = () => {
     return <directionalLight ref={lightRef} intensity={2.2} color="#ffd9a0" />;
 };
 
+/* ------------------------------------------------------------------ */
+/* 3D boat meshes built from primitives — real ships that catch the    */
+/* sun and environment light and sit in the water.                     */
+/* ------------------------------------------------------------------ */
+const CargoShipMesh = () => (
+    <group>
+        {/* hull */}
+        <mesh position={[0, 0.15, 0]}>
+            <boxGeometry args={[3.4, 0.7, 1.0]} />
+            <meshStandardMaterial color="#27465e" metalness={0.55} roughness={0.42} />
+        </mesh>
+        {/* bow */}
+        <mesh position={[1.55, 0.1, 0]} rotation={[0, 0, -0.14]}>
+            <boxGeometry args={[0.9, 0.6, 0.88]} />
+            <meshStandardMaterial color="#27465e" metalness={0.55} roughness={0.42} />
+        </mesh>
+        {/* deck */}
+        <mesh position={[0, 0.5, 0]}>
+            <boxGeometry args={[2.8, 0.12, 0.9]} />
+            <meshStandardMaterial color="#dce6ee" metalness={0.25} roughness={0.5} />
+        </mesh>
+        {/* stacked containers */}
+        <mesh position={[-0.5, 0.8, 0]}>
+            <boxGeometry args={[0.62, 0.5, 0.55]} />
+            <meshStandardMaterial color="#e0762a" metalness={0.3} roughness={0.4} />
+        </mesh>
+        <mesh position={[0.15, 0.8, 0]}>
+            <boxGeometry args={[0.62, 0.5, 0.55]} />
+            <meshStandardMaterial color="#1f9ac4" metalness={0.3} roughness={0.4} />
+        </mesh>
+        <mesh position={[-0.5, 1.08, 0]}>
+            <boxGeometry args={[0.62, 0.28, 0.55]} />
+            <meshStandardMaterial color="#3fa785" metalness={0.3} roughness={0.4} />
+        </mesh>
+        <mesh position={[0.15, 1.08, 0]}>
+            <boxGeometry args={[0.62, 0.28, 0.55]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.35} roughness={0.38} />
+        </mesh>
+        {/* bridge + funnel */}
+        <mesh position={[1.15, 0.82, 0]}>
+            <boxGeometry args={[0.9, 0.62, 0.7]} />
+            <meshStandardMaterial color="#eef4f8" metalness={0.18} roughness={0.32} />
+        </mesh>
+        <mesh position={[1.42, 1.3, 0]}>
+            <cylinderGeometry args={[0.13, 0.18, 0.55, 12]} />
+            <meshStandardMaterial color="#1b3044" metalness={0.5} roughness={0.4} />
+        </mesh>
+        {/* mast + flag */}
+        <mesh position={[-1.15, 1.0, 0]}>
+            <cylinderGeometry args={[0.03, 0.03, 1.4, 8]} />
+            <meshStandardMaterial color="#3a4a5c" metalness={0.4} roughness={0.5} />
+        </mesh>
+        <mesh position={[-1.15, 1.75, 0.05]}>
+            <planeGeometry args={[0.55, 0.35]} />
+            <meshStandardMaterial color="#1f9ac4" metalness={0.1} roughness={0.6} side={THREE.DoubleSide} />
+        </mesh>
+    </group>
+);
+
+const SailboatMesh = () => (
+    <group>
+        {/* hull */}
+        <mesh position={[0, 0.12, 0]}>
+            <boxGeometry args={[2.6, 0.45, 0.7]} />
+            <meshStandardMaterial color="#7a4a26" metalness={0.18} roughness={0.55} />
+        </mesh>
+        {/* bow */}
+        <mesh position={[1.25, 0.1, 0]} rotation={[0, 0, -0.2]}>
+            <boxGeometry args={[0.5, 0.35, 0.55]} />
+            <meshStandardMaterial color="#7a4a26" metalness={0.18} roughness={0.55} />
+        </mesh>
+        {/* gunwale */}
+        <mesh position={[0, 0.36, 0]}>
+            <boxGeometry args={[2.4, 0.06, 0.72]} />
+            <meshStandardMaterial color="#c9a468" metalness={0.3} roughness={0.4} />
+        </mesh>
+        {/* mast */}
+        <mesh position={[0.25, 0.95, 0]}>
+            <cylinderGeometry args={[0.04, 0.045, 1.9, 8]} />
+            <meshStandardMaterial color="#5a3a22" metalness={0.2} roughness={0.6} />
+        </mesh>
+        {/* billowing lateen sail */}
+        <mesh position={[0.25, 1.05, 0]} rotation={[0, 0, -0.32]}>
+            <planeGeometry args={[1.7, 1.35]} />
+            <meshStandardMaterial color="#f2e3bd" metalness={0.05} roughness={0.72} side={THREE.DoubleSide} />
+        </mesh>
+        {/* red stripe */}
+        <mesh position={[0.42, 0.82, 0.02]} rotation={[0, 0, -0.32]}>
+            <planeGeometry args={[0.95, 0.22]} />
+            <meshStandardMaterial color="#b03a24" metalness={0.05} roughness={0.72} side={THREE.DoubleSide} />
+        </mesh>
+        {/* pennant */}
+        <mesh position={[0.25, 1.95, 0]} rotation={[0, 0, 0.5]}>
+            <planeGeometry args={[0.5, 0.14]} />
+            <meshStandardMaterial color="#b03a24" metalness={0.05} roughness={0.6} side={THREE.DoubleSide} />
+        </mesh>
+    </group>
+);
+
+/* Approximate the water shader's surface height for boat bobbing. */
+const waveH = (x, z, t) => {
+    let w = 0;
+    w += Math.sin(x * 0.32 + t * 0.7) * 0.24;
+    w += Math.cos(z * 0.48 + t * 0.52) * 0.17;
+    w += Math.sin((x + z) * 0.21 + t * 0.85) * 0.13;
+    w += Math.cos(x * 0.72 - t * 1.05 + z * 0.55) * 0.06;
+    return w;
+};
+
+/* Sailing fleet: 3D ships riding the waves. Projects each boat's real
+   screen position into positionsRef so the DOM cards can follow it. */
+const Fleet = ({ fleet, positionsRef }) => {
+    const groups = useRef([]);
+    const v = useRef(new THREE.Vector3());
+
+    useFrame((state) => {
+        const t = state.clock.elapsedTime;
+        const cam = state.camera;
+        const pos = positionsRef.current;
+        fleet.forEach((b, i) => {
+            const g = groups.current[i];
+            if (!g || !pos) return;
+            const range = 30;
+            const raw = (t * b.speed + b.phase) % (2 * range);
+            const x = raw > range ? 2 * range - raw : raw;
+            const xs = x - range;
+            const z = b.z;
+            const wave = waveH(xs, z, t);
+            const y = -0.35 + wave * 0.7;
+
+            g.position.set(xs, y, z);
+            const slope = waveH(xs + 0.35, z, t) - waveH(xs - 0.35, z, t);
+            g.rotation.z = -slope * 0.4;
+            g.rotation.x = Math.sin(t * 0.6 + i * 1.7) * 0.03;
+            g.rotation.y = b.dir > 0 ? 0 : Math.PI;
+
+            // project center to screen (%)
+            v.current.set(xs, y + b.anchorY, z);
+            v.current.project(cam);
+            const sx = (v.current.x + 1) / 2;
+            const sy = (1 - v.current.y) / 2;
+            // project an offset to estimate on-screen width
+            v.current.set(xs + b.w, y, z);
+            v.current.project(cam);
+            const wPct = Math.abs(((v.current.x + 1) / 2) - sx) * 100;
+            const visible = v.current.z < 1 && sx > -0.25 && sx < 1.25 && sy > -0.25 && sy < 1.25;
+            pos[b.id] = { x: sx * 100, y: sy * 100, w: Math.max(wPct, 7), visible };
+        });
+    });
+
+    return (
+        <group>
+            {fleet.map((b, i) => (
+                <group key={b.id} ref={(el) => { groups.current[i] = el; }} scale={b.scale}>
+                    {b.kind === 'jobs' ? <CargoShipMesh /> : <SailboatMesh />}
+                </group>
+            ))}
+        </group>
+    );
+};
+
+/* ------------------------------------------------------------------ */
 const SceneContents = () => (
     <>
         <ambientLight intensity={0.55} color="#ffe6c0" />
@@ -420,7 +582,7 @@ const PostFX = () => (
     </EffectComposer>
 );
 
-const ThreeScene = ({ className = '' }) => (
+const ThreeScene = ({ className = '', fleet = [], positionsRef = null }) => (
     <div className={`three-scene ${className}`.trim()}>
         <Canvas
             dpr={[1, 1.5]}
@@ -431,6 +593,7 @@ const ThreeScene = ({ className = '' }) => (
                 <MouseRig>
                     <SceneContents />
                 </MouseRig>
+                {fleet.length ? <Fleet fleet={fleet} positionsRef={positionsRef} /> : null}
                 <PostFX />
             </Suspense>
         </Canvas>

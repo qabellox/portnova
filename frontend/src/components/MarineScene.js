@@ -14,11 +14,11 @@ import ThreeScene from './ThreeScene';
 
 // The fleet config is shared with ThreeScene: 3D layout + the card content.
 const FLEET = [
-    { id: 'job-a', kind: 'jobs', w: 3.4, z: 3.6, speed: 0.7, phase: 1, dir: 1, scale: 1.15, anchorY: 1.4, focus: 'Frontend Product Intern', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
-    { id: 'course-a', kind: 'courses', w: 2.6, z: 1.4, speed: 0.85, phase: 7, dir: -1, scale: 1.05, anchorY: 1.5, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
-    { id: 'job-b', kind: 'jobs', w: 3.4, z: -2.6, speed: 0.55, phase: 13, dir: 1, scale: 0.8, anchorY: 1.4, focus: 'Operations Coordinator', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
-    { id: 'course-b', kind: 'courses', w: 2.6, z: -6.5, speed: 0.42, phase: 19, dir: -1, scale: 0.6, anchorY: 1.5, focus: 'Startup Operations', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
-    { id: 'course-c', kind: 'courses', w: 2.6, z: -10.5, speed: 0.34, phase: 27, dir: 1, scale: 0.42, anchorY: 1.5, focus: 'Career Readiness', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
+    { id: 'job-a', kind: 'jobs', w: 3.4, z: 3.6, speed: 0.7, phase: 1, dir: 1, range: 4, scale: 1.15, anchorY: 1.4, focus: 'Frontend Product Intern', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
+    { id: 'course-a', kind: 'courses', w: 2.6, z: 1.4, speed: 0.85, phase: 7, dir: -1, range: 5, scale: 1.05, anchorY: 1.5, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
+    { id: 'job-b', kind: 'jobs', w: 3.4, z: -2.6, speed: 0.55, phase: 13, dir: 1, range: 8, scale: 0.8, anchorY: 1.4, focus: 'Operations Coordinator', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
+    { id: 'course-b', kind: 'courses', w: 2.6, z: -6.5, speed: 0.42, phase: 19, dir: -1, range: 12, scale: 0.6, anchorY: 1.5, focus: 'Startup Operations', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
+    { id: 'course-c', kind: 'courses', w: 2.6, z: -10.5, speed: 0.34, phase: 27, dir: 1, range: 16, scale: 0.42, anchorY: 1.5, focus: 'Career Readiness', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
 ];
 
 const MarineScene = ({ className = '' }) => {

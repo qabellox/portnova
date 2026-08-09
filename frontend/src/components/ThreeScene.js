@@ -516,7 +516,7 @@ const Fleet = ({ fleet, positionsRef }) => {
         fleet.forEach((b, i) => {
             const g = groups.current[i];
             if (!g || !pos) return;
-            const range = 30;
+            const range = b.range || 14;
             const raw = (t * b.speed + b.phase) % (2 * range);
             const x = raw > range ? 2 * range - raw : raw;
             const xs = x - range;

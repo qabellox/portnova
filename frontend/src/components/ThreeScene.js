@@ -13,6 +13,7 @@ import * as THREE from 'three';
  * Fully procedural, tuned for 60fps.
  */
 
+/* Time of day: t in [0,1] over 24h, dayLight peaks at noon. */
 const getDayLight = () => {
     const now = new Date();
     const mins = now.getHours() * 60 + now.getMinutes();
@@ -20,8 +21,39 @@ const getDayLight = () => {
     return (Math.cos((t - 0.5) * Math.PI * 2) + 1) / 2;
 };
 
-const SUN_DIR = new THREE.Vector3(1.2, 1.6, -5).normalize();
-const MOON_DIR = new THREE.Vector3(-1.4, 1.3, -4).normalize();
+/**
+ * Celestial positions that track the real clock.
+ * Sun: rises on the right (+X) at ~6am, arcs overhead to the middle at
+ * noon, sets on the left (-X) at ~6pm. Moon runs the opposite night arc.
+ * Returns direction vectors (for shaders + lights) plus altitude and sizes.
+ */
+const getCelestial = () => {
+    const now = new Date();
+    const mins = now.getHours() * 60 + now.getMinutes();
+    const t = mins / 1440;
+    const dayLight = (Math.cos((t - 0.5) * Math.PI * 2) + 1) / 2;
+
+    // Sun: dayPhase 0 at 6am -> 1 at 6pm
+    const dayPhase = (t - 0.25) / 0.5;
+    const dc = Math.min(Math.max(dayPhase, 0), 1);
+    const sunAlt = Math.sin(dc * Math.PI); // 0 horizon, 1 overhead
+    const sunAz = Math.cos(dc * Math.PI); // +1 right, 0 center, -1 left
+    const sunDir = new THREE.Vector3(sunAz * 0.9, sunAlt * 1.15, -1.0).normalize();
+    const sunSize = 0.8 + sunAlt * 0.45; // slightly larger high in the sky
+
+    // Moon: nightPhase 0 at 6pm -> 1 at 6am (opposite of sun)
+    const nightPhase = (t - 0.75) / 0.5;
+    const nc = ((nightPhase % 1) + 1) % 1;
+    const moonAlt = Math.sin(nc * Math.PI);
+    const moonAz = Math.cos(nc * Math.PI);
+    const moonDir = new THREE.Vector3(moonAz * 0.9, moonAlt * 1.15, -1.0).normalize();
+    const moonSize = 0.8 + moonAlt * 0.4;
+
+    return { t, dayLight, sunDir, sunAlt, sunSize, moonDir, moonAlt, moonSize };
+};
+
+const SUN_DIR = new THREE.Vector3(0, 1.15, -1.0).normalize();
+const MOON_DIR = new THREE.Vector3(0, 1.15, -1.0).normalize();
 
 /* ------------------------------------------------------------------ */
 /* Sky dome: warm golden near horizon, Mediterranean blue overhead,     */
@@ -32,7 +64,10 @@ const SkyDome = () => {
 
     useFrame((state) => {
         if (!mat.current) return;
-        mat.current.uniforms.uDayLight.value = getDayLight();
+        const { dayLight, sunDir, moonDir } = getCelestial();
+        mat.current.uniforms.uDayLight.value = dayLight;
+        mat.current.uniforms.uSunDir.value.copy(sunDir);
+        mat.current.uniforms.uMoonDir.value.copy(moonDir);
         mat.current.uniforms.uTime.value = state.clock.elapsedTime;
     });
 
@@ -46,8 +81,8 @@ const SkyDome = () => {
                 uniforms={{
                     uDayLight: { value: getDayLight() },
                     uTime: { value: 0 },
-                    uSunDir: { value: SUN_DIR },
-                    uMoonDir: { value: MOON_DIR },
+                    uSunDir: { value: new THREE.Vector3(0, 1.15, -1).normalize() },
+                    uMoonDir: { value: new THREE.Vector3(0, 1.15, -1).normalize() },
                 }}
                 vertexShader={`
                     varying vec3 vDir;
@@ -104,8 +139,11 @@ const Water = () => {
 
     useFrame((state) => {
         if (!mat.current) return;
+        const { dayLight, sunDir, moonDir } = getCelestial();
         mat.current.uniforms.uTime.value = state.clock.elapsedTime;
-        mat.current.uniforms.uDayLight.value = getDayLight();
+        mat.current.uniforms.uDayLight.value = dayLight;
+        mat.current.uniforms.uSunDir.value.copy(sunDir);
+        mat.current.uniforms.uMoonDir.value.copy(moonDir);
     });
 
     return (
@@ -116,8 +154,8 @@ const Water = () => {
                 uniforms={{
                     uTime: { value: 0 },
                     uDayLight: { value: getDayLight() },
-                    uSunDir: { value: SUN_DIR },
-                    uMoonDir: { value: MOON_DIR },
+                    uSunDir: { value: new THREE.Vector3(0, 1.15, -1).normalize() },
+                    uMoonDir: { value: new THREE.Vector3(0, 1.15, -1).normalize() },
                     uShallow: { value: new THREE.Color('#1d8ba3') },
                     uDeep: { value: new THREE.Color('#06445f') },
                     uNight: { value: new THREE.Color('#071c30') },
@@ -211,14 +249,19 @@ const Water = () => {
 /* ------------------------------------------------------------------ */
 const Sun = () => {
     const mat = useRef(null);
+    const groupRef = useRef(null);
 
     useFrame(() => {
-        if (!mat.current) return;
-        mat.current.uniforms.uDayLight.value = getDayLight();
+        const { dayLight, sunDir, sunSize } = getCelestial();
+        if (mat.current) mat.current.uniforms.uDayLight.value = dayLight;
+        if (groupRef.current) {
+            groupRef.current.position.set(sunDir.x * 22, sunDir.y * 22, sunDir.z * 22);
+            groupRef.current.scale.setScalar(sunSize);
+        }
     });
 
     return (
-        <Billboard position={[SUN_DIR.x * 22, SUN_DIR.y * 22, SUN_DIR.z * 22]}>
+        <Billboard ref={groupRef} position={[0, 22, -22]}>
             <mesh>
                 <planeGeometry args={[7, 7]} />
                 <shaderMaterial
@@ -259,14 +302,19 @@ const Sun = () => {
 /* ------------------------------------------------------------------ */
 const Moon = () => {
     const mat = useRef(null);
+    const groupRef = useRef(null);
 
     useFrame(() => {
-        if (!mat.current) return;
-        mat.current.uniforms.uNight.value = 1.0 - getDayLight();
+        const { dayLight, moonDir, moonSize } = getCelestial();
+        if (mat.current) mat.current.uniforms.uNight.value = 1.0 - dayLight;
+        if (groupRef.current) {
+            groupRef.current.position.set(moonDir.x * 22, moonDir.y * 22, moonDir.z * 22);
+            groupRef.current.scale.setScalar(moonSize);
+        }
     });
 
     return (
-        <Billboard position={[MOON_DIR.x * 22, MOON_DIR.y * 22, MOON_DIR.z * 22]}>
+        <Billboard ref={groupRef} position={[0, 22, -22]}>
             <mesh>
                 <planeGeometry args={[2.4, 2.4]} />
                 <shaderMaterial
@@ -333,10 +381,23 @@ const MouseRig = ({ children }) => {
 };
 
 /* ------------------------------------------------------------------ */
+const SunLight = () => {
+    const lightRef = useRef(null);
+
+    useFrame(() => {
+        const { sunDir, dayLight } = getCelestial();
+        if (!lightRef.current) return;
+        lightRef.current.position.copy(sunDir).multiplyScalar(6);
+        lightRef.current.intensity = 0.6 + dayLight * 2.2;
+    });
+
+    return <directionalLight ref={lightRef} intensity={2.2} color="#ffd9a0" />;
+};
+
 const SceneContents = () => (
     <>
         <ambientLight intensity={0.55} color="#ffe6c0" />
-        <directionalLight position={[SUN_DIR.x, SUN_DIR.y, SUN_DIR.z]} intensity={2.2} color="#ffd9a0" />
+        <SunLight />
         <pointLight position={[-3, 2.2, 3]} intensity={8} distance={16} color="#ffe9c9" />
 
         <SkyDome />

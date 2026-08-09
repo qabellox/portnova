@@ -1,5 +1,5 @@
 ﻿/* ============================================================
-   MARINE SCENE — 3D live seascape with interactive boat fleet
+   MARINE SCENE — cinematic Three.js seascape + interactive fleet
    ============================================================ */
 .marine-scene {
    position: absolute;
@@ -8,7 +8,25 @@
    pointer-events: none;
    z-index: 0;
    border-radius: inherit;
-   background: linear-gradient(180deg, #0a2e52 0%, #164a78 55%, #0a2c50 100%);
+   background: linear-gradient(180deg, #ffd9a0 0%, #f4a86a 40%, #1e5f7a 68%, #0e4a6b 100%);
+}
+
+/* Three.js cinematic background layer */
+.three-scene {
+   position: absolute;
+   inset: 0;
+   width: 100%;
+   height: 100%;
+   z-index: 1;
+   overflow: hidden;
+   pointer-events: none;
+}
+
+.three-scene canvas {
+   display: block;
+   width: 100% !important;
+   height: 100% !important;
+   outline: none;
 }
 
 .marine-canvas {

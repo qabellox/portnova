@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import ThreeScene from './ThreeScene';
 
 /**
  * MarineScene: 3D live seascape.
@@ -461,7 +462,8 @@ const MarineScene = ({ className = '' }) => {
 
     return (
         <div className={`marine-scene ${className}`.trim()}>
-            <canvas ref={canvasRef} className="marine-canvas" aria-hidden="true" />
+            {/* Cinematic golden-hour Three.js seascape (full background) */}
+            <ThreeScene />
 
             <div className="marine-gulls" aria-hidden="true">
                 {gulls.map((g) => (

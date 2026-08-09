@@ -13,17 +13,18 @@ import ThreeScene from './ThreeScene';
  */
 
 // The fleet config is shared with ThreeScene: 3D layout + the card content.
-/* Every boat sails a continuous elliptical orbit (cx,cz center; rx,rz axes;
-   speed = rad/s). The orbit stays inside the visible sea so all 5 boats are
-   always on screen, and because it's a circle the boat never pops — it glides
-   from the right, around the back of the scene and back. lift raises the hull
+/* Every boat sails steadily FORWARD across the sea (dir=1 right, dir=-1
+   left), traversing the whole visible width and wrapping just off-screen —
+   no pop, no reversal, no circling. phase is a fraction of the travel cycle
+   (0..1) that spreads the boats apart; margin is how far past the screen edge
+   the boat travels before wrapping (hides the wrap). lift raises the hull
    above the waterline so it floats with real freeboard. */
 const FLEET = [
-    { id: 'job-a', kind: 'jobs', w: 3.4, cx: 0, cz: -1.8, rx: 3.8, rz: 2.6, speed: 0.20, phase: 0.4, scale: 0.85, lift: 0.12, anchorY: 1.6, focus: 'Frontend Product Intern', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
-    { id: 'course-a', kind: 'courses', w: 2.6, cx: 0, cz: -5, rx: 5, rz: 3.4, speed: 0.26, phase: 3.2, scale: 0.72, lift: 0.32, anchorY: 1.7, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
-    { id: 'job-b', kind: 'jobs', w: 3.4, cx: 0, cz: -9, rx: 6.4, rz: 4, speed: 0.16, phase: 5.6, scale: 0.6, lift: 0.12, anchorY: 1.6, focus: 'Operations Coordinator', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
-    { id: 'course-b', kind: 'courses', w: 2.6, cx: 0, cz: -14, rx: 8, rz: 4.4, speed: 0.12, phase: 2.2, scale: 0.5, lift: 0.32, anchorY: 1.7, focus: 'Startup Operations', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
-    { id: 'course-c', kind: 'courses', w: 2.6, cx: 0, cz: -20, rx: 9.5, rz: 4.4, speed: 0.09, phase: 4.4, scale: 0.42, lift: 0.32, anchorY: 1.7, focus: 'Career Readiness', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
+    { id: 'job-a', kind: 'jobs', w: 3.4, z: -2, speed: 0.6, dir: 1, phase: 0.15, margin: 2.3, scale: 0.8, lift: 0.28, anchorY: 1.8, focus: 'Frontend Product Intern', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
+    { id: 'course-a', kind: 'courses', w: 2.6, z: -5.5, speed: 0.75, dir: -1, phase: 0.85, margin: 2.0, scale: 0.68, lift: 0.4, anchorY: 2.3, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
+    { id: 'job-b', kind: 'jobs', w: 3.4, z: -9, speed: 0.5, dir: 1, phase: 0.4, margin: 2.3, scale: 0.56, lift: 0.28, anchorY: 1.8, focus: 'Operations Coordinator', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
+    { id: 'course-b', kind: 'courses', w: 2.6, z: -13, speed: 0.4, dir: -1, phase: 0.65, margin: 2.0, scale: 0.46, lift: 0.4, anchorY: 2.3, focus: 'Startup Operations', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
+    { id: 'course-c', kind: 'courses', w: 2.6, z: -18, speed: 0.3, dir: 1, phase: 0.5, margin: 2.0, scale: 0.38, lift: 0.4, anchorY: 2.3, focus: 'Career Readiness', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
 ];
 
 const MarineScene = ({ className = '' }) => {
@@ -42,7 +43,7 @@ const MarineScene = ({ className = '' }) => {
                 if (!el || !p) return;
                 el.style.left = `${p.x}%`;
                 el.style.top = `${p.y}%`;
-                el.style.width = `${p.w * 1.6}px`;
+                el.style.width = `${Math.max(p.w * 1.6, 96)}px`;
                 el.style.opacity = p.visible ? '' : '0';
                 el.style.pointerEvents = p.visible ? 'auto' : 'none';
             });

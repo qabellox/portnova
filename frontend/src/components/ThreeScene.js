@@ -164,10 +164,10 @@ const Water = () => {
 
                     float wave(vec2 p, float t) {
                         float w = 0.0;
-                        w += sin(p.x * 0.32 + t * 0.70) * 0.16;
-                        w += cos(p.y * 0.48 + t * 0.52) * 0.11;
-                        w += sin((p.x + p.y) * 0.21 + t * 0.85) * 0.07;
-                        w += cos(p.x * 0.72 - t * 1.05 + p.y * 0.55) * 0.03;
+                        w += sin(p.x * 0.32 + t * 0.70) * 0.12;
+                        w += cos(p.y * 0.48 + t * 0.52) * 0.08;
+                        w += sin((p.x + p.y) * 0.21 + t * 0.85) * 0.05;
+                        w += cos(p.x * 0.72 - t * 1.05 + p.y * 0.55) * 0.02;
                         return w;
                     }
 
@@ -223,7 +223,7 @@ const Water = () => {
                         col += vec3(0.72, 0.82, 1.0) * specM * (1.0 - uDayLight) * 0.8;
 
                         // Foam on the (now realistic) wave crests
-                        float crest = smoothstep(0.13, 0.26, abs(vH));
+                        float crest = smoothstep(0.10, 0.21, abs(vH));
                         col = mix(col, vec3(0.92, 0.96, 1.0), crest * 0.22);
 
                         gl_FragColor = vec4(col, 1.0);
@@ -533,7 +533,7 @@ const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.15 }) =
             const x = arr[i];
             const u = x / length;
             const flutter = Math.pow(u, 1.4);
-            arr[i + 2] = flutter * (Math.sin(x * 9 - t * 13) + 0.55 * Math.sin(x * 15 - t * 21)) * 0.16;
+            arr[i + 2] = flutter * (Math.sin(x * 8 - t * 11) + 0.5 * Math.sin(x * 13 - t * 18)) * 0.09;
         }
         attr.needsUpdate = true;
         mesh.geometry.computeVertexNormals();
@@ -546,7 +546,7 @@ const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.15 }) =
                 <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
             </mesh>
             <mesh ref={meshRef} geometry={geo} position={[0.02, topY, 0]}>
-                <meshStandardMaterial color={color} metalness={0.05} roughness={0.55} side={THREE.DoubleSide} />
+                <meshStandardMaterial color={color} metalness={0.05} roughness={0.55} side={THREE.DoubleSide} depthWrite={false} />
             </mesh>
             <mesh position={[0, poleH, 0]}>
                 <sphereGeometry args={[0.07, 10, 10]} />
@@ -629,8 +629,8 @@ const Sail = () => {
 const SailboatMesh = () => (
     <group>
         {/* keel fin below the waterline */}
-        <mesh position={[0, -0.42, 0]}>
-            <boxGeometry args={[0.9, 0.4, 0.06]} />
+        <mesh position={[0, -0.6, 0]}>
+            <boxGeometry args={[0.9, 0.5, 0.06]} />
             <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
         </mesh>
         {/* rounded wooden hull — closes its own deck, no overlapping boxes */}
@@ -663,18 +663,19 @@ const cargoHullGeo = buildHullGeometry(3.3, 1.2, 0.55, { stations: 36, ribs: 14,
    The boat's heave tracks this precisely, so it floats and never sinks. */
 const waveH = (x, z, t) => {
     let w = 0;
-    w += Math.sin(x * 0.32 + t * 0.70) * 0.16;
-    w += Math.cos(z * 0.48 + t * 0.52) * 0.11;
-    w += Math.sin((x + z) * 0.21 + t * 0.85) * 0.07;
-    w += Math.cos(x * 0.72 - t * 1.05 + z * 0.55) * 0.03;
+    w += Math.sin(x * 0.32 + t * 0.70) * 0.12;
+    w += Math.cos(z * 0.48 + t * 0.52) * 0.08;
+    w += Math.sin((x + z) * 0.21 + t * 0.85) * 0.05;
+    w += Math.cos(x * 0.72 - t * 1.05 + z * 0.55) * 0.02;
     return w;
 };
 
-/* Sailing fleet. Each boat rides a continuous ELLIPTICAL ORBIT around the
-   scene: it always sails forward along its path (never reverses, never
-   teleports), smoothly circling — coming closer to the camera, receding
-   into the sea, and returning. Projects each boat's screen position so the
-   DOM cards follow it. */
+/* Sailing fleet. Each boat sails steadily FORWARD across the sea — straight
+   through the visible water, exiting one edge and seamlessly re-entering the
+   other fully off-screen (no pop, no reversal) — exactly like Clash Royale
+   boats. The travel span tracks the visible sea width for the current screen,
+   so all boats stay on view on any device. Projects each boat's screen
+   position so the DOM cards follow it. */
 const Fleet = ({ fleet, positionsRef }) => {
     const groups = useRef([]);
     const v = useRef(new THREE.Vector3());
@@ -683,13 +684,18 @@ const Fleet = ({ fleet, positionsRef }) => {
         const t = state.clock.elapsedTime;
         const cam = state.camera;
         const pos = positionsRef.current;
+        // Horizontal half-width of the view at a given depth, for this aspect
+        const tanHalf = Math.tan(THREE.MathUtils.degToRad(46 / 2)) * (state.size.width / state.size.height);
         fleet.forEach((b, i) => {
             const g = groups.current[i];
             if (!g || !pos) return;
 
-            const th = t * b.speed + b.phase;
-            const x = b.cx + b.rx * Math.cos(th);
-            const z = b.cz + b.rz * Math.sin(th);
+            // Span = visible half-width at the boat's depth + a small margin,
+            // so it crosses the whole sea and wraps fully off-screen.
+            const span = (7.2 - b.z) * tanHalf + (b.margin || 2);
+            const raw = (t * b.speed * b.dir + (b.phase || 0) * span * 2) % (span * 2);
+            const x = raw - span;
+            const z = b.z;
 
             // Float on the exact wave surface, plus the boat's draft so the
             // hull has real freeboard (visible waterline, never submerged).
@@ -699,10 +705,8 @@ const Fleet = ({ fleet, positionsRef }) => {
             const hz = waveH(x, z + eps, t) - waveH(x, z - eps, t);
             const y = -0.35 + h0 + (b.lift || 0);
 
-            // Face the direction of travel along the orbit
-            const dirX = -b.rx * Math.sin(th);
-            const dirZ = b.rz * Math.cos(th);
-            g.rotation.y = -Math.atan2(dirZ, dirX);
+            // Fixed facing: sail right with the bow forward, left turned round
+            g.rotation.y = b.dir > 0 ? 0 : Math.PI;
             g.rotation.z = Math.atan(hx) * 0.5;
             g.rotation.x = Math.atan(hz) * 0.4;
 

@@ -500,10 +500,12 @@ const Moon3D = () => {
                     vertexShader={`
                         varying vec3 vNormal;
                         varying vec3 vWorldPos;
+                        varying vec3 vDir;
                         void main() {
                             vNormal = normalize(normalMatrix * normal);
                             vec4 wp = modelMatrix * vec4(position, 1.0);
                             vWorldPos = wp.xyz;
+                            vDir = normalize(position);
                             gl_Position = projectionMatrix * viewMatrix * wp;
                         }
                     `}
@@ -512,35 +514,64 @@ const Moon3D = () => {
                         uniform vec3 uLightDir;
                         varying vec3 vNormal;
                         varying vec3 vWorldPos;
+                        varying vec3 vDir;
+
+                        float hash1(vec3 p) {
+                            p = fract(p * 0.1031);
+                            p += dot(p, p.zyx + 31.32);
+                            return fract((p.x + p.y) * p.z);
+                        }
+
+                        // smooth 3D value noise — soft, large-scale features
+                        float vnoise(vec3 p) {
+                            vec3 i = floor(p);
+                            vec3 f = fract(p);
+                            f = f * f * (3.0 - 2.0 * f);
+                            return mix(
+                                mix(mix(hash1(i), hash1(i + vec3(1,0,0)), f.x),
+                                    mix(hash1(i + vec3(0,1,0)), hash1(i + vec3(1,1,0)), f.x), f.y),
+                                mix(mix(hash1(i + vec3(0,0,1)), hash1(i + vec3(1,0,1)), f.x),
+                                    mix(hash1(i + vec3(0,1,1)), hash1(i + vec3(1,1,1)), f.x), f.y),
+                                f.z);
+                        }
+
+                        // a soft dark crater patch of angular radius r
+                        float craterAt(vec3 p, vec3 c, float r) {
+                            float d = acos(clamp(dot(normalize(p), normalize(c)), -1.0, 1.0));
+                            return smoothstep(r, r * 0.78, d);
+                        }
 
                         void main() {
                             vec3 n = normalize(vNormal);
                             vec3 viewDir = normalize(cameraPosition - vWorldPos);
                             vec3 light = normalize(uLightDir);
+                            vec3 p = normalize(vDir);
 
                             // soft day/night terminator (lit side faces the sun)
                             float diff = max(dot(n, light), 0.0);
-                            float term = smoothstep(-0.1, 0.25, diff);
+                            float term = smoothstep(-0.12, 0.3, diff);
 
-                            // distance from the moon's disc centre + iris angle
-                            float d = length(n.xy);
-                            float ang = atan(n.y, n.x);
+                            // lunar surface: smooth maria + a few distinct craters
+                            float maria = vnoise(p * 2.2) * 0.5 + vnoise(p * 5.0) * 0.3;
+                            float cr = 0.0;
+                            cr += craterAt(p, vec3(0.55, 0.45, 0.35), 0.34);
+                            cr += craterAt(p, vec3(-0.5, 0.55, 0.5), 0.26);
+                            cr += craterAt(p, vec3(0.15, 0.7, -0.3), 0.2);
+                            cr += craterAt(p, vec3(-0.35, -0.6, 0.5), 0.3);
+                            cr += craterAt(p, vec3(0.7, -0.3, 0.4), 0.18);
+                            cr += craterAt(p, vec3(-0.8, -0.1, 0.2), 0.16);
 
-                            // pearl-silver 3D body
-                            vec3 body = vec3(0.87, 0.90, 0.97) * (term * 1.2 + 0.05);
+                            // realistic grey moon (not a white basketball):
+                            // dark maria and darker crater floors on a grey body
+                            vec3 base = mix(vec3(0.80, 0.82, 0.87), vec3(0.55, 0.59, 0.67),
+                                clamp(maria * 0.8 + cr * 0.3, 0.0, 1.0));
 
-                            // iris-style luminous layers: bright core, soft halo,
-                            // six fine rays — like the sun, but cool and silver
-                            float core = smoothstep(0.5, 0.0, d);
-                            float glow = exp(-d * 2.4);
-                            float rays = pow(abs(sin(ang * 6.0)), 20.0) * exp(-d * 3.0);
-                            vec3 iris = vec3(0.84, 0.89, 1.0) * (core * 1.6 + glow * 0.55 + rays * 0.9);
+                            // sunlit face with a gentle terminator, faint night side
+                            vec3 col = base * (0.06 + term * 1.3);
 
-                            vec3 col = body + iris * (0.15 + 0.85 * term);
-
-                            // faint cool rim
-                            float rim = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
-                            col += vec3(0.75, 0.82, 1.0) * rim * 0.3;
+                            // very subtle limb brightening
+                            float limb = pow(1.0 - max(dot(n, viewDir), 0.0), 2.0);
+                            col += vec3(0.72, 0.78, 0.95) * limb * 0.1;
 
                             col *= uVisible;
                             gl_FragColor = vec4(col, uVisible);

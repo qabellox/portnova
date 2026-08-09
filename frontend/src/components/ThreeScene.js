@@ -99,13 +99,17 @@ const getCelestial = () => {
 const fitToView = (dir, aspect) => {
     const halfH = Math.atan(Math.tan(THREE.MathUtils.degToRad(46 / 2)) * aspect);
     const az = Math.atan2(dir.x, -dir.z);
-    const maxAz = halfH * 0.75;
-    const cl = Math.max(-maxAz, Math.min(maxAz, az));
-    // Clamp the elevation too: the sun/moon stay between just above the
-    // horizon and the top of the visible sky, so they are never off-screen.
+    // The sun/moon sweep about ±40° of azimuth in reality. Remap that whole
+    // sweep onto the visible sky width, so they travel edge-to-edge above the
+    // sea following the real clock, and never leave the frame.
+    const CEL = THREE.MathUtils.degToRad(40);
+    const k = Math.min(1, halfH / CEL);
+    const cl = az * k;
+    // Keep them inside the vertical view, arcing just above the horizon.
     const el = Math.atan2(dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z));
     const maxEl = THREE.MathUtils.degToRad(8);
-    const clEl = Math.max(THREE.MathUtils.degToRad(1), Math.min(maxEl, el));
+    const minEl = THREE.MathUtils.degToRad(2);
+    const clEl = Math.max(minEl, Math.min(maxEl, el));
     const cosE = Math.cos(clEl);
     const sinE = Math.sin(clEl);
     return new THREE.Vector3(Math.sin(cl) * cosE, sinE, -Math.cos(cl) * cosE);
@@ -194,12 +198,12 @@ const SkyDome = () => {
                         col += uSunColor * smoothstep(0.9945, 0.9988, s) * 2.6 * uSunGlow;
                         col += uSunColor * pow(s, 26.0) * 1.2 * uSunGlow;
 
-                        // Shiny, glimmering moon with a soft halo
+                        // ONE clean moon: a single crisp circle + one smooth,
+                        // consistent halo — no overlapping blobs, no shimmer.
                         float m = max(dot(d, uMoonDir), 0.0);
-                        float shimmer = 1.0 + 0.15 * sin(uTime * 2.1);
-                        col += vec3(0.97, 0.99, 1.0) * smoothstep(0.9940, 0.9986, m) * 3.0 * uMoonVisible * shimmer;
-                        col += vec3(0.78, 0.86, 1.0) * pow(m, 6.0) * 1.4 * uMoonVisible * (0.8 + 0.3 * sin(uTime * 1.3));
-                        col += vec3(0.6, 0.7, 0.95) * pow(m, 3.0) * 0.7 * uMoonVisible;
+                        float disc = smoothstep(0.9955, 0.9988, m);
+                        float halo = smoothstep(0.986, 0.9968, m) * 0.38;
+                        col += vec3(0.97, 0.99, 1.0) * (disc * 3.2 + halo) * uMoonVisible;
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -376,10 +380,11 @@ const StarField = () => {
     const ref = useRef(null);
     const matRef = useRef(null);
     const geo = useMemo(() => {
-        const count = 650;
+        const count = 620;
         const pos = new Float32Array(count * 3);
         const size = new Float32Array(count);
         const bright = new Float32Array(count);
+        const color = new Float32Array(count * 3);
         const R = 58;
         for (let i = 0; i < count; i++) {
             const y = 0.03 + Math.random() * 0.97; // upper sky only
@@ -388,14 +393,23 @@ const StarField = () => {
             pos[i * 3] = Math.cos(a) * r * R;
             pos[i * 3 + 1] = y * R;
             pos[i * 3 + 2] = Math.sin(a) * r * R;
-            // a sprinkle of bright stars among many dim ones
-            size[i] = 2.0 + Math.random() * 7.0;
-            bright[i] = 0.35 + Math.pow(Math.random(), 2.0) * 0.65;
+            size[i] = 2.5 + Math.random() * 7.5;
+            bright[i] = 0.4 + Math.pow(Math.random(), 2.0) * 0.6;
+            // natural star colours: mostly white, some blue-white, a few warm
+            const k = Math.random();
+            let c;
+            if (k < 0.18) c = [0.78, 0.86, 1.0];    // blue-white
+            else if (k < 0.3) c = [1.0, 0.92, 0.78]; // warm gold
+            else c = [0.92, 0.96, 1.0];              // white
+            color[i * 3] = c[0];
+            color[i * 3 + 1] = c[1];
+            color[i * 3 + 2] = c[2];
         }
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
         g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
         g.setAttribute('aBright', new THREE.BufferAttribute(bright, 1));
+        g.setAttribute('aColor', new THREE.BufferAttribute(color, 3));
         return g;
     }, []);
 
@@ -424,26 +438,33 @@ const StarField = () => {
                 vertexShader={`
                     attribute float aSize;
                     attribute float aBright;
+                    attribute vec3 aColor;
                     uniform float uTime;
                     uniform float uPixelRatio;
                     varying float vBright;
+                    varying vec3 vColor;
                     void main() {
                         vec4 mv = modelViewMatrix * vec4(position, 1.0);
                         gl_Position = projectionMatrix * mv;
-                        float tw = 0.72 + 0.28 * sin(uTime * 2.0 + aBright * 43.0);
+                        float tw = 0.78 + 0.22 * sin(uTime * 1.8 + aBright * 43.0);
                         gl_PointSize = aSize * tw * uPixelRatio * (40.0 / -mv.z);
                         vBright = aBright * tw;
+                        vColor = aColor;
                     }
                 `}
                 fragmentShader={`
                     uniform float uOpacity;
                     varying float vBright;
+                    varying vec3 vColor;
                     void main() {
-                        vec2 uv = gl_PointCoord - 0.5;
-                        float d = length(uv) * 2.0;
+                        vec2 p = gl_PointCoord - 0.5;
+                        float d = length(p) * 2.0;
                         float glow = exp(-d * d * 5.0);
-                        float core = smoothstep(0.6, 0.0, d);
-                        vec3 col = vec3(0.86, 0.93, 1.0) * (core * 1.5 + glow * 0.8);
+                        float core = smoothstep(0.55, 0.0, d);
+                        // a fine diffraction cross on the brighter stars
+                        float ang = atan(p.y, p.x);
+                        float cross = pow(abs(cos(ang * 2.0)), 6.0) * 0.55 * step(0.45, vBright);
+                        vec3 col = vColor * (core * 1.6 + glow * 0.85) + vec3(1.0) * cross * 0.4;
                         gl_FragColor = vec4(col * vBright, uOpacity);
                     }
                 `}

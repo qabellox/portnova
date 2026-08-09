@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useRef } from 'react';
+import React, { Suspense, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
@@ -198,12 +198,8 @@ const SkyDome = () => {
                         col += uSunColor * smoothstep(0.9945, 0.9988, s) * 2.6 * uSunGlow;
                         col += uSunColor * pow(s, 26.0) * 1.2 * uSunGlow;
 
-                        // ONE clean moon: a single crisp circle + one smooth,
-                        // consistent halo — no overlapping blobs, no shimmer.
-                        float m = max(dot(d, uMoonDir), 0.0);
-                        float disc = smoothstep(0.9955, 0.9988, m);
-                        float halo = smoothstep(0.986, 0.9968, m) * 0.38;
-                        col += vec3(0.97, 0.99, 1.0) * (disc * 3.2 + halo) * uMoonVisible;
+                        // The moon is now a real 3D mesh rendered in the scene
+                        // (see Moon3D) — nothing is painted on the sky here.
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -303,8 +299,10 @@ const Water = () => {
                         vec3 night = mix(vec3(0.04,0.12,0.2), uNight, depth);
                         vec3 col = mix(night, day, uDayLight);
 
+                        // Clear water, not a fog bank: the pale sky sheen is
+                        // kept subtle, especially at night.
                         float fres = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
-                        col += vec3(0.9, 0.95, 1.0) * fres * 0.25;
+                        col += vec3(0.9, 0.95, 1.0) * fres * (0.08 + 0.16 * uDayLight);
 
                         vec3 refl = reflect(-uSunDir, n);
                         float spec = pow(max(dot(refl, viewDir), 0.0), 120.0);
@@ -314,9 +312,10 @@ const Water = () => {
                         float specM = pow(max(dot(reflM, viewDir), 0.0), 160.0);
                         col += vec3(0.72, 0.82, 1.0) * specM * (1.0 - uDayLight) * 0.8;
 
-                        // Foam on the (now realistic) wave crests
+                        // Foam on the wave crests (barely visible at night so
+                        // the sea reads as clear water, not a fog bank)
                         float crest = smoothstep(0.10, 0.21, abs(vH));
-                        col = mix(col, vec3(0.92, 0.96, 1.0), crest * 0.22);
+                        col = mix(col, vec3(0.92, 0.96, 1.0), crest * 0.2 * (0.12 + 0.88 * uDayLight));
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -376,100 +375,155 @@ const SunLight = () => {
 /* 3D starfield: crisp points fixed on the sky sphere, fading in as     */
 /* night falls so they match the time-of-day atmosphere.               */
 /* ------------------------------------------------------------------ */
+/* 3D starfield: real low-poly star gems rendered as instanced meshes in the
+   scene, with natural colours, varied sizes, and a slow drift. They fade in
+   as night falls to match the time-of-day atmosphere. */
 const StarField = () => {
-    const ref = useRef(null);
+    const meshRef = useRef(null);
+    const groupRef = useRef(null);
     const matRef = useRef(null);
-    const geo = useMemo(() => {
-        const count = 620;
-        const pos = new Float32Array(count * 3);
-        const size = new Float32Array(count);
-        const bright = new Float32Array(count);
-        const color = new Float32Array(count * 3);
-        const R = 58;
+    const data = useMemo(() => {
+        const count = 420;
+        const R = 56;
+        const positions = [];
+        const scales = [];
+        const colors = [];
         for (let i = 0; i < count; i++) {
-            const y = 0.03 + Math.random() * 0.97; // upper sky only
+            const y = 0.04 + Math.random() * 0.96; // upper sky only
             const a = Math.random() * Math.PI * 2;
             const r = Math.sqrt(Math.max(0, 1 - y * y));
-            pos[i * 3] = Math.cos(a) * r * R;
-            pos[i * 3 + 1] = y * R;
-            pos[i * 3 + 2] = Math.sin(a) * r * R;
-            size[i] = 2.5 + Math.random() * 7.5;
-            bright[i] = 0.4 + Math.pow(Math.random(), 2.0) * 0.6;
-            // natural star colours: mostly white, some blue-white, a few warm
+            positions.push(Math.cos(a) * r * R, y * R, Math.sin(a) * r * R);
+            scales.push(0.5 + Math.pow(Math.random(), 2.0) * 2.3);
             const k = Math.random();
-            let c;
-            if (k < 0.18) c = [0.78, 0.86, 1.0];    // blue-white
-            else if (k < 0.3) c = [1.0, 0.92, 0.78]; // warm gold
-            else c = [0.92, 0.96, 1.0];              // white
-            color[i * 3] = c[0];
-            color[i * 3 + 1] = c[1];
-            color[i * 3 + 2] = c[2];
+            if (k < 0.18) colors.push(0.72, 0.82, 1.0);    // blue-white
+            else if (k < 0.3) colors.push(1.0, 0.9, 0.72); // warm gold
+            else colors.push(0.9, 0.95, 1.0);              // white
         }
-        const g = new THREE.BufferGeometry();
-        g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-        g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
-        g.setAttribute('aBright', new THREE.BufferAttribute(bright, 1));
-        g.setAttribute('aColor', new THREE.BufferAttribute(color, 3));
-        return g;
+        return { count, positions, scales, colors };
     }, []);
+
+    useLayoutEffect(() => {
+        const mesh = meshRef.current;
+        if (!mesh) return;
+        const dummy = new THREE.Object3D();
+        const color = new THREE.Color();
+        for (let i = 0; i < data.count; i++) {
+            dummy.position.set(data.positions[i * 3], data.positions[i * 3 + 1], data.positions[i * 3 + 2]);
+            dummy.scale.setScalar(data.scales[i]);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(i, dummy.matrix);
+            color.setRGB(data.colors[i * 3], data.colors[i * 3 + 1], data.colors[i * 3 + 2]);
+            mesh.setColorAt(i, color);
+        }
+        mesh.instanceMatrix.needsUpdate = true;
+        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    }, [data]);
 
     useFrame((state) => {
         if (matRef.current) {
             const { skyLight } = getCelestial();
-            matRef.current.uniforms.uOpacity.value = Math.max(0, Math.min(1, (1 - skyLight) * 1.15));
-            matRef.current.uniforms.uTime.value = state.clock.elapsedTime;
-            matRef.current.uniforms.uPixelRatio.value = state.gl.getPixelRatio();
+            matRef.current.opacity = Math.max(0, Math.min(1, (1 - skyLight) * 1.15));
+            matRef.current.emissiveIntensity = 1.4 + 0.5 * Math.sin(state.clock.elapsedTime * 1.5);
         }
-        if (ref.current) ref.current.rotation.y += 0.00025;
+        if (groupRef.current) groupRef.current.rotation.y += 0.00025;
     });
 
     return (
-        <points ref={ref} geometry={geo}>
-            <shaderMaterial
-                ref={matRef}
-                transparent
-                depthWrite={false}
-                blending={THREE.AdditiveBlending}
-                uniforms={{
-                    uOpacity: { value: 0 },
-                    uTime: { value: 0 },
-                    uPixelRatio: { value: 1 },
-                }}
-                vertexShader={`
-                    attribute float aSize;
-                    attribute float aBright;
-                    attribute vec3 aColor;
-                    uniform float uTime;
-                    uniform float uPixelRatio;
-                    varying float vBright;
-                    varying vec3 vColor;
-                    void main() {
-                        vec4 mv = modelViewMatrix * vec4(position, 1.0);
-                        gl_Position = projectionMatrix * mv;
-                        float tw = 0.78 + 0.22 * sin(uTime * 1.8 + aBright * 43.0);
-                        gl_PointSize = aSize * tw * uPixelRatio * (40.0 / -mv.z);
-                        vBright = aBright * tw;
-                        vColor = aColor;
-                    }
-                `}
-                fragmentShader={`
-                    uniform float uOpacity;
-                    varying float vBright;
-                    varying vec3 vColor;
-                    void main() {
-                        vec2 p = gl_PointCoord - 0.5;
-                        float d = length(p) * 2.0;
-                        float glow = exp(-d * d * 5.0);
-                        float core = smoothstep(0.55, 0.0, d);
-                        // a fine diffraction cross on the brighter stars
-                        float ang = atan(p.y, p.x);
-                        float cross = pow(abs(cos(ang * 2.0)), 6.0) * 0.55 * step(0.45, vBright);
-                        vec3 col = vColor * (core * 1.6 + glow * 0.85) + vec3(1.0) * cross * 0.4;
-                        gl_FragColor = vec4(col * vBright, uOpacity);
-                    }
-                `}
-            />
-        </points>
+        <group ref={groupRef}>
+            <instancedMesh ref={meshRef} args={[undefined, undefined, data.count]} frustumCulled={false}>
+                <icosahedronGeometry args={[0.4, 0]} />
+                <meshStandardMaterial ref={matRef} color="#ffffff" emissive="#ffffff" emissiveIntensity={1.6} transparent opacity={0} depthWrite={false} toneMapped={false} />
+            </instancedMesh>
+        </group>
+    );
+};
+
+/* ------------------------------------------------------------------ */
+/* 3D moon: a real lit sphere with craters and a day/night terminator,  */
+/* drifting through the sky with the real clock.                      */
+/* ------------------------------------------------------------------ */
+const Moon3D = () => {
+    const groupRef = useRef(null);
+    const matRef = useRef(null);
+
+    useFrame((state) => {
+        const { moonDir, moonVisible, sunDir } = getCelestial();
+        const aspect = state.size.width / state.size.height;
+        const d = fitToView(moonDir, aspect);
+        if (groupRef.current) {
+            groupRef.current.position.copy(d).multiplyScalar(40);
+            groupRef.current.visible = moonVisible > 0.02;
+        }
+        if (matRef.current) {
+            matRef.current.uniforms.uVisible.value = moonVisible;
+            matRef.current.uniforms.uLightDir.value.copy(sunDir);
+        }
+    });
+
+    return (
+        <group ref={groupRef} position={[0, 40, 0]}>
+            <mesh>
+                <sphereGeometry args={[2.0, 48, 48]} />
+                <shaderMaterial
+                    ref={matRef}
+                    transparent
+                    depthWrite
+                    uniforms={{
+                        uVisible: { value: 0 },
+                        uLightDir: { value: new THREE.Vector3(0, 0, -1) },
+                    }}
+                    vertexShader={`
+                        varying vec3 vNormal;
+                        varying vec3 vWorldPos;
+                        varying vec3 vDir;
+                        void main() {
+                            vNormal = normalize(normalMatrix * normal);
+                            vec4 wp = modelMatrix * vec4(position, 1.0);
+                            vWorldPos = wp.xyz;
+                            vDir = normalize(position);
+                            gl_Position = projectionMatrix * viewMatrix * wp;
+                        }
+                    `}
+                    fragmentShader={`
+                        uniform float uVisible;
+                        uniform vec3 uLightDir;
+                        varying vec3 vNormal;
+                        varying vec3 vWorldPos;
+                        varying vec3 vDir;
+
+                        float hash(vec3 p) {
+                            p = fract(p * 0.1031);
+                            p += dot(p, p.zyx + 31.32);
+                            return fract((p.x + p.y) * p.z);
+                        }
+
+                        void main() {
+                            vec3 n = normalize(vNormal);
+                            vec3 viewDir = normalize(cameraPosition - vWorldPos);
+                            vec3 light = normalize(uLightDir);
+
+                            // real terminator: the lit side faces the sun
+                            float diff = max(dot(n, light), 0.0);
+                            float term = smoothstep(-0.12, 0.22, diff);
+
+                            // pearl-silver surface with faint craters
+                            float crater = smoothstep(0.30, 0.55, hash(vDir * 55.0));
+                            float mottle = 0.92 + 0.16 * hash(vDir * 11.0);
+                            vec3 base = vec3(0.84, 0.88, 0.96) * mottle;
+                            vec3 col = base * (term * 1.35 + 0.05);
+                            col -= vec3(0.5, 0.55, 0.65) * crater * 0.55 * term;
+
+                            // soft silver rim against the night sky
+                            float rim = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
+                            col += vec3(0.72, 0.80, 1.0) * rim * 0.4;
+
+                            col *= uVisible;
+                            gl_FragColor = vec4(col, uVisible);
+                        }
+                    `}
+                />
+            </mesh>
+        </group>
     );
 };
 
@@ -839,6 +893,7 @@ const SceneContents = () => (
 
         <SkyDome />
         <StarField />
+        <Moon3D />
         <Water />
 
         <Environment resolution={256}>

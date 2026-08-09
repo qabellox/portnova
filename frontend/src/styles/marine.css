@@ -166,7 +166,8 @@
    bottom: 6%;
    left: 0;
    pointer-events: auto;
-   transform: translateZ(calc(var(--depth) * 40px)) scale(var(--depth));
+   /* No scale() here: boat sizes are baked into w/h so text stays crisp */
+   transform: translateZ(calc(var(--depth) * 40px));
    transform-style: preserve-3d;
    will-change: transform;
    z-index: 1;
@@ -286,7 +287,7 @@
    box-shadow: 0 20px 50px rgba(3, 12, 26, 0.65), 0 0 0 1px rgba(212, 175, 55, 0.2);
    opacity: 0;
    pointer-events: none;
-   transform: translateX(-50%) translateY(8px) scale(calc(1 / var(--depth)));
+   transform: translateX(-50%) translateY(8px);
    transform-origin: 50% 100%;
    transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
    z-index: 6;
@@ -297,7 +298,7 @@
 .marine-vessel:focus-within .marine-vessel__card {
    opacity: 1;
    pointer-events: auto;
-   transform: translateX(-50%) translateY(0) scale(calc(1 / var(--depth)));
+   transform: translateX(-50%) translateY(0);
 }
 
 .marine-vessel__card::after {

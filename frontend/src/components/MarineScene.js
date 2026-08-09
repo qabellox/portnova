@@ -447,13 +447,16 @@ const MarineScene = ({ className = '' }) => {
         { cls: 'marine-gull--6', size: 32, top: 25, dur: 70, delay: -32, op: 0.65 },
     ];
 
-    // Each boat rides the swells: bob amplitude grows with depth (wave magnitude)
+    // Each boat rides the swells: bob amplitude grows with depth (wave magnitude).
+    // Sizes are BAKED into w/h (already multiplied by depth) so the fleet does not
+    // use CSS scale on the vessel, which keeps card text at native resolution
+    // (crisp) instead of being rasterized/blurred by counter-scaling.
     const fleet = [
         { kind: 'jobs', cls: 'marine-vessel--job-a', w: 340, h: 166, dur: 60, delay: -8, depth: 1, focus: 'Frontend Product Intern', titleKey: 'fleetJob1Title', descKey: 'fleetJob1Desc' },
-        { kind: 'courses', cls: 'marine-vessel--course-a', w: 296, h: 148, dur: 78, delay: -30, depth: 0.8, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
-        { kind: 'jobs', cls: 'marine-vessel--job-b', w: 224, h: 112, dur: 100, delay: -46, depth: 0.58, focus: 'Operations Coordinator', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
-        { kind: 'courses', cls: 'marine-vessel--course-b', w: 188, h: 96, dur: 118, delay: -66, depth: 0.45, focus: 'Startup Operations', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
-        { kind: 'courses', cls: 'marine-vessel--course-c', w: 132, h: 68, dur: 142, delay: -88, depth: 0.32, focus: 'Career Readiness', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
+        { kind: 'courses', cls: 'marine-vessel--course-a', w: 237, h: 118, dur: 78, delay: -30, depth: 0.8, focus: 'Product Design Sprint', titleKey: 'fleetCourse1Title', descKey: 'fleetCourse1Desc' },
+        { kind: 'jobs', cls: 'marine-vessel--job-b', w: 130, h: 65, dur: 100, delay: -46, depth: 0.58, focus: 'Operations Coordinator', titleKey: 'fleetJob2Title', descKey: 'fleetJob2Desc' },
+        { kind: 'courses', cls: 'marine-vessel--course-b', w: 85, h: 43, dur: 118, delay: -66, depth: 0.45, focus: 'Startup Operations', titleKey: 'fleetCourse2Title', descKey: 'fleetCourse2Desc' },
+        { kind: 'courses', cls: 'marine-vessel--course-c', w: 42, h: 22, dur: 142, delay: -88, depth: 0.32, focus: 'Career Readiness', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
     ];
 
     return (

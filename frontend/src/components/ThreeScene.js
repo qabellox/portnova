@@ -549,44 +549,39 @@ const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.1 }) =>
 
 const CargoShipMesh = () => (
     <group>
-        {/* chined hull (dark blue steel) — deck at local y≈0.34 above waterline */}
+        {/* lofted hull already has its own deck surface (no overlapping boxes) */}
         <mesh geometry={cargoHullGeo} position={[0, 0, 0]}>
             <meshStandardMaterial color="#1a365d" metalness={0.6} roughness={0.38} />
         </mesh>
-        {/* deck sitting on the raised hull */}
-        <mesh position={[0, 0.34, 0]}>
-            <boxGeometry args={[3.1, 0.08, 1.0]} />
-            <meshStandardMaterial color={DECK} metalness={0.15} roughness={0.6} />
-        </mesh>
-        {/* bridge / superstructure on the deck */}
-        <mesh position={[1.05, 0.72, 0]}>
-            <boxGeometry args={[0.95, 0.6, 0.72]} />
+        {/* bridge / superstructure sitting on the hull deck (top ≈ 0.34) */}
+        <mesh position={[1.05, 0.62, 0]}>
+            <boxGeometry args={[0.95, 0.55, 0.7]} />
             <meshStandardMaterial color="#f8fafc" metalness={0.2} roughness={0.3} />
         </mesh>
-        <mesh position={[1.05, 0.82, 0.37]}>
-            <boxGeometry args={[0.9, 0.4, 0.02]} />
+        <mesh position={[1.05, 0.62, 0.36]}>
+            <boxGeometry args={[0.85, 0.32, 0.02]} />
             <meshStandardMaterial color="#0c4a6e" metalness={0.2} roughness={0.4} />
         </mesh>
         {/* funnel */}
-        <mesh position={[1.35, 1.32, 0]}>
+        <mesh position={[1.35, 1.1, 0]}>
             <cylinderGeometry args={[0.11, 0.16, 0.6, 14]} />
             <meshStandardMaterial color="#123048" metalness={0.55} roughness={0.35} />
         </mesh>
         {/* cargo containers on the deck */}
-        <mesh position={[-0.85, 0.68, 0]}>
+        <mesh position={[-0.85, 0.62, 0]}>
             <boxGeometry args={[0.6, 0.5, 0.55]} />
             <meshStandardMaterial color="#e0762a" metalness={0.25} roughness={0.45} />
         </mesh>
-        <mesh position={[-0.15, 0.68, 0]}>
+        <mesh position={[-0.15, 0.62, 0]}>
             <boxGeometry args={[0.6, 0.5, 0.55]} />
             <meshStandardMaterial color="#1f9ac4" metalness={0.25} roughness={0.45} />
         </mesh>
-        <mesh position={[-0.5, 1.0, 0]}>
+        <mesh position={[-0.5, 0.94, 0]}>
             <boxGeometry args={[0.6, 0.24, 0.55]} />
             <meshStandardMaterial color="#3fa785" metalness={0.25} roughness={0.45} />
         </mesh>
         {/* identity banner (blue) at the stern */}
-        <group position={[-1.35, 0.32, 0]}>
+        <group position={[-1.35, 0.34, 0]}>
             <Banner color="#1f9ac4" poleH={2.1} topY={1.7} length={1.15} />
         </group>
     </group>
@@ -599,22 +594,13 @@ const SailboatMesh = () => (
             <boxGeometry args={[0.9, 0.4, 0.06]} />
             <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
         </mesh>
-        {/* rounded wooden hull — deck at local y≈0.26 above waterline */}
+        {/* rounded wooden hull — deck at local y≈0.26 above waterline.
+            Hull already closes its own deck; no overlapping boxes. */}
         <mesh geometry={sailHullGeo} position={[0, 0, 0]}>
             <meshStandardMaterial color={WOOD} metalness={0.18} roughness={0.55} />
         </mesh>
-        {/* gunwale highlight on the raised rail */}
-        <mesh position={[0, 0.26, 0]}>
-            <boxGeometry args={[2.4, 0.04, 0.7]} />
-            <meshStandardMaterial color="#c9a468" metalness={0.3} roughness={0.4} />
-        </mesh>
-        {/* deck */}
-        <mesh position={[0, 0.22, 0]}>
-            <boxGeometry args={[2.3, 0.04, 0.56]} />
-            <meshStandardMaterial color={DECK} metalness={0.15} roughness={0.6} />
-        </mesh>
-        {/* small cabin */}
-        <mesh position={[-0.55, 0.38, 0]}>
+        {/* small cabin sitting on the hull deck */}
+        <mesh position={[-0.55, 0.34, 0]}>
             <boxGeometry args={[0.7, 0.22, 0.5]} />
             <meshStandardMaterial color="#f8fafc" metalness={0.15} roughness={0.45} />
         </mesh>
@@ -671,12 +657,14 @@ const Fleet = ({ fleet, positionsRef }) => {
             const xs = raw - span;
             const z = b.z;
 
-            // Gentle heave + subtle pitch/roll so it rides, not rocks violently
+            // The boat's keel line sits exactly on the water surface (h0 has the
+            // same amplitude as the water shader), so it floats, never sinks or
+            // pops out of the water. Gentle pitch/roll follow the wave face.
             const eps = 0.35;
             const h0 = waveH(xs, z, t);
             const hx = waveH(xs + eps, z, t) - waveH(xs - eps, z, t);
             const hz = waveH(xs, z + eps, t) - waveH(xs, z - eps, t);
-            const y = -0.35 + h0 * 0.45;
+            const y = -0.35 + h0;
 
             g.position.set(xs, y, z);
             g.rotation.z = Math.atan(hx) * 0.3; // gentle pitch

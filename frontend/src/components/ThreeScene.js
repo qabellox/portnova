@@ -117,8 +117,8 @@ const SkyDome = () => {
         if (!mat.current) return;
         const { skyLight, sunDir, moonDir, sunColor, warmth, sunGlow, moonVisible } = getCelestial();
         const aspect = state.size.width / state.size.height;
-        // Phones: pull the sun/moon into the visible sky (desktop unchanged)
-        const viewDir = aspect < 0.9 ? (d) => fitToView(d, aspect) : (d) => d;
+        // Keep the sun & moon inside the visible sky on every screen
+        const viewDir = (d) => fitToView(d, aspect);
         mat.current.uniforms.uDayLight.value = skyLight;
         mat.current.uniforms.uDusk.value = warmth;
         mat.current.uniforms.uSunGlow.value = sunGlow;
@@ -164,11 +164,11 @@ const SkyDome = () => {
                     uniform vec3 uSunColor;
                     varying vec3 vDir;
 
-                    vec3 dayTop    = vec3(0.14, 0.40, 0.68);
-                    vec3 dayMid    = vec3(0.50, 0.70, 0.86);
+                    vec3 dayTop    = vec3(0.10, 0.34, 0.62);
+                    vec3 dayMid    = vec3(0.46, 0.66, 0.85);
                     vec3 dayHor    = vec3(1.00, 0.78, 0.52);
-                    vec3 nightTop  = vec3(0.012, 0.028, 0.07);
-                    vec3 nightHor  = vec3(0.09, 0.17, 0.32);
+                    vec3 nightTop  = vec3(0.006, 0.014, 0.045);
+                    vec3 nightHor  = vec3(0.05, 0.10, 0.22);
 
                     void main() {
                         vec3 d = normalize(vDir);
@@ -177,24 +177,25 @@ const SkyDome = () => {
                         vec3 top = mix(nightTop, dayTop, uDayLight);
                         vec3 hor = mix(nightHor, dayHor, uDayLight);
                         // The horizon picks up the current sun tint — yellow at
-                        // dawn, deep orange at dusk — and glows in the twilight
-                        hor = mix(hor, uSunColor * 1.2, uDusk * uSunGlow * 0.85);
+                        // dawn, deep orange at dusk — as a crisp glow, not fog
+                        hor = mix(hor, uSunColor * 1.15, uDusk * uSunGlow * 0.55);
 
                         vec3 col = mix(hor, top, smoothstep(0.0, 0.55, h));
-                        col = mix(col, dayMid, smoothstep(0.18, 0.5, h) * uDayLight * 0.4);
+                        col = mix(col, dayMid, smoothstep(0.18, 0.5, h) * uDayLight * 0.3);
 
-                        // ONE time-coloured sun: a huge warm glim at dawn/dusk
-                        // plus a crisp disc (fades away once fully dark)
+                        // Crisp time-coloured sun: disc + warm glow at dawn/dusk
                         float s = max(dot(d, uSunDir), 0.0);
-                        col += uSunColor * pow(s, 3.0) * (0.25 + 1.25 * uDusk) * uSunGlow;
-                        col += uSunColor * pow(s, 7.0) * (0.45 + 0.75 * uDusk) * uSunGlow;
+                        col += uSunColor * pow(s, 4.0) * (0.18 + 1.0 * uDusk) * uSunGlow;
+                        col += uSunColor * pow(s, 8.0) * (0.4 + 0.7 * uDusk) * uSunGlow;
                         col += uSunColor * smoothstep(0.9945, 0.9988, s) * 2.6 * uSunGlow;
-                        col += uSunColor * pow(s, 24.0) * 1.3 * uSunGlow;
+                        col += uSunColor * pow(s, 26.0) * 1.2 * uSunGlow;
 
-                        // ONE moon: cool disc + halo, appears as night falls
+                        // Shiny, glimmering moon with a soft halo
                         float m = max(dot(d, uMoonDir), 0.0);
-                        col += vec3(0.9, 0.95, 1.0) * smoothstep(0.9950, 0.9988, m) * 1.6 * uMoonVisible;
-                        col += vec3(0.62, 0.72, 0.95) * pow(m, 8.0) * 0.5 * uMoonVisible;
+                        float shimmer = 1.0 + 0.14 * sin(uTime * 2.1);
+                        col += vec3(0.96, 0.985, 1.0) * smoothstep(0.9950, 0.9988, m) * 2.4 * uMoonVisible * shimmer;
+                        col += vec3(0.75, 0.84, 1.0) * pow(m, 6.0) * 1.1 * uMoonVisible * (0.8 + 0.3 * sin(uTime * 1.3));
+                        col += vec3(0.6, 0.7, 0.95) * pow(m, 3.0) * 0.5 * uMoonVisible;
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -215,8 +216,8 @@ const Water = () => {
         if (!mat.current) return;
         const { skyLight, sunDir, moonDir } = getCelestial();
         const aspect = state.size.width / state.size.height;
-        // Phones: keep the sun/moon glint matching the visible sun/moon
-        const viewDir = aspect < 0.9 ? (d) => fitToView(d, aspect) : (d) => d;
+        // Keep the sun/moon glint matching the visible sun/moon
+        const viewDir = (d) => fitToView(d, aspect);
         mat.current.uniforms.uTime.value = state.clock.elapsedTime;
         mat.current.uniforms.uDayLight.value = skyLight;
         mat.current.uniforms.uSunDir.value.copy(viewDir(sunDir));
@@ -360,6 +361,45 @@ const SunLight = () => {
     });
 
     return <directionalLight ref={lightRef} intensity={2.2} color="#ffd9a0" />;
+};
+
+/* ------------------------------------------------------------------ */
+/* 3D starfield: crisp points fixed on the sky sphere, fading in as     */
+/* night falls so they match the time-of-day atmosphere.               */
+/* ------------------------------------------------------------------ */
+const StarField = () => {
+    const ref = useRef(null);
+    const matRef = useRef(null);
+    const geo = useMemo(() => {
+        const count = 850;
+        const pos = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+            const y = 0.04 + Math.random() * 1.05; // upper sky only
+            const a = Math.random() * Math.PI * 2;
+            const r = Math.sqrt(Math.max(0, 1 - y * y));
+            const R = 58;
+            pos[i * 3] = Math.cos(a) * r * R;
+            pos[i * 3 + 1] = y * R;
+            pos[i * 3 + 2] = Math.sin(a) * r * R;
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        return g;
+    }, []);
+
+    useFrame(() => {
+        if (matRef.current) {
+            const { skyLight } = getCelestial();
+            matRef.current.opacity = Math.max(0, Math.min(1, (1 - skyLight) * 1.15));
+        }
+        if (ref.current) ref.current.rotation.y += 0.00035;
+    });
+
+    return (
+        <points ref={ref} geometry={geo}>
+            <pointsMaterial ref={matRef} color="#eef6ff" size={0.13} sizeAttenuation transparent opacity={0} depthWrite={false} />
+        </points>
+    );
 };
 
 /* ------------------------------------------------------------------ */
@@ -727,6 +767,7 @@ const SceneContents = () => (
         <pointLight position={[-3, 2.2, 3]} intensity={8} distance={16} color="#ffe9c9" />
 
         <SkyDome />
+        <StarField />
         <Water />
 
         <Environment resolution={256}>

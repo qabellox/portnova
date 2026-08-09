@@ -99,11 +99,15 @@ const getCelestial = () => {
 const fitToView = (dir, aspect) => {
     const halfH = Math.atan(Math.tan(THREE.MathUtils.degToRad(46 / 2)) * aspect);
     const az = Math.atan2(dir.x, -dir.z);
-    const maxAz = halfH * 0.8;
+    const maxAz = halfH * 0.75;
     const cl = Math.max(-maxAz, Math.min(maxAz, az));
+    // Clamp the elevation too: the sun/moon stay between just above the
+    // horizon and the top of the visible sky, so they are never off-screen.
     const el = Math.atan2(dir.y, Math.sqrt(dir.x * dir.x + dir.z * dir.z));
-    const cosE = Math.cos(el);
-    const sinE = Math.sin(el);
+    const maxEl = THREE.MathUtils.degToRad(8);
+    const clEl = Math.max(THREE.MathUtils.degToRad(1), Math.min(maxEl, el));
+    const cosE = Math.cos(clEl);
+    const sinE = Math.sin(clEl);
     return new THREE.Vector3(Math.sin(cl) * cosE, sinE, -Math.cos(cl) * cosE);
 };
 
@@ -167,8 +171,8 @@ const SkyDome = () => {
                     vec3 dayTop    = vec3(0.10, 0.34, 0.62);
                     vec3 dayMid    = vec3(0.46, 0.66, 0.85);
                     vec3 dayHor    = vec3(1.00, 0.78, 0.52);
-                    vec3 nightTop  = vec3(0.006, 0.014, 0.045);
-                    vec3 nightHor  = vec3(0.05, 0.10, 0.22);
+                    vec3 nightTop  = vec3(0.002, 0.005, 0.02);
+                    vec3 nightHor  = vec3(0.015, 0.035, 0.09);
 
                     void main() {
                         vec3 d = normalize(vDir);
@@ -192,10 +196,10 @@ const SkyDome = () => {
 
                         // Shiny, glimmering moon with a soft halo
                         float m = max(dot(d, uMoonDir), 0.0);
-                        float shimmer = 1.0 + 0.14 * sin(uTime * 2.1);
-                        col += vec3(0.96, 0.985, 1.0) * smoothstep(0.9950, 0.9988, m) * 2.4 * uMoonVisible * shimmer;
-                        col += vec3(0.75, 0.84, 1.0) * pow(m, 6.0) * 1.1 * uMoonVisible * (0.8 + 0.3 * sin(uTime * 1.3));
-                        col += vec3(0.6, 0.7, 0.95) * pow(m, 3.0) * 0.5 * uMoonVisible;
+                        float shimmer = 1.0 + 0.15 * sin(uTime * 2.1);
+                        col += vec3(0.97, 0.99, 1.0) * smoothstep(0.9940, 0.9986, m) * 3.0 * uMoonVisible * shimmer;
+                        col += vec3(0.78, 0.86, 1.0) * pow(m, 6.0) * 1.4 * uMoonVisible * (0.8 + 0.3 * sin(uTime * 1.3));
+                        col += vec3(0.6, 0.7, 0.95) * pow(m, 3.0) * 0.7 * uMoonVisible;
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -357,7 +361,8 @@ const SunLight = () => {
         const { sunDir, skyLight } = getCelestial();
         if (!lightRef.current) return;
         lightRef.current.position.copy(sunDir).multiplyScalar(6);
-        lightRef.current.intensity = 0.6 + skyLight * 2.2;
+        // nearly off at night so the scene reads as a real night, not dawn
+        lightRef.current.intensity = 0.05 + skyLight * 2.2;
     });
 
     return <directionalLight ref={lightRef} intensity={2.2} color="#ffd9a0" />;
@@ -371,33 +376,78 @@ const StarField = () => {
     const ref = useRef(null);
     const matRef = useRef(null);
     const geo = useMemo(() => {
-        const count = 850;
+        const count = 650;
         const pos = new Float32Array(count * 3);
+        const size = new Float32Array(count);
+        const bright = new Float32Array(count);
+        const R = 58;
         for (let i = 0; i < count; i++) {
-            const y = 0.04 + Math.random() * 1.05; // upper sky only
+            const y = 0.03 + Math.random() * 0.97; // upper sky only
             const a = Math.random() * Math.PI * 2;
             const r = Math.sqrt(Math.max(0, 1 - y * y));
-            const R = 58;
             pos[i * 3] = Math.cos(a) * r * R;
             pos[i * 3 + 1] = y * R;
             pos[i * 3 + 2] = Math.sin(a) * r * R;
+            // a sprinkle of bright stars among many dim ones
+            size[i] = 2.0 + Math.random() * 7.0;
+            bright[i] = 0.35 + Math.pow(Math.random(), 2.0) * 0.65;
         }
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+        g.setAttribute('aBright', new THREE.BufferAttribute(bright, 1));
         return g;
     }, []);
 
-    useFrame(() => {
+    useFrame((state) => {
         if (matRef.current) {
             const { skyLight } = getCelestial();
-            matRef.current.opacity = Math.max(0, Math.min(1, (1 - skyLight) * 1.15));
+            matRef.current.uniforms.uOpacity.value = Math.max(0, Math.min(1, (1 - skyLight) * 1.15));
+            matRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+            matRef.current.uniforms.uPixelRatio.value = state.gl.getPixelRatio();
         }
-        if (ref.current) ref.current.rotation.y += 0.00035;
+        if (ref.current) ref.current.rotation.y += 0.00025;
     });
 
     return (
         <points ref={ref} geometry={geo}>
-            <pointsMaterial ref={matRef} color="#eef6ff" size={0.13} sizeAttenuation transparent opacity={0} depthWrite={false} />
+            <shaderMaterial
+                ref={matRef}
+                transparent
+                depthWrite={false}
+                blending={THREE.AdditiveBlending}
+                uniforms={{
+                    uOpacity: { value: 0 },
+                    uTime: { value: 0 },
+                    uPixelRatio: { value: 1 },
+                }}
+                vertexShader={`
+                    attribute float aSize;
+                    attribute float aBright;
+                    uniform float uTime;
+                    uniform float uPixelRatio;
+                    varying float vBright;
+                    void main() {
+                        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+                        gl_Position = projectionMatrix * mv;
+                        float tw = 0.72 + 0.28 * sin(uTime * 2.0 + aBright * 43.0);
+                        gl_PointSize = aSize * tw * uPixelRatio * (40.0 / -mv.z);
+                        vBright = aBright * tw;
+                    }
+                `}
+                fragmentShader={`
+                    uniform float uOpacity;
+                    varying float vBright;
+                    void main() {
+                        vec2 uv = gl_PointCoord - 0.5;
+                        float d = length(uv) * 2.0;
+                        float glow = exp(-d * d * 5.0);
+                        float core = smoothstep(0.6, 0.0, d);
+                        vec3 col = vec3(0.86, 0.93, 1.0) * (core * 1.5 + glow * 0.8);
+                        gl_FragColor = vec4(col * vBright, uOpacity);
+                    }
+                `}
+            />
         </points>
     );
 };

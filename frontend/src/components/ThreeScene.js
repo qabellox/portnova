@@ -307,33 +307,6 @@ const Moon = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/* The metallic "gateway" ring, half-submerged, gently swaying.        */
-/* ------------------------------------------------------------------ */
-const GatewayRing = () => {
-    const groupRef = useRef(null);
-
-    useFrame((state) => {
-        if (!groupRef.current) return;
-        const t = state.clock.elapsedTime;
-        groupRef.current.rotation.z = Math.sin(t * 0.4) * 0.04;
-        groupRef.current.rotation.x = Math.sin(t * 0.3 + 1.2) * 0.03;
-    });
-
-    return (
-        <group ref={groupRef} position={[0, 0.15, -1.4]}>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[1.55, 0.16, 28, 110]} />
-                <meshStandardMaterial color="#d4af37" metalness={1} roughness={0.22} envMapIntensity={1.6} />
-            </mesh>
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[1.55, 0.1, 16, 110]} />
-                <meshBasicMaterial color="#fff3cf" transparent opacity={0.35} blending={THREE.AdditiveBlending} />
-            </mesh>
-        </group>
-    );
-};
-
-/* ------------------------------------------------------------------ */
 /* Mouse parallax rig: the camera drifts gently with the pointer.      */
 /* ------------------------------------------------------------------ */
 const MouseRig = ({ children }) => {
@@ -370,7 +343,6 @@ const SceneContents = () => (
         <Sun />
         <Moon />
         <Water />
-        <GatewayRing />
 
         <Environment resolution={256}>
             <Lightformer intensity={3} position={[5, 3, -6]} scale={[8, 8, 1]} color="#ffd9a0" />

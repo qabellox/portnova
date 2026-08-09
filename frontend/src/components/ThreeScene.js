@@ -13,12 +13,23 @@ import * as THREE from 'three';
  * carries a pennant that flutters in the wind. Tuned for 60fps.
  */
 
-/* Time of day: t in [0,1] over 24h, dayLight peaks at noon. */
+/* Sky brightness 0..1 for the current clock. Full by day, fades through dusk
+   after sunset, deep night from ~20:15, and dawn fades in before sunrise. */
 const getDayLight = () => {
     const now = new Date();
     const mins = now.getHours() * 60 + now.getMinutes();
-    const t = mins / 1440;
-    return (Math.cos((t - 0.5) * Math.PI * 2) + 1) / 2;
+    const SUNRISE = 330; // 5:30
+    const SUNSET = 1125; // 18:45
+    const NIGHT = 1215;  // 20:15
+    if (mins >= SUNRISE && mins <= SUNSET) {
+        const alt = Math.sin((Math.PI * (mins - SUNRISE)) / (SUNSET - SUNRISE));
+        return Math.max(0.5, alt);
+    }
+    if (mins > SUNSET) {
+        return Math.max(0, 0.5 * (1 - (mins - SUNSET) / (NIGHT - SUNSET)));
+    }
+    const dawnStart = SUNRISE - 120;
+    return Math.max(0, Math.min(0.5, ((mins - dawnStart) / (SUNRISE - dawnStart)) * 0.5));
 };
 
 /**
@@ -30,23 +41,57 @@ const getCelestial = () => {
     const now = new Date();
     const mins = now.getHours() * 60 + now.getMinutes();
     const t = mins / 1440;
-    const dayLight = (Math.cos((t - 0.5) * Math.PI * 2) + 1) / 2;
 
-    const dayPhase = (t - 0.25) / 0.5;
-    const dc = Math.min(Math.max(dayPhase, 0), 1);
-    const sunAlt = Math.sin(dc * Math.PI);
+    const SUNRISE = 330;   // 5:30
+    const SUNSET = 1125;   // 18:45
+    const NIGHT = 1215;    // 20:15
+    const NOON = (SUNRISE + SUNSET) / 2;
+
+    // Sun altitude 0..1 (0 at/below the horizon, 1 overhead at noon)
+    let sunAlt = 0;
+    if (mins >= SUNRISE && mins <= SUNSET) {
+        sunAlt = Math.sin((Math.PI * (mins - SUNRISE)) / (SUNSET - SUNRISE));
+    }
+
+    const skyLight = getDayLight();
+
+    // Warmth: 0 at high noon, 1 at the horizon — drives the dawn/dusk glow
+    const warmth = Math.pow(Math.max(0, 1 - sunAlt), 1.35);
+    const isDusk = mins > NOON;
+
+    // Sun glow: full while the sun is up, fades through dusk, off at deep
+    // night, and a faint pre-dawn glow returns just before sunrise.
+    let sunGlow = 0;
+    if (sunAlt > 0) {
+        sunGlow = 1;
+    } else if (mins > SUNSET) {
+        sunGlow = Math.max(0, 1 - (mins - SUNSET) / (NIGHT - SUNSET));
+    } else {
+        sunGlow = Math.max(0, Math.min(1, (mins - (SUNRISE - 60)) / 60));
+    }
+
+    // Azimuth: rises on the right, crosses the middle at noon, sets on the left
+    const dc = Math.min(Math.max((mins - SUNRISE) / (SUNSET - SUNRISE), 0), 1);
     const sunAz = Math.cos(dc * Math.PI);
-    const sunDir = new THREE.Vector3(sunAz * 0.9, sunAlt * 1.15, -1.0).normalize();
-    const sunSize = 0.8 + sunAlt * 0.45;
+    const sunDir = new THREE.Vector3(sunAz * 0.85, sunAlt * 1.15 + 0.02, -1.0).normalize();
 
+    // Sun colour follows the real clock: white-gold at noon, yellow at dawn,
+    // deep orange at dusk — fully responsive, never static.
+    const sunColor = new THREE.Color('#fff2cf')
+        .lerp(isDusk ? new THREE.Color('#ff8a3d') : new THREE.Color('#ffd27a'), warmth);
+
+    // Moon: opposite night arc, fades in as night falls (~30 min after dusk)
     const nightPhase = (t - 0.75) / 0.5;
     const nc = ((nightPhase % 1) + 1) % 1;
     const moonAlt = Math.sin(nc * Math.PI);
     const moonAz = Math.cos(nc * Math.PI);
-    const moonDir = new THREE.Vector3(moonAz * 0.9, moonAlt * 1.15, -1.0).normalize();
-    const moonSize = 0.8 + moonAlt * 0.4;
+    const moonDir = new THREE.Vector3(moonAz * 0.85, moonAlt * 1.1, -1.0).normalize();
+    const moonVisible = Math.max(0, Math.min(1, 1 - skyLight * 1.8));
 
-    return { t, dayLight, sunDir, sunAlt, sunSize, moonDir, moonAlt, moonSize };
+    return {
+        t, skyLight, sunDir, sunAlt, sunColor, warmth, sunGlow, isDusk,
+        moonDir, moonAlt, moonSize: 0.9 + moonAlt * 0.35, sunSize: 0.8 + sunAlt * 0.45, moonVisible,
+    };
 };
 
 /* Keep a celestial body inside the visible sky on narrow (phone) screens,
@@ -70,13 +115,17 @@ const SkyDome = () => {
 
     useFrame((state) => {
         if (!mat.current) return;
-        const { dayLight, sunDir, moonDir } = getCelestial();
+        const { skyLight, sunDir, moonDir, sunColor, warmth, sunGlow, moonVisible } = getCelestial();
         const aspect = state.size.width / state.size.height;
         // Phones: pull the sun/moon into the visible sky (desktop unchanged)
         const viewDir = aspect < 0.9 ? (d) => fitToView(d, aspect) : (d) => d;
-        mat.current.uniforms.uDayLight.value = dayLight;
+        mat.current.uniforms.uDayLight.value = skyLight;
+        mat.current.uniforms.uDusk.value = warmth;
+        mat.current.uniforms.uSunGlow.value = sunGlow;
+        mat.current.uniforms.uMoonVisible.value = moonVisible;
         mat.current.uniforms.uSunDir.value.copy(viewDir(sunDir));
         mat.current.uniforms.uMoonDir.value.copy(viewDir(moonDir));
+        mat.current.uniforms.uSunColor.value.copy(sunColor);
         mat.current.uniforms.uTime.value = state.clock.elapsedTime;
     });
 
@@ -89,9 +138,13 @@ const SkyDome = () => {
                 depthWrite={false}
                 uniforms={{
                     uDayLight: { value: getDayLight() },
+                    uDusk: { value: 0 },
+                    uSunGlow: { value: 1 },
+                    uMoonVisible: { value: 0 },
                     uTime: { value: 0 },
                     uSunDir: { value: new THREE.Vector3(0, 1.15, -1).normalize() },
                     uMoonDir: { value: new THREE.Vector3(0, 1.15, -1).normalize() },
+                    uSunColor: { value: new THREE.Color('#fff2cf') },
                 }}
                 vertexShader={`
                     varying vec3 vDir;
@@ -102,16 +155,20 @@ const SkyDome = () => {
                 `}
                 fragmentShader={`
                     uniform float uDayLight;
+                    uniform float uDusk;
+                    uniform float uSunGlow;
+                    uniform float uMoonVisible;
                     uniform float uTime;
                     uniform vec3 uSunDir;
                     uniform vec3 uMoonDir;
+                    uniform vec3 uSunColor;
                     varying vec3 vDir;
 
-                    vec3 dayTop    = vec3(0.16, 0.42, 0.68);
-                    vec3 dayMid    = vec3(0.55, 0.72, 0.85);
+                    vec3 dayTop    = vec3(0.14, 0.40, 0.68);
+                    vec3 dayMid    = vec3(0.50, 0.70, 0.86);
                     vec3 dayHor    = vec3(1.00, 0.78, 0.52);
-                    vec3 nightTop  = vec3(0.015, 0.03, 0.075);
-                    vec3 nightHor  = vec3(0.10, 0.18, 0.32);
+                    vec3 nightTop  = vec3(0.012, 0.028, 0.07);
+                    vec3 nightHor  = vec3(0.09, 0.17, 0.32);
 
                     void main() {
                         vec3 d = normalize(vDir);
@@ -119,20 +176,25 @@ const SkyDome = () => {
 
                         vec3 top = mix(nightTop, dayTop, uDayLight);
                         vec3 hor = mix(nightHor, dayHor, uDayLight);
+                        // The horizon picks up the current sun tint — yellow at
+                        // dawn, deep orange at dusk — and glows in the twilight
+                        hor = mix(hor, uSunColor * 1.2, uDusk * uSunGlow * 0.85);
 
                         vec3 col = mix(hor, top, smoothstep(0.0, 0.55, h));
                         col = mix(col, dayMid, smoothstep(0.18, 0.5, h) * uDayLight * 0.4);
 
-                        // ONE sun: a clearly visible warm disc + soft halo
+                        // ONE time-coloured sun: a huge warm glim at dawn/dusk
+                        // plus a crisp disc (fades away once fully dark)
                         float s = max(dot(d, uSunDir), 0.0);
-                        col += vec3(1.0, 0.98, 0.92) * smoothstep(0.9945, 0.9988, s) * 2.2 * uDayLight;
-                        col += vec3(1.0, 0.66, 0.36) * pow(s, 6.0) * 0.7 * uDayLight;
-                        col += vec3(1.0, 0.9, 0.68) * pow(s, 22.0) * 1.15 * uDayLight;
+                        col += uSunColor * pow(s, 3.0) * (0.25 + 1.25 * uDusk) * uSunGlow;
+                        col += uSunColor * pow(s, 7.0) * (0.45 + 0.75 * uDusk) * uSunGlow;
+                        col += uSunColor * smoothstep(0.9945, 0.9988, s) * 2.6 * uSunGlow;
+                        col += uSunColor * pow(s, 24.0) * 1.3 * uSunGlow;
 
-                        // ONE moon: cool disc + halo at night
+                        // ONE moon: cool disc + halo, appears as night falls
                         float m = max(dot(d, uMoonDir), 0.0);
-                        col += vec3(0.9, 0.95, 1.0) * smoothstep(0.9950, 0.9988, m) * 1.5 * (1.0 - uDayLight);
-                        col += vec3(0.62, 0.72, 0.95) * pow(m, 8.0) * 0.45 * (1.0 - uDayLight);
+                        col += vec3(0.9, 0.95, 1.0) * smoothstep(0.9950, 0.9988, m) * 1.6 * uMoonVisible;
+                        col += vec3(0.62, 0.72, 0.95) * pow(m, 8.0) * 0.5 * uMoonVisible;
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -151,12 +213,12 @@ const Water = () => {
 
     useFrame((state) => {
         if (!mat.current) return;
-        const { dayLight, sunDir, moonDir } = getCelestial();
+        const { skyLight, sunDir, moonDir } = getCelestial();
         const aspect = state.size.width / state.size.height;
         // Phones: keep the sun/moon glint matching the visible sun/moon
         const viewDir = aspect < 0.9 ? (d) => fitToView(d, aspect) : (d) => d;
         mat.current.uniforms.uTime.value = state.clock.elapsedTime;
-        mat.current.uniforms.uDayLight.value = dayLight;
+        mat.current.uniforms.uDayLight.value = skyLight;
         mat.current.uniforms.uSunDir.value.copy(viewDir(sunDir));
         mat.current.uniforms.uMoonDir.value.copy(viewDir(moonDir));
     });
@@ -291,10 +353,10 @@ const SunLight = () => {
     const lightRef = useRef(null);
 
     useFrame(() => {
-        const { sunDir, dayLight } = getCelestial();
+        const { sunDir, skyLight } = getCelestial();
         if (!lightRef.current) return;
         lightRef.current.position.copy(sunDir).multiplyScalar(6);
-        lightRef.current.intensity = 0.6 + dayLight * 2.2;
+        lightRef.current.intensity = 0.6 + skyLight * 2.2;
     });
 
     return <directionalLight ref={lightRef} intensity={2.2} color="#ffd9a0" />;

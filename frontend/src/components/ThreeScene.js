@@ -1,4 +1,4 @@
-﻿import React, { Suspense, useEffect, useRef } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Billboard, Environment, Lightformer } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
@@ -7,10 +7,10 @@ import * as THREE from 'three';
 /**
  * ThreeScene — cinematic coastal seascape for the PortNova hero.
  *
- * Real animated shader waves (not a flat reflector), a custom warm golden
- * sky that blends to night, an iris-style glowing sun with light rays, and
- * a time-responsive moon. Mouse movement drifts the camera for depth.
- * Fully procedural, tuned for 60fps.
+ * Real animated shader waves, warm golden sky, iris-style sun, moon, and a
+ * fleet of real 3D ships that SAIL — each boat rides a continuous elliptical
+ * orbit (never pops, never reverses), floats on the exact wave surface, and
+ * carries a pennant that flutters in the wind. Tuned for 60fps.
  */
 
 /* Time of day: t in [0,1] over 24h, dayLight peaks at noon. */
@@ -25,7 +25,6 @@ const getDayLight = () => {
  * Celestial positions that track the real clock.
  * Sun: rises on the right (+X) at ~6am, arcs overhead to the middle at
  * noon, sets on the left (-X) at ~6pm. Moon runs the opposite night arc.
- * Returns direction vectors (for shaders + lights) plus altitude and sizes.
  */
 const getCelestial = () => {
     const now = new Date();
@@ -33,15 +32,13 @@ const getCelestial = () => {
     const t = mins / 1440;
     const dayLight = (Math.cos((t - 0.5) * Math.PI * 2) + 1) / 2;
 
-    // Sun: dayPhase 0 at 6am -> 1 at 6pm
     const dayPhase = (t - 0.25) / 0.5;
     const dc = Math.min(Math.max(dayPhase, 0), 1);
-    const sunAlt = Math.sin(dc * Math.PI); // 0 horizon, 1 overhead
-    const sunAz = Math.cos(dc * Math.PI); // +1 right, 0 center, -1 left
+    const sunAlt = Math.sin(dc * Math.PI);
+    const sunAz = Math.cos(dc * Math.PI);
     const sunDir = new THREE.Vector3(sunAz * 0.9, sunAlt * 1.15, -1.0).normalize();
-    const sunSize = 0.8 + sunAlt * 0.45; // slightly larger high in the sky
+    const sunSize = 0.8 + sunAlt * 0.45;
 
-    // Moon: nightPhase 0 at 6pm -> 1 at 6am (opposite of sun)
     const nightPhase = (t - 0.75) / 0.5;
     const nc = ((nightPhase % 1) + 1) % 1;
     const moonAlt = Math.sin(nc * Math.PI);
@@ -52,12 +49,8 @@ const getCelestial = () => {
     return { t, dayLight, sunDir, sunAlt, sunSize, moonDir, moonAlt, moonSize };
 };
 
-const SUN_DIR = new THREE.Vector3(0, 1.15, -1.0).normalize();
-const MOON_DIR = new THREE.Vector3(0, 1.15, -1.0).normalize();
-
 /* ------------------------------------------------------------------ */
-/* Sky dome: warm golden near horizon, Mediterranean blue overhead,     */
-/* blends to deep night colors, with sun + moon glow.                  */
+/* Sky dome: warm golden near horizon, Mediterranean blue overhead.     */
 /* ------------------------------------------------------------------ */
 const SkyDome = () => {
     const mat = useRef(null);
@@ -132,7 +125,8 @@ const SkyDome = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/* Water: animated layered waves with sun/moon glint + fresnel.        */
+/* Water: layered waves scaled to the boats so hulls float with real    */
+/* freeboard — the surface never exceeds the boat's draft.             */
 /* ------------------------------------------------------------------ */
 const Water = () => {
     const mat = useRef(null);
@@ -148,7 +142,7 @@ const Water = () => {
 
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.35, 0]}>
-            <planeGeometry args={[70, 70, 160, 160]} />
+            <planeGeometry args={[70, 70, 128, 128]} />
             <shaderMaterial
                 ref={mat}
                 uniforms={{
@@ -170,10 +164,10 @@ const Water = () => {
 
                     float wave(vec2 p, float t) {
                         float w = 0.0;
-                        w += sin(p.x * 0.32 + t * 0.70) * 0.24;
-                        w += cos(p.y * 0.48 + t * 0.52) * 0.17;
-                        w += sin((p.x + p.y) * 0.21 + t * 0.85) * 0.13;
-                        w += cos(p.x * 0.72 - t * 1.05 + p.y * 0.55) * 0.06;
+                        w += sin(p.x * 0.32 + t * 0.70) * 0.16;
+                        w += cos(p.y * 0.48 + t * 0.52) * 0.11;
+                        w += sin((p.x + p.y) * 0.21 + t * 0.85) * 0.07;
+                        w += cos(p.x * 0.72 - t * 1.05 + p.y * 0.55) * 0.03;
                         return w;
                     }
 
@@ -211,29 +205,25 @@ const Water = () => {
                         vec3 viewDir = normalize(cameraPosition - vWorldPos);
                         vec3 n = normalize(vNormal);
 
-                        // Depth: uv.y = 1 at horizon, 0 near camera
                         float depth = 1.0 - vUv.y;
                         vec3 day = mix(uShallow, uDeep, depth);
                         day = mix(day, uHorizon, smoothstep(0.55, 0.95, vUv.y));
                         vec3 night = mix(vec3(0.04,0.12,0.2), uNight, depth);
                         vec3 col = mix(night, day, uDayLight);
 
-                        // Fresnel: reflect sky near horizon
                         float fres = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
                         col += vec3(0.9, 0.95, 1.0) * fres * 0.25;
 
-                        // Sun glint (iris-style sparkle)
                         vec3 refl = reflect(-uSunDir, n);
                         float spec = pow(max(dot(refl, viewDir), 0.0), 120.0);
                         col += vec3(1.0, 0.9, 0.62) * spec * (0.5 + 0.5 * uDayLight);
 
-                        // Moon glint
                         vec3 reflM = reflect(-uMoonDir, n);
                         float specM = pow(max(dot(reflM, viewDir), 0.0), 160.0);
                         col += vec3(0.72, 0.82, 1.0) * specM * (1.0 - uDayLight) * 0.8;
 
-                        // Foam on wave crests
-                        float crest = smoothstep(0.16, 0.3, abs(vH));
+                        // Foam on the (now realistic) wave crests
+                        float crest = smoothstep(0.13, 0.26, abs(vH));
                         col = mix(col, vec3(0.92, 0.96, 1.0), crest * 0.22);
 
                         gl_FragColor = vec4(col, 1.0);
@@ -338,7 +328,6 @@ const Moon = () => {
                             float d = length(uv);
                             float disc = smoothstep(0.5, 0.44, d);
                             float halo = exp(-d * 5.0) * 0.5;
-                            // craters
                             float c1 = smoothstep(0.06, 0.0, distance(uv, vec2(0.18, -0.12)));
                             float c2 = smoothstep(0.05, 0.0, distance(uv, vec2(-0.2, 0.14)));
                             float c3 = smoothstep(0.04, 0.0, distance(uv, vec2(0.05, 0.2)));
@@ -395,27 +384,18 @@ const SunLight = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/* Real boat geometry — smooth chined hulls built from parametric       */
-/* BufferGeometry, curved billowing sails, keel fin, proper materials.  */
-/* No stacked cubes: a genuine ship silhouette.                        */
+/* Boat geometry — smooth lofted hulls with round bilge + tumblehome.  */
 /* ------------------------------------------------------------------ */
 
-/* Build a boat hull: a rounded, chined shell with a crowned deck.
-   Bow points +X. Returns a BufferGeometry. */
-/**
- * Build a smooth, lofted boat hull. Each station is a curved rib with a
- * round bilge and a gentle tumblehome — genuine boat curvature (concaves
- * and junctions), not angular chines. Bow points +X.
- */
+/* Build a smooth, lofted boat hull. Each station is a curved rib with a
+   round bilge and a gentle tumblehome — genuine boat curvature. Bow +X. */
 const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rocker = 0.06, sheerLift = 0.24, transom = 0.16, belly = 0.25 } = {}) => {
     const pos = [];
     const idx = [];
-    // half-breadth along the length: transom at stern, pointed bow
     const profile = (t) => {
         const s = Math.sin(Math.PI * Math.min(Math.max(t, 0), 1));
         return Math.pow(s, 0.75);
     };
-    // grid[station][rib] -> vertex index
     const grid = [];
     for (let i = 0; i <= stations; i++) {
         const t = i / stations;
@@ -425,8 +405,7 @@ const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rock
         const sh = sheerLift + rocker * Math.sin(Math.PI * t);
         const rib = [];
         for (let r = 0; r <= ribs; r++) {
-            const th = (r / ribs) * Math.PI; // 0 port sheer -> π starboard sheer
-            // cross-section: sheer at θ=0/π, keel at θ=π/2, with round bilge
+            const th = (r / ribs) * Math.PI;
             const c = Math.cos(th);
             const sn = Math.sin(th);
             const z = -hw * c;
@@ -436,7 +415,6 @@ const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rock
         }
         grid.push(rib);
     }
-    // connect hull shell between stations
     for (let i = 0; i < stations; i++) {
         for (let r = 0; r < ribs; r++) {
             const a = grid[i][r];
@@ -446,7 +424,6 @@ const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rock
             idx.push(a, b, d, a, d, c);
         }
     }
-    // deck: strip between port sheer (r=0) and starboard sheer (r=ribs)
     for (let i = 0; i < stations; i++) {
         const lp = grid[i][0];
         const lq = grid[i + 1][0];
@@ -454,14 +431,12 @@ const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rock
         const rq = grid[i + 1][ribs];
         idx.push(lp, rp, rq, lp, rq, lq);
     }
-    // stern transom cap (fan from a center vertex)
     const stern = grid[0];
     const sternCX = pos.length / 3;
     pos.push(-length / 2, -depth * 0.5, 0);
     for (let r = 0; r < ribs; r++) {
         idx.push(stern[r], stern[r + 1], sternCX);
     }
-    // bow cap (fan from a center vertex, just behind the point)
     const bow = grid[stations];
     const bowCX = pos.length / 3;
     pos.push(length / 2, sheerLift * 0.5, 0);
@@ -476,20 +451,27 @@ const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rock
     return g;
 };
 
-/* Build a billowing triangular sail (lateen/sloop). Belly in Z. */
+/* Billowing triangular sail with a red band baked into vertex colors
+   (no overlapping plane — kills the z-fighting flicker). */
 const buildSailGeometry = (chord, height, belly, segments = 14) => {
     const pos = [];
     const idx = [];
+    const col = [];
     const n = segments;
+    const CREAM = [0.965, 0.975, 0.995];
+    const RED = [0.72, 0.24, 0.15];
     for (let j = 0; j <= n; j++) {
-        const v = j / n; // 0 foot -> 1 head
+        const v = j / n;
         for (let i = 0; i <= n; i++) {
-            const u = i / n; // 0 luff -> 1 leech
-            const w = u * (1 - v); // tapers to a point at the head
+            const u = i / n;
+            const w = u * (1 - v);
             const x = w * chord;
             const y = v * height;
             const z = belly * Math.sin(Math.PI * u) * Math.sin(Math.PI * v);
             pos.push(x, y, z);
+            const inBand = v > 0.70 && v < 0.90 && u > 0.06;
+            const c = inBand ? RED : CREAM;
+            col.push(c[0], c[1], c[2]);
         }
     }
     const S = n + 1;
@@ -504,62 +486,90 @@ const buildSailGeometry = (chord, height, belly, segments = 14) => {
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     g.setIndex(idx);
     g.computeVertexNormals();
     return g;
 };
 
-/* Hulls are built with the deck well ABOVE the waterline (local y≈0.25-0.3)
-   so the boat visibly floats instead of sinking to the keel. */
-const sailHullGeo = buildHullGeometry(2.6, 0.95, 0.5, { stations: 36, ribs: 14, rocker: 0.07, sheerLift: 0.26, transom: 0.2, belly: 0.25 });
-const cargoHullGeo = buildHullGeometry(3.3, 1.2, 0.55, { stations: 36, ribs: 14, rocker: 0.06, sheerLift: 0.32, transom: 0.16, belly: 0.3 });
-const sailGeo = buildSailGeometry(1.8, 1.6, 0.34);
+/* Tapered triangular pennant grid (animated by the wind in Banner). */
+const buildPennantGeometry = (length, height, segments = 12) => {
+    const pos = [];
+    const idx = [];
+    const n = segments;
+    for (let i = 0; i <= n; i++) {
+        const u = i / n;
+        const x = u * length;
+        pos.push(x, 0, 0); // top edge, level
+        pos.push(x, -height * (1 - u * 0.88), 0); // bottom edge rises to tip
+    }
+    for (let i = 0; i < n; i++) {
+        const a = i * 2, b = i * 2 + 1, c = i * 2 + 2, d = i * 2 + 3;
+        idx.push(a, c, b, b, c, d);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    return g;
+};
 
 const WOOD = '#8b7355';
 const WOOD_DARK = '#5c4033';
-const DECK = '#d4a373';
-const SAIL = '#f8fafc';
 
-/* Clash-Royale-style identity banner: a pole + a bright pennant that
-   clearly labels the boat. color = flag tint, glyph = emoji-like shape. */
-const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.1 }) => (
-    <group>
-        {/* pole */}
-        <mesh position={[0, poleH / 2, 0]}>
-            <cylinderGeometry args={[0.035, 0.045, poleH, 8]} />
-            <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
-        </mesh>
-        {/* pennant */}
-        <mesh position={[length / 2, topY, 0.02]}>
-            <planeGeometry args={[length, 0.62]} />
-            <meshStandardMaterial color={color} metalness={0.1} roughness={0.5} side={THREE.DoubleSide} />
-        </mesh>
-        {/* pennant tail notch */}
-        <mesh position={[length * 0.82, topY - 0.14, 0.03]} rotation={[0, 0, 0.5]}>
-            <planeGeometry args={[length * 0.34, 0.24]} />
-            <meshStandardMaterial color={color} metalness={0.1} roughness={0.5} side={THREE.DoubleSide} />
-        </mesh>
-        {/* pennant tip */}
-        <mesh position={[length * 0.05, topY + 0.3, 0.02]}>
-            <sphereGeometry args={[0.07, 10, 10]} />
-            <meshStandardMaterial color="#fcd34d" metalness={0.2} roughness={0.4} />
-        </mesh>
-    </group>
-);
+/* Clash-Royale-style identity banner whose pennant FLUTTERS in the wind
+   (anchored at the pole, free end waves). */
+const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.15 }) => {
+    const meshRef = useRef(null);
+    const geo = useMemo(() => buildPennantGeometry(length, 0.62), [length]);
+
+    useFrame((state) => {
+        const mesh = meshRef.current;
+        if (!mesh) return;
+        const attr = mesh.geometry.attributes.position;
+        const arr = attr.array;
+        const t = state.clock.elapsedTime;
+        for (let i = 0; i < arr.length; i += 3) {
+            const x = arr[i];
+            const u = x / length;
+            const flutter = Math.pow(u, 1.4);
+            arr[i + 2] = flutter * (Math.sin(x * 9 - t * 13) + 0.55 * Math.sin(x * 15 - t * 21)) * 0.16;
+        }
+        attr.needsUpdate = true;
+        mesh.geometry.computeVertexNormals();
+    });
+
+    return (
+        <group>
+            <mesh position={[0, poleH / 2, 0]}>
+                <cylinderGeometry args={[0.035, 0.045, poleH, 8]} />
+                <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
+            </mesh>
+            <mesh ref={meshRef} geometry={geo} position={[0.02, topY, 0]}>
+                <meshStandardMaterial color={color} metalness={0.05} roughness={0.55} side={THREE.DoubleSide} />
+            </mesh>
+            <mesh position={[0, poleH, 0]}>
+                <sphereGeometry args={[0.07, 10, 10]} />
+                <meshStandardMaterial color="#fcd34d" metalness={0.2} roughness={0.4} />
+            </mesh>
+        </group>
+    );
+};
 
 const CargoShipMesh = () => (
     <group>
-        {/* lofted hull already has its own deck surface (no overlapping boxes) */}
+        {/* lofted hull — closes its own deck, no overlapping boxes */}
         <mesh geometry={cargoHullGeo} position={[0, 0, 0]}>
             <meshStandardMaterial color="#1a365d" metalness={0.6} roughness={0.38} />
         </mesh>
-        {/* bridge / superstructure sitting on the hull deck (top ≈ 0.34) */}
+        {/* bridge / superstructure sitting on the hull deck */}
         <mesh position={[1.05, 0.62, 0]}>
             <boxGeometry args={[0.95, 0.55, 0.7]} />
             <meshStandardMaterial color="#f8fafc" metalness={0.2} roughness={0.3} />
         </mesh>
-        <mesh position={[1.05, 0.62, 0.36]}>
-            <boxGeometry args={[0.85, 0.32, 0.02]} />
+        {/* window band — clearly proud of the bridge face (no coplanar overlap) */}
+        <mesh position={[1.05, 0.62, 0.43]}>
+            <boxGeometry args={[0.85, 0.3, 0.04]} />
             <meshStandardMaterial color="#0c4a6e" metalness={0.2} roughness={0.4} />
         </mesh>
         {/* funnel */}
@@ -582,10 +592,39 @@ const CargoShipMesh = () => (
         </mesh>
         {/* identity banner (blue) at the stern */}
         <group position={[-1.35, 0.34, 0]}>
-            <Banner color="#1f9ac4" poleH={2.1} topY={1.7} length={1.15} />
+            <Banner color="#1f9ac4" poleH={2.1} topY={1.85} length={1.15} />
         </group>
     </group>
 );
+
+/* Sail that keeps billowing and gently rippling in the wind. */
+const Sail = () => {
+    const meshRef = useRef(null);
+    const geo = useMemo(() => buildSailGeometry(1.8, 1.6, 0.34), []);
+
+    useFrame((state) => {
+        const mesh = meshRef.current;
+        if (!mesh) return;
+        const attr = mesh.geometry.attributes.position;
+        const arr = attr.array;
+        const t = state.clock.elapsedTime;
+        for (let i = 0; i < arr.length; i += 3) {
+            const x = arr[i];
+            const y = arr[i + 1];
+            const u = Math.min(x / 1.8, 1);
+            arr[i + 2] = 0.34 * Math.sin(Math.PI * u) * Math.sin(Math.PI * (y / 1.6))
+                + 0.05 * u * Math.sin(x * 7 - t * 10 + y * 2.5);
+        }
+        attr.needsUpdate = true;
+        mesh.geometry.computeVertexNormals();
+    });
+
+    return (
+        <mesh ref={meshRef} geometry={geo} position={[0.45, 0.4, 0]}>
+            <meshStandardMaterial vertexColors side={THREE.DoubleSide} color="#ffffff" metalness={0.03} roughness={0.78} />
+        </mesh>
+    );
+};
 
 const SailboatMesh = () => (
     <group>
@@ -594,8 +633,7 @@ const SailboatMesh = () => (
             <boxGeometry args={[0.9, 0.4, 0.06]} />
             <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
         </mesh>
-        {/* rounded wooden hull — deck at local y≈0.26 above waterline.
-            Hull already closes its own deck; no overlapping boxes. */}
+        {/* rounded wooden hull — closes its own deck, no overlapping boxes */}
         <mesh geometry={sailHullGeo} position={[0, 0, 0]}>
             <meshStandardMaterial color={WOOD} metalness={0.18} roughness={0.55} />
         </mesh>
@@ -609,36 +647,34 @@ const SailboatMesh = () => (
             <cylinderGeometry args={[0.035, 0.045, 2.1, 10]} />
             <meshStandardMaterial color={WOOD_DARK} metalness={0.25} roughness={0.55} />
         </mesh>
-        {/* billowing cream sail */}
-        <mesh geometry={sailGeo} position={[0.45, 0.4, 0]} rotation={[0, 0, 0]}>
-            <meshStandardMaterial color={SAIL} metalness={0.03} roughness={0.78} side={THREE.DoubleSide} />
-        </mesh>
-        {/* red sail stripe */}
-        <mesh position={[1.25, 0.8, 0.02]} rotation={[0, 0, 0.35]}>
-            <planeGeometry args={[1.05, 0.18]} />
-            <meshStandardMaterial color="#b03a24" metalness={0.03} roughness={0.7} side={THREE.DoubleSide} />
-        </mesh>
+        {/* billowing, rippling sail (red band baked into vertex colors) */}
+        <Sail />
         {/* identity banner (gold) at the bow */}
         <group position={[-0.35, 0.22, 0]}>
-            <Banner color="#d4af37" poleH={2.2} topY={1.8} length={1.2} />
+            <Banner color="#d4af37" poleH={2.2} topY={1.9} length={1.2} />
         </group>
     </group>
 );
 
-/* Approximate the water shader's surface height for boat bobbing. */
+const sailHullGeo = buildHullGeometry(2.6, 0.95, 0.5, { stations: 36, ribs: 14, rocker: 0.07, sheerLift: 0.26, transom: 0.2, belly: 0.25 });
+const cargoHullGeo = buildHullGeometry(3.3, 1.2, 0.55, { stations: 36, ribs: 14, rocker: 0.06, sheerLift: 0.32, transom: 0.16, belly: 0.3 });
+
+/* Exact match of the Water shader's surface — same amplitudes, same time.
+   The boat's heave tracks this precisely, so it floats and never sinks. */
 const waveH = (x, z, t) => {
     let w = 0;
-    w += Math.sin(x * 0.32 + t * 0.7) * 0.24;
-    w += Math.cos(z * 0.48 + t * 0.52) * 0.17;
-    w += Math.sin((x + z) * 0.21 + t * 0.85) * 0.13;
-    w += Math.cos(x * 0.72 - t * 1.05 + z * 0.55) * 0.06;
+    w += Math.sin(x * 0.32 + t * 0.70) * 0.16;
+    w += Math.cos(z * 0.48 + t * 0.52) * 0.11;
+    w += Math.sin((x + z) * 0.21 + t * 0.85) * 0.07;
+    w += Math.cos(x * 0.72 - t * 1.05 + z * 0.55) * 0.03;
     return w;
 };
 
-/* Sailing fleet: 3D ships riding the waves. Each boat sails steadily
-   FORWARD (never reverses), gently bobbing on the water like Clash Royale
-   clan boats. Projects each boat's real screen position into positionsRef
-   so the DOM cards can follow it. */
+/* Sailing fleet. Each boat rides a continuous ELLIPTICAL ORBIT around the
+   scene: it always sails forward along its path (never reverses, never
+   teleports), smoothly circling — coming closer to the camera, receding
+   into the sea, and returning. Projects each boat's screen position so the
+   DOM cards follow it. */
 const Fleet = ({ fleet, positionsRef }) => {
     const groups = useRef([]);
     const v = useRef(new THREE.Vector3());
@@ -650,37 +686,37 @@ const Fleet = ({ fleet, positionsRef }) => {
         fleet.forEach((b, i) => {
             const g = groups.current[i];
             if (!g || !pos) return;
-            const span = b.range || 14;
-            // Continuous forward progress in the boat's direction; wraps
-            // seamlessly (boat never reverses). dir=1 sails right, -1 left.
-            const raw = (t * b.speed * b.dir + b.phase) % (span * 2);
-            const xs = raw - span;
-            const z = b.z;
 
-            // The boat's keel line sits exactly on the water surface (h0 has the
-            // same amplitude as the water shader), so it floats, never sinks or
-            // pops out of the water. Gentle pitch/roll follow the wave face.
-            const eps = 0.35;
-            const h0 = waveH(xs, z, t);
-            const hx = waveH(xs + eps, z, t) - waveH(xs - eps, z, t);
-            const hz = waveH(xs, z + eps, t) - waveH(xs, z - eps, t);
-            const y = -0.35 + h0;
+            const th = t * b.speed + b.phase;
+            const x = b.cx + b.rx * Math.cos(th);
+            const z = b.cz + b.rz * Math.sin(th);
 
-            g.position.set(xs, y, z);
-            g.rotation.z = Math.atan(hx) * 0.3; // gentle pitch
-            g.rotation.x = Math.atan(hz) * 0.22; // gentle roll
-            g.rotation.y = b.dir > 0 ? 0 : Math.PI; // fixed facing, never flips
+            // Float on the exact wave surface, plus the boat's draft so the
+            // hull has real freeboard (visible waterline, never submerged).
+            const eps = 0.5;
+            const h0 = waveH(x, z, t);
+            const hx = waveH(x + eps, z, t) - waveH(x - eps, z, t);
+            const hz = waveH(x, z + eps, t) - waveH(x, z - eps, t);
+            const y = -0.35 + h0 + (b.lift || 0);
+
+            // Face the direction of travel along the orbit
+            const dirX = -b.rx * Math.sin(th);
+            const dirZ = b.rz * Math.cos(th);
+            g.rotation.y = -Math.atan2(dirZ, dirX);
+            g.rotation.z = Math.atan(hx) * 0.5;
+            g.rotation.x = Math.atan(hz) * 0.4;
+
+            g.position.set(x, y, z);
 
             // project center to screen (%)
-            v.current.set(xs, y + b.anchorY, z);
+            v.current.set(x, y + b.anchorY, z);
             v.current.project(cam);
             const sx = (v.current.x + 1) / 2;
             const sy = (1 - v.current.y) / 2;
-            // project an offset to estimate on-screen width
-            v.current.set(xs + b.w, y, z);
+            v.current.set(x + b.w, y, z);
             v.current.project(cam);
             const wPct = Math.abs(((v.current.x + 1) / 2) - sx) * 100;
-            const visible = v.current.z < 1 && sx > -0.25 && sx < 1.25 && sy > -0.25 && sy < 1.25;
+            const visible = v.current.z < 1 && sx > -0.2 && sx < 1.2 && sy > -0.2 && sy < 1.2;
             pos[b.id] = { x: sx * 100, y: sy * 100, w: Math.max(wPct, 7), visible };
         });
     });
@@ -718,7 +754,7 @@ const SceneContents = () => (
 
 const PostFX = () => (
     <EffectComposer>
-        <Bloom intensity={0.45} luminanceThreshold={0.6} luminanceSmoothing={0.5} mipmapBlur radius={0.6} />
+        <Bloom intensity={0.32} luminanceThreshold={0.62} luminanceSmoothing={0.5} mipmapBlur radius={0.6} />
         <Vignette eskil={false} offset={0.22} darkness={0.5} />
     </EffectComposer>
 );

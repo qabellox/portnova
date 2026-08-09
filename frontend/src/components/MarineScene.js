@@ -41,8 +41,20 @@ const MarineScene = ({ className = '' }) => {
                 const el = vesselRefs.current[id];
                 const p = pos[id];
                 if (!el || !p) return;
-                el.style.left = `${p.x}%`;
-                el.style.top = `${p.y}%`;
+                let xPct = p.x;
+                let yPct = p.y;
+                // Phones only: keep the info card fully inside the screen so it
+                // never overlaps the screen border when a boat sails near an
+                // edge. Desktop layout is left completely untouched.
+                if (window.innerWidth <= 720) {
+                    const card = el.querySelector('.marine-vessel__card');
+                    const halfW = (card ? card.offsetWidth : 150) / 2;
+                    const halfPct = (halfW / window.innerWidth) * 100;
+                    xPct = Math.min(100 - halfPct, Math.max(halfPct, p.x));
+                    yPct = Math.min(90, Math.max(15, p.y));
+                }
+                el.style.left = `${xPct}%`;
+                el.style.top = `${yPct}%`;
                 el.style.width = `${Math.max(p.w * 1.6, 160)}px`;
                 el.style.opacity = p.visible ? '' : '0';
                 el.style.pointerEvents = p.visible ? 'auto' : 'none';

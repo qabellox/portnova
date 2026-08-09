@@ -1826,6 +1826,22 @@ body[dir='rtl'] .user-menu__link:hover {
         border-radius: 1.2rem;
     }
 
+    /* Mobile only: the brand name ellipsizes into dots at this size, so keep
+       just the logo mark (desktop keeps the full name + tag). */
+    .brand {
+        gap: 0.4rem;
+    }
+
+    .brand__text {
+        display: none;
+    }
+
+    .brand__logo-wrap {
+        width: 4.2rem;
+        height: 4.2rem;
+        padding: 0.3rem;
+    }
+
     .nav-links {
         display: none;
     }
@@ -2001,7 +2017,6 @@ body[dir='rtl'] .chip-row {
     justify-content: flex-start;
 }
 
-body[dir='rtl'] .brand__logo,
 body[dir='rtl'] .backdrop__glint {
     transform: scaleX(-1);
 }

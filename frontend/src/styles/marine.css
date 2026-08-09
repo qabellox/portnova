@@ -170,8 +170,8 @@
    position: absolute;
    top: 0;
    left: 0;
-   transform: translate(-50%, -115%);
-   height: 84px;
+   transform: translate(-50%, -50%);
+   height: 110px;
    min-width: 110px;
    pointer-events: auto;
    cursor: pointer;
@@ -292,7 +292,7 @@
    ============================================================ */
 @media (max-width: 720px) {
    .marine-vessel {
-      height: 64px;
+      height: 90px;
    }
 
    .marine-vessel__card {

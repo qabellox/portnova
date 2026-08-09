@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Billboard, Environment, Lightformer } from '@react-three/drei';
+import { Environment, Lightformer } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
@@ -107,14 +107,17 @@ const SkyDome = () => {
                         vec3 col = mix(hor, top, smoothstep(0.0, 0.55, h));
                         col = mix(col, dayMid, smoothstep(0.18, 0.5, h) * uDayLight * 0.4);
 
-                        // Golden sun glow (iris-style warm halo)
+                        // ONE sun: crisp disc + soft warm halo (drawn in the sky
+                        // itself — no separate billboard, no square glow edge)
                         float s = max(dot(d, uSunDir), 0.0);
-                        col += vec3(1.0, 0.72, 0.42) * pow(s, 6.0) * 1.1 * uDayLight;
-                        col += vec3(1.0, 0.86, 0.62) * pow(s, 20.0) * 0.9 * uDayLight;
+                        col += vec3(1.0, 0.98, 0.92) * smoothstep(0.9960, 0.9992, s) * 1.6 * uDayLight;
+                        col += vec3(1.0, 0.68, 0.38) * pow(s, 6.0) * 0.5 * uDayLight;
+                        col += vec3(1.0, 0.88, 0.66) * pow(s, 28.0) * 0.85 * uDayLight;
 
-                        // Cool moon glow at night
+                        // ONE moon: cool disc + halo at night
                         float m = max(dot(d, uMoonDir), 0.0);
-                        col += vec3(0.62, 0.72, 0.95) * pow(m, 8.0) * 0.8 * (1.0 - uDayLight);
+                        col += vec3(0.9, 0.95, 1.0) * smoothstep(0.9965, 0.9992, m) * 1.2 * (1.0 - uDayLight);
+                        col += vec3(0.62, 0.72, 0.95) * pow(m, 8.0) * 0.35 * (1.0 - uDayLight);
 
                         gl_FragColor = vec4(col, 1.0);
                     }
@@ -234,114 +237,10 @@ const Water = () => {
     );
 };
 
-/* ------------------------------------------------------------------ */
-/* Iris-style glowing sun with light rays.                             */
-/* ------------------------------------------------------------------ */
-const Sun = () => {
-    const mat = useRef(null);
-    const groupRef = useRef(null);
+/* The sun and moon are drawn directly inside the SkyDome shader so there is
+   exactly one crisp disc in the sky — no billboards, no square glow edges. */
 
-    useFrame(() => {
-        const { dayLight, sunDir, sunSize } = getCelestial();
-        if (mat.current) mat.current.uniforms.uDayLight.value = dayLight;
-        if (groupRef.current) {
-            groupRef.current.position.set(sunDir.x * 22, sunDir.y * 22, sunDir.z * 22);
-            groupRef.current.scale.setScalar(sunSize);
-        }
-    });
 
-    return (
-        <Billboard ref={groupRef} position={[0, 22, -22]}>
-            <mesh>
-                <planeGeometry args={[7, 7]} />
-                <shaderMaterial
-                    ref={mat}
-                    transparent
-                    depthWrite={false}
-                    blending={THREE.AdditiveBlending}
-                    uniforms={{ uDayLight: { value: getDayLight() } }}
-                    vertexShader={`
-                        varying vec2 vUv;
-                        void main() {
-                            vUv = uv;
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                        }
-                    `}
-                    fragmentShader={`
-                        uniform float uDayLight;
-                        varying vec2 vUv;
-                        void main() {
-                            vec2 uv = vUv * 2.0 - 1.0;
-                            float d = length(uv);
-                            float core = smoothstep(0.42, 0.0, d);
-                            float glow = exp(-d * 2.6);
-                            float ang = atan(uv.y, uv.x);
-                            float rays = pow(abs(sin(ang * 6.0)), 24.0) * exp(-d * 3.4);
-                            vec3 col = vec3(1.0, 0.86, 0.55) * (core * 2.2 + glow * 0.7 + rays * 1.1);
-                            gl_FragColor = vec4(col * uDayLight, 1.0);
-                        }
-                    `}
-                />
-            </mesh>
-        </Billboard>
-    );
-};
-
-/* ------------------------------------------------------------------ */
-/* Moon with craters + halo, fades in at night.                        */
-/* ------------------------------------------------------------------ */
-const Moon = () => {
-    const mat = useRef(null);
-    const groupRef = useRef(null);
-
-    useFrame(() => {
-        const { dayLight, moonDir, moonSize } = getCelestial();
-        if (mat.current) mat.current.uniforms.uNight.value = 1.0 - dayLight;
-        if (groupRef.current) {
-            groupRef.current.position.set(moonDir.x * 22, moonDir.y * 22, moonDir.z * 22);
-            groupRef.current.scale.setScalar(moonSize);
-        }
-    });
-
-    return (
-        <Billboard ref={groupRef} position={[0, 22, -22]}>
-            <mesh>
-                <planeGeometry args={[2.4, 2.4]} />
-                <shaderMaterial
-                    ref={mat}
-                    transparent
-                    depthWrite={false}
-                    blending={THREE.AdditiveBlending}
-                    uniforms={{ uNight: { value: 1.0 - getDayLight() } }}
-                    vertexShader={`
-                        varying vec2 vUv;
-                        void main() {
-                            vUv = uv;
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                        }
-                    `}
-                    fragmentShader={`
-                        uniform float uNight;
-                        varying vec2 vUv;
-                        void main() {
-                            vec2 uv = vUv * 2.0 - 1.0;
-                            float d = length(uv);
-                            float disc = smoothstep(0.5, 0.44, d);
-                            float halo = exp(-d * 5.0) * 0.5;
-                            float c1 = smoothstep(0.06, 0.0, distance(uv, vec2(0.18, -0.12)));
-                            float c2 = smoothstep(0.05, 0.0, distance(uv, vec2(-0.2, 0.14)));
-                            float c3 = smoothstep(0.04, 0.0, distance(uv, vec2(0.05, 0.2)));
-                            vec3 col = vec3(0.9, 0.94, 1.0) * disc * 1.6;
-                            col -= vec3(0.35, 0.4, 0.5) * (c1 + c2 + c3) * 0.5;
-                            col += vec3(0.75, 0.82, 0.98) * halo;
-                            gl_FragColor = vec4(col * uNight, 1.0);
-                        }
-                    `}
-                />
-            </mesh>
-        </Billboard>
-    );
-};
 
 /* ------------------------------------------------------------------ */
 /* Mouse parallax rig: the camera drifts gently with the pointer.      */
@@ -722,20 +621,9 @@ const Fleet = ({ fleet, positionsRef }) => {
             const wPct = Math.abs(((v.current.x + 1) / 2) - sx) * 100;
             const visible = v.current.z < 1 && sx > -0.2 && sx < 1.2 && sy > -0.2 && sy < 1.2;
 
-            // Dissolve the hull near the screen edges: the ship fades in as it
-            // enters from the border and fades out as it leaves — a smooth
-            // transition instead of a hard pop at the wall.
-            const edge = 0.12;
-            const fade = Math.min(1, Math.max(0, Math.min(sx / edge, (1 - sx) / edge)));
-            if (fade < 1) {
-                g.traverse((child) => {
-                    if (child.isMesh && child.material) {
-                        const mats = Array.isArray(child.material) ? child.material : [child.material];
-                        mats.forEach((m) => { m.transparent = true; m.opacity = fade; });
-                    }
-                });
-            }
-
+            // The ship stays fully opaque: it sails across the screen border
+            // like a vessel coming from the open sea, wraps around off-screen,
+            // and sails back in — no fading in/out at the edges.
             pos[b.id] = { x: sx * 100, y: sy * 100, w: Math.max(wPct, 7), visible };
         });
     });
@@ -759,8 +647,6 @@ const SceneContents = () => (
         <pointLight position={[-3, 2.2, 3]} intensity={8} distance={16} color="#ffe9c9" />
 
         <SkyDome />
-        <Sun />
-        <Moon />
         <Water />
 
         <Environment resolution={256}>

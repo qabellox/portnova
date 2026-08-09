@@ -402,46 +402,72 @@ const SunLight = () => {
 
 /* Build a boat hull: a rounded, chined shell with a crowned deck.
    Bow points +X. Returns a BufferGeometry. */
-const buildHullGeometry = (length, beam, depth, { stations = 30, chine = 0.42, rocker = 0.07, sheerLift = 0.05, transom = 0.1 } = {}) => {
+/**
+ * Build a smooth, lofted boat hull. Each station is a curved rib with a
+ * round bilge and a gentle tumblehome — genuine boat curvature (concaves
+ * and junctions), not angular chines. Bow points +X.
+ */
+const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rocker = 0.06, sheerLift = 0.24, transom = 0.16, belly = 0.25 } = {}) => {
     const pos = [];
     const idx = [];
+    // half-breadth along the length: transom at stern, pointed bow
     const profile = (t) => {
         const s = Math.sin(Math.PI * Math.min(Math.max(t, 0), 1));
-        return Math.pow(s, 0.8);
+        return Math.pow(s, 0.75);
     };
-    const rows = stations + 1;
-    // 4 verts per station: [lSheer, lKeel, rKeel, rSheer]
-    for (let i = 0; i < rows; i++) {
+    // grid[station][rib] -> vertex index
+    const grid = [];
+    for (let i = 0; i <= stations; i++) {
         const t = i / stations;
         const x = -length / 2 + length * t;
         const hw = (beam / 2) * (transom + (1 - transom) * profile(t));
-        const kw = hw * chine;
-        const yS = rocker * Math.sin(Math.PI * t) + sheerLift;
-        const yK = -depth * profile(t) - 0.05;
-        pos.push(x, yS, -hw); // lSheer
-        pos.push(x, yK, -kw); // lKeel
-        pos.push(x, yK, kw); // rKeel
-        pos.push(x, yS, hw); // rSheer
+        const kd = depth * profile(t);
+        const sh = sheerLift + rocker * Math.sin(Math.PI * t);
+        const rib = [];
+        for (let r = 0; r <= ribs; r++) {
+            const th = (r / ribs) * Math.PI; // 0 port sheer -> π starboard sheer
+            // cross-section: sheer at θ=0/π, keel at θ=π/2, with round bilge
+            const c = Math.cos(th);
+            const sn = Math.sin(th);
+            const z = -hw * c;
+            const y = sh * c * c - kd * sn * sn;
+            pos.push(x, y, z);
+            rib.push(pos.length / 3 - 1);
+        }
+        grid.push(rib);
     }
-    const ring = (i) => i * 4;
+    // connect hull shell between stations
     for (let i = 0; i < stations; i++) {
-        const a = ring(i);
-        const b = ring(i + 1);
-        // port side
-        idx.push(a, a + 1, b + 1, a, b + 1, b);
-        // bottom
-        idx.push(a + 1, a + 2, b + 2, a + 1, b + 2, b + 1);
-        // starboard
-        idx.push(a + 2, a + 3, b + 3, a + 2, b + 3, b + 2);
-        // deck
-        idx.push(a + 3, a, b, a + 3, b, b + 3);
+        for (let r = 0; r < ribs; r++) {
+            const a = grid[i][r];
+            const b = grid[i][r + 1];
+            const c = grid[i + 1][r];
+            const d = grid[i + 1][r + 1];
+            idx.push(a, b, d, a, d, c);
+        }
     }
-    // stern transom cap
-    const a = 0;
-    idx.push(a + 2, a + 3, a + 1, a + 3, a, a + 1);
-    // bow point cap
-    const z = ring(stations);
-    idx.push(z + 1, z + 3, z + 2, z + 1, z, z + 3);
+    // deck: strip between port sheer (r=0) and starboard sheer (r=ribs)
+    for (let i = 0; i < stations; i++) {
+        const lp = grid[i][0];
+        const lq = grid[i + 1][0];
+        const rp = grid[i][ribs];
+        const rq = grid[i + 1][ribs];
+        idx.push(lp, rp, rq, lp, rq, lq);
+    }
+    // stern transom cap (fan from a center vertex)
+    const stern = grid[0];
+    const sternCX = pos.length / 3;
+    pos.push(-length / 2, -depth * 0.5, 0);
+    for (let r = 0; r < ribs; r++) {
+        idx.push(stern[r], stern[r + 1], sternCX);
+    }
+    // bow cap (fan from a center vertex, just behind the point)
+    const bow = grid[stations];
+    const bowCX = pos.length / 3;
+    pos.push(length / 2, sheerLift * 0.5, 0);
+    for (let r = 0; r < ribs; r++) {
+        idx.push(bow[r + 1], bow[r], bowCX);
+    }
 
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
@@ -483,10 +509,10 @@ const buildSailGeometry = (chord, height, belly, segments = 14) => {
     return g;
 };
 
-/* Hulls are built with the deck well ABOVE the waterline (local y≈0.3)
+/* Hulls are built with the deck well ABOVE the waterline (local y≈0.25-0.3)
    so the boat visibly floats instead of sinking to the keel. */
-const sailHullGeo = buildHullGeometry(2.6, 0.95, 0.34, { stations: 30, chine: 0.45, rocker: 0.06, sheerLift: 0.26, transom: 0.18 });
-const cargoHullGeo = buildHullGeometry(3.3, 1.2, 0.4, { stations: 30, chine: 0.55, rocker: 0.05, sheerLift: 0.34, transom: 0.14 });
+const sailHullGeo = buildHullGeometry(2.6, 0.95, 0.5, { stations: 36, ribs: 14, rocker: 0.07, sheerLift: 0.26, transom: 0.2, belly: 0.25 });
+const cargoHullGeo = buildHullGeometry(3.3, 1.2, 0.55, { stations: 36, ribs: 14, rocker: 0.06, sheerLift: 0.32, transom: 0.16, belly: 0.3 });
 const sailGeo = buildSailGeometry(1.8, 1.6, 0.34);
 
 const WOOD = '#8b7355';
@@ -620,13 +646,18 @@ const Fleet = ({ fleet, positionsRef }) => {
             const x = raw > range ? 2 * range - raw : raw;
             const xs = x - range;
             const z = b.z;
-            const wave = waveH(xs, z, t);
-            const y = -0.35 + wave * 0.7;
+
+            // Surface height + local slopes -> the boat truly rides the waves
+            const eps = 0.35;
+            const h0 = waveH(xs, z, t);
+            const hx = waveH(xs + eps, z, t) - waveH(xs - eps, z, t);
+            const hz = waveH(xs, z + eps, t) - waveH(xs, z - eps, t);
+            const y = -0.35 + h0 * 0.7;
 
             g.position.set(xs, y, z);
-            const slope = waveH(xs + 0.35, z, t) - waveH(xs - 0.35, z, t);
-            g.rotation.z = -slope * 0.4;
-            g.rotation.x = Math.sin(t * 0.6 + i * 1.7) * 0.03;
+            // pitch (X slope) and roll (Z slope) follow the wave face
+            g.rotation.z = Math.atan(hx) * 0.55;
+            g.rotation.x = Math.atan(hz) * 0.55;
             g.rotation.y = b.dir > 0 ? 0 : Math.PI;
 
             // project center to screen (%)

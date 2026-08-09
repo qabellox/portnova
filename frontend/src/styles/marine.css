@@ -331,6 +331,10 @@
 
    .marine-vessel__desc {
       font-size: 0.76rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
    }
 
    .marine-vessel__btn {

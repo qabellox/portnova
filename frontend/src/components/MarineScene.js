@@ -44,19 +44,24 @@ const MarineScene = ({ className = '' }) => {
                 let xPct = p.x;
                 let yPct = p.y;
                 // Phones only: keep the info card fully inside the hero (the
-                // live wallpaper) so it never overlaps its borders. Desktop
+                // live wallpaper) so it never overlaps its borders — the card
+                // opens below the boat, so it is clamped in both axes. Desktop
                 // layout is left completely untouched.
                 if (window.innerWidth <= 720) {
                     const fleetEl = el.closest('.marine-fleet');
                     const fr = fleetEl ? fleetEl.getBoundingClientRect() : null;
                     const card = el.querySelector('.marine-vessel__card');
-                    const cw = (card && card.offsetWidth ? card.offsetWidth : 184) / 2;
                     if (fr && fr.width > 0) {
+                        const cw = (card && card.offsetWidth ? card.offsetWidth : 184) / 2;
                         const halfPct = (cw / fr.width) * 100;
                         const marginPct = (5 / fr.width) * 100;
                         xPct = Math.min(100 - halfPct - marginPct, Math.max(halfPct + marginPct, p.x));
+                        const ch = card && card.offsetHeight ? card.offsetHeight : 190;
+                        const vHalf = (el.offsetHeight || 90) / 2;
+                        const minY = ((fr.top + 6 - vHalf) / fr.height) * 100;
+                        const maxY = ((fr.bottom - 6 - vHalf - ch) / fr.height) * 100;
+                        yPct = Math.min(maxY, Math.max(minY, p.y));
                     }
-                    yPct = Math.min(84, Math.max(10, p.y));
                 }
                 el.style.left = `${xPct}%`;
                 el.style.top = `${yPct}%`;

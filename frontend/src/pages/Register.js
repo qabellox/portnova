@@ -11,7 +11,7 @@ const Register = () => {
     const [fullName, setFullName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('youth');
+    const [role, setRole] = useState('seeker');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -84,31 +84,28 @@ const Register = () => {
                                 {isArabic ? 'نوع الحساب' : 'Account type'}
                             </span>
                             <div className="role-picker">
-                                <label className={`role-option ${role === 'youth' ? 'role-option--active' : ''}`}>
-                                    <input type="radio" name="role" value="youth" checked={role === 'youth'} onChange={(event) => setRole(event.target.value)} />
+                                <label className={`role-option ${role === 'seeker' ? 'role-option--active' : ''}`}>
+                                    <input type="radio" name="role" value="seeker" checked={role === 'seeker'} onChange={(event) => setRole(event.target.value)} />
                                     <span className="role-option__mark">🎓</span>
                                     <span className="role-option__text">
-                                        <strong>{isArabic ? 'شاب / باحث' : 'Youth / Seeker'}</strong>
+                                        <strong>{isArabic ? 'باحث' : 'Seeker'}</strong>
                                         <small>{isArabic ? 'أبحث عن وظائف ودورات وسيرة ذاتية.' : 'I look for jobs, courses, and CV support.'}</small>
                                     </span>
                                 </label>
-                                <label className={`role-option ${role === 'company' ? 'role-option--active' : ''}`}>
-                                    <input type="radio" name="role" value="company" checked={role === 'company'} onChange={(event) => setRole(event.target.value)} />
+                                <label className={`role-option ${role === 'provider' ? 'role-option--active' : ''}`}>
+                                    <input type="radio" name="role" value="provider" checked={role === 'provider'} onChange={(event) => setRole(event.target.value)} />
                                     <span className="role-option__mark">🏢</span>
                                     <span className="role-option__text">
-                                        <strong>{isArabic ? 'شركة / جهة توظيف' : 'Company / Employer'}</strong>
-                                        <small>{isArabic ? 'أنشر وظائف وأقدم فرصًا.' : 'I post jobs and offer opportunities.'}</small>
-                                    </span>
-                                </label>
-                                <label className={`role-option ${role === 'expert' ? 'role-option--active' : ''}`}>
-                                    <input type="radio" name="role" value="expert" checked={role === 'expert'} onChange={(event) => setRole(event.target.value)} />
-                                    <span className="role-option__mark">📚</span>
-                                    <span className="role-option__text">
-                                        <strong>{isArabic ? 'خبير / مقدّم دورات' : 'Expert / Course provider'}</strong>
-                                        <small>{isArabic ? 'أقدّم دورات ومراجعة سير ذاتية.' : 'I provide courses and CV review.'}</small>
+                                        <strong>{isArabic ? 'مقدّم' : 'Provider'}</strong>
+                                        <small>{isArabic ? 'أنشر الوظائف والدورات.' : 'I post jobs and courses.'}</small>
                                     </span>
                                 </label>
                             </div>
+                            <p className="muted" style={{ fontSize: '0.78rem' }}>
+                                {isArabic
+                                    ? 'نوع الحساب ثابت ولا يمكن تغييره لاحقًا.'
+                                    : 'Your account type is fixed and cannot be changed later.'}
+                            </p>
                         </div>
                         <PremiumButton type="submit" variant="primary" disabled={loading}>
                             {loading ? (isArabic ? 'جارٍ إنشاء الحساب...' : 'Creating account...') : isArabic ? 'إنشاء الحساب' : 'Create account'}

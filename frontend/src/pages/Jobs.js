@@ -2,26 +2,23 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
-
-const jobs = [
-    { company: 'Nova Labs', role: 'Frontend Product Intern', salary: '$450/mo', location: 'Port Said', category: 'Tech', type: 'intern', experience: 'entry', posted: 2, tone: 'blue', emoji: '💻' },
-    { company: 'HarborX', role: 'Operations Coordinator', salary: '$700/mo', location: 'Hybrid', category: 'Business', type: 'full', experience: 'mid', posted: 4, tone: 'gold', emoji: '⚓' },
-    { company: 'BlueWave', role: 'Community Designer', salary: '$600/mo', location: 'Remote', category: 'Design', type: 'full', experience: 'mid', posted: 1, tone: 'success', emoji: '🎨' },
-    { company: 'Atlas Port', role: 'Business Analyst', salary: '$900/mo', location: 'Onsite', category: 'Business', type: 'contract', experience: 'senior', posted: 6, tone: 'blue', emoji: '📊' },
-    { company: 'Sunrise Digital', role: 'Junior Marketing Specialist', salary: '$420/mo', location: 'Remote', category: 'Marketing', type: 'part', experience: 'entry', posted: 3, tone: 'gold', emoji: '📣' },
-    { company: 'Porta Tech', role: 'Data Entry & Support', salary: '$380/mo', location: 'Port Said', category: 'Business', type: 'full', experience: 'entry', posted: 8, tone: 'blue', emoji: '🗂' },
-];
+import { getJobs } from '../services/content';
 
 const Jobs = () => {
     const { t } = useLanguage();
     const [searchParams] = useSearchParams();
     const focusRole = searchParams.get('focus');
+    const [jobs, setJobs] = useState([]);
     const [query, setQuery] = useState('');
     const [location, setLocation] = useState('All');
     const [category, setCategory] = useState('All');
     const [cvName, setCvName] = useState('');
     const cvInputRef = useRef(null);
     const focusRef = useRef(null);
+
+    useEffect(() => {
+        setJobs(getJobs());
+    }, []);
 
     useEffect(() => {
         if (!focusRole) return;
@@ -40,8 +37,8 @@ const Jobs = () => {
         if (file) setCvName(file.name);
     };
 
-    const locations = useMemo(() => ['All', ...new Set(jobs.map((j) => j.location))], []);
-    const categories = useMemo(() => ['All', ...new Set(jobs.map((j) => j.category))], []);
+    const locations = useMemo(() => ['All', ...new Set(jobs.map((j) => j.location))], [jobs]);
+    const categories = useMemo(() => ['All', ...new Set(jobs.map((j) => j.category))], [jobs]);
 
     const filtered = useMemo(
         () =>
@@ -56,7 +53,7 @@ const Jobs = () => {
                 const matchesCategory = category === 'All' || job.category === category;
                 return matchesQuery && matchesLocation && matchesCategory;
             }),
-        [query, location, category]
+        [query, location, category, jobs]
     );
 
     return (
@@ -135,7 +132,7 @@ const Jobs = () => {
                 <div className="card-grid card-grid--compact">
                     {filtered.map((job) => (
                         <GlassCard
-                            key={job.role}
+                            key={job.id || job.role}
                             interactive
                             className={`data-card${focusRole === job.role ? ' data-card--focused' : ''}`}
                             ref={focusRole === job.role ? focusRef : undefined}

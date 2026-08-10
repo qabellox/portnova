@@ -2,23 +2,20 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
-
-const courses = [
-    { title: 'Product Design Sprint', provider: 'PortNova Academy', price: 'Free', hours: 24, mode: 'online', location: 'Zoom', date: 'Flexible', level: 'Beginner', tone: 'blue', emoji: '🎨' },
-    { title: 'Startup Operations', provider: 'Harbor School', price: '$49', hours: 32, mode: 'offline', location: 'Port Said', date: 'Sat 10:00', level: 'Intermediate', tone: 'gold', emoji: '🚀' },
-    { title: 'Career Readiness', provider: 'FutureBridge', price: 'Free', hours: 12, mode: 'online', location: 'Zoom', date: 'Flexible', level: 'Foundation', tone: 'success', emoji: '🧭' },
-    { title: 'Data Storytelling', provider: 'Nova Labs', price: '$79', hours: 20, mode: 'online', location: 'Google Meet', date: 'Wed 18:00', level: 'Advanced', tone: 'blue', emoji: '📊' },
-    { title: 'Freelance Foundations', provider: 'PortNova Academy', price: 'Free', hours: 15, mode: 'offline', location: 'Youth Center', date: 'Sun 12:00', level: 'Beginner', tone: 'success', emoji: '💼' },
-    { title: 'Digital Marketing Basics', provider: 'Harbor School', price: '$39', hours: 18, mode: 'online', location: 'Zoom', date: 'Mon 17:00', level: 'Intermediate', tone: 'gold', emoji: '📣' },
-];
+import { getCourses } from '../services/content';
 
 const Courses = () => {
     const { t } = useLanguage();
     const [searchParams] = useSearchParams();
     const focusTitle = searchParams.get('focus');
+    const [courses, setCourses] = useState([]);
     const [query, setQuery] = useState('');
     const [level, setLevel] = useState('All');
     const focusRef = useRef(null);
+
+    useEffect(() => {
+        setCourses(getCourses());
+    }, []);
 
     useEffect(() => {
         if (!focusTitle) return;
@@ -30,7 +27,7 @@ const Courses = () => {
         return () => window.clearTimeout(id);
     }, [focusTitle]);
 
-    const levels = useMemo(() => ['All', ...new Set(courses.map((c) => c.level))], []);
+    const levels = useMemo(() => ['All', ...new Set(courses.map((c) => c.level))], [courses]);
 
     const filtered = useMemo(
         () =>
@@ -43,7 +40,7 @@ const Courses = () => {
                 const matchesLevel = level === 'All' || course.level === level;
                 return matchesQuery && matchesLevel;
             }),
-        [query, level]
+        [query, level, courses]
     );
 
     return (
@@ -86,7 +83,7 @@ const Courses = () => {
                 <div className="card-grid card-grid--compact">
                     {filtered.map((course) => (
                         <GlassCard
-                            key={course.title}
+                            key={course.id || course.title}
                             interactive
                             className={`${focusTitle === course.title ? ' data-card--focused' : ''}`}
                             ref={focusTitle === course.title ? focusRef : undefined}

@@ -58,17 +58,25 @@ export const AuthProvider = ({ children }) => {
         return { error };
     };
 
-    const value = useMemo(
-        () => ({
+    const value = useMemo(() => {
+        // Roles are FIXED at registration (a provider cannot become a seeker
+        // without creating a new account). Legacy role names are mapped to the
+        // two public types so nothing breaks.
+        const rawRole = session?.user?.user_metadata?.role;
+        const role =
+            { youth: 'seeker', seeker: 'seeker', company: 'provider', provider: 'provider', expert: 'provider' }[rawRole] ||
+            'seeker';
+        return {
             session,
             user: session?.user ?? null,
+            role,
+            isProvider: role === 'provider',
             loading,
             register,
             login,
             logout,
-        }),
-        [session, loading]
-    );
+        };
+    }, [session, loading]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

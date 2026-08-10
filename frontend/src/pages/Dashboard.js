@@ -1,6 +1,7 @@
 ﻿import React, { useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
+import ProviderStudio from '../components/ProviderStudio';
 import { Badge, GlassCard, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -13,20 +14,18 @@ const getInitials = (name = 'PN') =>
         .join('') || 'PN';
 
 const roleInfo = {
-    youth: { key: 'roleSeeker', tag: 'roleSeekerTag', icon: '🎓' },
-    company: { key: 'roleHirer', tag: 'roleHirerTag', icon: '🏢' },
-    expert: { key: 'roleProvider', tag: 'roleProviderTag', icon: '📚' },
+    seeker: { key: 'roleSeeker', tag: 'roleSeekerTag', icon: '🎓' },
+    provider: { key: 'roleProviderName', tag: 'roleProviderTag', icon: '🏢' },
 };
 
 const Dashboard = () => {
-    const { user } = useAuth();
+    const { user, role, isProvider } = useAuth();
     const { isArabic, t } = useLanguage();
     const fileRef = useRef(null);
 
     const meta = user?.user_metadata || {};
-    const role = meta.role || 'youth';
     const email = user?.email || '';
-    const info = roleInfo[role] || roleInfo.youth;
+    const info = roleInfo[role] || roleInfo.seeker;
 
     const [fullName, setFullName] = useState(meta.fullName || '');
     const [headline, setHeadline] = useState(meta.headline || '');
@@ -121,6 +120,11 @@ const Dashboard = () => {
                     title={t('dashRoleHint')}
                     subtitle={`${info.icon} ${t(info.key)}، ${t(info.tag)}`}
                 />
+                {isProvider ? (
+                    <p className="muted" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
+                        {isArabic ? 'دورك ثابت ولا يمكن تغييره — أنت مقدّم.' : 'Your role is fixed — you are a provider.'}
+                    </p>
+                ) : null}
                 <div className="split-grid">
                     <div>
                         <div className="field-group">
@@ -149,6 +153,8 @@ const Dashboard = () => {
                     </GlassCard>
                 </div>
             </GlassCard>
+
+            {isProvider ? <ProviderStudio /> : null}
         </div>
     );
 };

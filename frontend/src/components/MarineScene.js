@@ -28,6 +28,23 @@ const FLEET = [
     { id: 'course-c', kind: 'courses', w: 2.6, z: -18, speed: 0.3, dir: 1, phase: 0.5, margin: 2.0, scale: 0.38, lift: 0.4, anchorY: 0.9, focus: 'Career Readiness', kickerKey: 'fleetCourse3Kicker', orgKey: 'fleetCourse3Org', metaKey: 'fleetCourse3Meta', titleKey: 'fleetCourse3Title', descKey: 'fleetCourse3Desc' },
 ];
 
+/* Rotation settings for the live fleet. Every ROTATE_MS the ships slide one
+   position through the newest-first list, so every released job/course gets
+   airtime in release order (a new release pushes items back, never drops them). */
+const ROTATE_MS = 10000;
+const JOB_TYPE_KEY = { full: 'jobTypeFull', part: 'jobTypePart', intern: 'jobTypeIntern', contract: 'jobTypeContract' };
+
+/* Ship index within its own kind (job-a=0, job-b=1; course-a=0, course-b=1,
+   course-c=2) — used to lay each ship onto a different slice of its list. */
+const FLEET_INDEX = {};
+{
+    const count = {};
+    FLEET.forEach((v) => {
+        FLEET_INDEX[v.id] = count[v.kind] || 0;
+        count[v.kind] = (count[v.kind] || 0) + 1;
+    });
+}
+
 const MarineScene = ({ className = '' }) => {
     const { t } = useLanguage();
     const positionsRef = useRef({});
@@ -79,7 +96,15 @@ const MarineScene = ({ className = '' }) => {
     // Live content from the shared store (newest first): each boat sails with
     // the newest job/course, so freshly published provider posts appear on the
     // front boats. Refreshes on mount and on window focus so cards never go stale.
-    const [cards, setCards] = useState(null);
+    // Live content from the shared store, newest first (jobs/courses come back
+    // sorted by release time, most recent first). The ships are a rolling
+    // time-slice over that list: every ROTATE_MS the window slides forward one
+    // position, so every released job/course cycles through the ships in release
+    // order — a new release moves older items one ship back (never drops them),
+    // and when a fresh item arrives the rotation resets so the newest sails in
+    // on the front ship immediately.
+    const [content, setContent] = useState({ jobs: [], courses: [] });
+    const [rot, setRot] = useState(0);
     const cardsSig = useRef('');
     const lastFetchAt = useRef(0);
     useEffect(() => {
@@ -87,37 +112,15 @@ const MarineScene = ({ className = '' }) => {
         const load = async () => {
             const [jobs, courses] = await Promise.all([getJobs(), getCourses()]);
             if (!mounted) return;
-            const jobIt = (Array.isArray(jobs) ? jobs : [])[Symbol.iterator]();
-            const courseIt = (Array.isArray(courses) ? courses : [])[Symbol.iterator]();
-            const jobTypeKey = { full: 'jobTypeFull', part: 'jobTypePart', intern: 'jobTypeIntern', contract: 'jobTypeContract' };
-            const next = {};
-            FLEET.forEach((vessel) => {
-                const item = vessel.kind === 'jobs' ? jobIt.next().value : courseIt.next().value;
-                if (!item) return;
-                if (vessel.kind === 'jobs') {
-                    next[vessel.id] = {
-                        kicker: t('boatJobs'),
-                        title: item.role,
-                        meta: `${item.company} · ${item.location}`,
-                        desc: `${item.salary} · ${t(jobTypeKey[item.type] || 'jobTypeFull')}`,
-                        focus: item.role,
-                    };
-                } else {
-                    next[vessel.id] = {
-                        kicker: t('boatCourses'),
-                        title: item.title,
-                        meta: `${item.provider} · ${item.location}`,
-                        desc: `${item.price} · ${item.hours} ${t('courseHours')} · ${item.mode === 'online' ? t('courseOnline') : t('courseOffline')}`,
-                        focus: item.title,
-                    };
-                }
-            });
-            // Only re-render the boats when the content actually changed —
-            // avoids a pointless scene re-render on every window focus.
-            const sig = JSON.stringify(next);
+            const jl = Array.isArray(jobs) ? jobs : [];
+            const cl = Array.isArray(courses) ? courses : [];
+            // Minimal churn check: only reload the boats when the newest item or
+            // the count changed (a new release = new front id).
+            const sig = `${jl.length}:${jl[0]?.id || ''}|${cl.length}:${cl[0]?.id || ''}`;
             if (sig !== cardsSig.current) {
                 cardsSig.current = sig;
-                setCards(next);
+                setContent({ jobs: jl, courses: cl });
+                setRot(0); // newest release jumps to the front ship
             }
         };
         load();
@@ -137,6 +140,13 @@ const MarineScene = ({ className = '' }) => {
             window.removeEventListener('focus', onFocus);
         };
     }, [t]);
+
+    // Time-sensitive marquee: slide the fleet window forward on a timer so
+    // every released item cycles through the ships in release order.
+    useEffect(() => {
+        const id = window.setInterval(() => setRot((r) => r + 1), ROTATE_MS);
+        return () => window.clearInterval(id);
+    }, []);
 
     // Gull split into two wings + body so each wing can swing with life
     const gullLeft = 'M30 12 C 23 7, 14 4, 4 8 C 13 10, 22 11, 30 12 Z';
@@ -174,7 +184,25 @@ const MarineScene = ({ className = '' }) => {
                 job/course name + deep-link button. */}
             <div className="marine-fleet">
                 {FLEET.map((vessel) => {
-                    const card = cards?.[vessel.id];
+                    const list = vessel.kind === 'jobs' ? content.jobs : content.courses;
+                    const item = list.length ? list[(rot + FLEET_INDEX[vessel.id]) % list.length] : null;
+                    const card = item
+                        ? vessel.kind === 'jobs'
+                            ? {
+                                kicker: t('boatJobs'),
+                                title: item.role,
+                                meta: `${item.company} · ${item.location}`,
+                                desc: `${item.salary} · ${t(JOB_TYPE_KEY[item.type] || 'jobTypeFull')}`,
+                                focus: item.role,
+                            }
+                            : {
+                                kicker: t('boatCourses'),
+                                title: item.title,
+                                meta: `${item.provider} · ${item.location}`,
+                                desc: `${item.price} · ${item.hours} ${t('courseHours')} · ${item.mode === 'online' ? t('courseOnline') : t('courseOffline')}`,
+                                focus: item.title,
+                            }
+                        : null;
                     const title = card?.title ?? t(vessel.titleKey);
                     const kicker = card?.kicker ?? t(vessel.kickerKey);
                     const meta = card?.meta ?? `${t(vessel.orgKey)} · ${t(vessel.metaKey)}`;

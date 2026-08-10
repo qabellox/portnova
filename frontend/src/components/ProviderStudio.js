@@ -10,6 +10,9 @@ const EMPTY_COURSE = { title: '', provider: '', price: '', hours: '', mode: 'onl
 const ProviderStudio = () => {
     const { user } = useAuth();
     const { isArabic, t } = useLanguage();
+    // A provider IS a company: their registered company name is the single
+    // identity auto-filled into every job/course they publish.
+    const companyName = (user?.user_metadata?.companyName || user?.user_metadata?.fullName || '').trim();
     const [tab, setTab] = useState('jobs');
     const [job, setJob] = useState(EMPTY_JOB);
     const [course, setCourse] = useState(EMPTY_COURSE);
@@ -35,7 +38,11 @@ const ProviderStudio = () => {
 
     const publishJob = async (event) => {
         event.preventDefault();
-        await addJob({ ...job, by: user?.id });
+        if (!companyName) {
+            setMessage(isArabic ? 'أضف اسم شركتك إلى حسابك أولًا.' : 'Add your company name to your account first.');
+            return;
+        }
+        await addJob({ ...job, company: companyName, by: user?.id });
         setJob(EMPTY_JOB);
         setMessage(t('publishedJob'));
         loadMine();
@@ -43,7 +50,11 @@ const ProviderStudio = () => {
 
     const publishCourse = async (event) => {
         event.preventDefault();
-        await addCourse({ ...course, by: user?.id });
+        if (!companyName) {
+            setMessage(isArabic ? 'أضف اسم شركتك إلى حسابك أولًا.' : 'Add your company name to your account first.');
+            return;
+        }
+        await addCourse({ ...course, provider: companyName, by: user?.id });
         setCourse(EMPTY_COURSE);
         setMessage(t('publishedCourse'));
         loadMine();
@@ -77,7 +88,10 @@ const ProviderStudio = () => {
                     <div className="field-group split-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                         <div>
                             {fieldLabel(t('fieldCompany'))}
-                            <input className="field" type="text" value={job.company} onChange={(e) => setJobField('company', e.target.value)} required />
+                            <div className="field" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fcd34d' }}>
+                                🏢 {companyName || '—'}
+                            </div>
+                            <p className="muted" style={{ fontSize: '0.72rem', marginTop: '0.25rem' }}>{t('companyAutoNote')}</p>
                         </div>
                         <div>
                             {fieldLabel(t('fieldRole'))}
@@ -133,7 +147,10 @@ const ProviderStudio = () => {
                         </div>
                         <div>
                             {fieldLabel(t('fieldProvider'))}
-                            <input className="field" type="text" value={course.provider} onChange={(e) => setCourseField('provider', e.target.value)} required />
+                            <div className="field" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fcd34d' }}>
+                                🏢 {companyName || '—'}
+                            </div>
+                            <p className="muted" style={{ fontSize: '0.72rem', marginTop: '0.25rem' }}>{t('companyAutoNote')}</p>
                         </div>
                         <div>
                             {fieldLabel(t('fieldPrice'))}

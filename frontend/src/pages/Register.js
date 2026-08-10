@@ -9,6 +9,7 @@ const Register = () => {
     const { isArabic } = useLanguage();
     const navigate = useNavigate();
     const [fullName, setFullName] = useState('');
+    const [companyName, setCompanyName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('seeker');
@@ -20,11 +21,16 @@ const Register = () => {
         setLoading(true);
         setError('');
 
+        // A provider IS a company: the name field holds the company name, which
+        // becomes the provider's identity and auto-fills their published posts.
+        const name = role === 'provider' ? companyName : fullName;
+
         const { data, error: authError } = await register({
             email,
             password,
-            fullName,
+            fullName: name,
             role,
+            companyName: role === 'provider' ? name : undefined,
         });
 
         if (authError) {
@@ -91,11 +97,33 @@ const Register = () => {
 
             <GlassCard className="auth-card">
                 <Badge tone="gold">{isArabic ? 'إنشاء حساب' : 'Create account'}</Badge>
-                <SectionHeading title={isArabic ? 'تسجيل جديد' : 'Register'} subtitle={isArabic ? 'استخدم الاسم الكامل والبريد وكلمة المرور والدور للبدء.' : 'Use your full name, email, password, and role to get started.'} />
+                <SectionHeading
+                    title={isArabic ? 'تسجيل جديد' : 'Register'}
+                    subtitle={
+                        isArabic
+                            ? role === 'provider'
+                                ? 'استخدم اسم شركتك والبريد وكلمة المرور للبدء.'
+                                : 'استخدم الاسم الكامل والبريد وكلمة المرور والدور للبدء.'
+                            : role === 'provider'
+                                ? 'Use your company name, email, and password to get started.'
+                                : 'Use your full name, email, password, and role to get started.'
+                    }
+                />
                 {error ? <p className="muted" style={{ color: '#fecaca' }}>{error}</p> : null}
                 <form onSubmit={handleSubmit}>
                     <div className="field-group">
-                        <input className="field" type="text" placeholder={isArabic ? 'الاسم الكامل' : 'Full name'} value={fullName} onChange={(event) => setFullName(event.target.value)} required />
+                        <input
+                            className="field"
+                            type="text"
+                            placeholder={
+                                role === 'provider'
+                                    ? isArabic ? 'اسم الشركة' : 'Company name'
+                                    : isArabic ? 'الاسم الكامل' : 'Full name'
+                            }
+                            value={role === 'provider' ? companyName : fullName}
+                            onChange={(event) => (role === 'provider' ? setCompanyName(event.target.value) : setFullName(event.target.value))}
+                            required
+                        />
                         <input className="field" type="email" placeholder={isArabic ? 'البريد الإلكتروني' : 'Email'} value={email} onChange={(event) => setEmail(event.target.value)} required />
                         <input className="field" type="password" placeholder={isArabic ? 'كلمة المرور' : 'Password'} value={password} onChange={(event) => setPassword(event.target.value)} required />
                         <div className="field-group" style={{ gap: '0.5rem' }}>

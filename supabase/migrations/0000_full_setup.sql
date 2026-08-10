@@ -54,6 +54,7 @@ create policy "jobs provider insert" on public.jobs
   for insert with check (
     auth.uid() is not null
     and public.current_user_role() in ('provider', 'company', 'expert')
+    and created_by = auth.uid()
   );
 
 drop policy if exists "jobs owner update" on public.jobs;
@@ -67,6 +68,14 @@ create policy "jobs owner update" on public.jobs
 drop policy if exists "jobs owner delete" on public.jobs;
 create policy "jobs owner delete" on public.jobs
   for delete using (auth.uid() = created_by);
+
+drop policy if exists "jobs provider delete unowned" on public.jobs;
+create policy "jobs provider delete unowned" on public.jobs
+  for delete using (
+    auth.uid() is not null
+    and public.current_user_role() in ('provider', 'company', 'expert')
+    and created_by is null
+  );
 
 create table if not exists public.courses (
   id          uuid primary key default gen_random_uuid(),
@@ -94,6 +103,7 @@ create policy "courses provider insert" on public.courses
   for insert with check (
     auth.uid() is not null
     and public.current_user_role() in ('provider', 'company', 'expert')
+    and created_by = auth.uid()
   );
 
 drop policy if exists "courses owner update" on public.courses;
@@ -107,6 +117,14 @@ create policy "courses owner update" on public.courses
 drop policy if exists "courses owner delete" on public.courses;
 create policy "courses owner delete" on public.courses
   for delete using (auth.uid() = created_by);
+
+drop policy if exists "courses provider delete unowned" on public.courses;
+create policy "courses provider delete unowned" on public.courses
+  for delete using (
+    auth.uid() is not null
+    and public.current_user_role() in ('provider', 'company', 'expert')
+    and created_by is null
+  );
 
 -- Demo seed data (only runs while the tables are empty)
 insert into public.jobs (company, role, salary, location, category, type, experience, emoji, tone)

@@ -141,15 +141,19 @@ export const addCourse = async (course) => {
 
 export const removeJob = async (id) => {
     const { data, error } = await supabase.from('jobs').delete().eq('id', id).select();
-    if (error || !data || data.length === 0) {
-        // table missing / RLS denied, or the post only ever existed in localStorage
-        writeLS(LS_JOBS, readLS(LS_JOBS).filter((j) => j.id !== id));
+    if (!error && data && data.length > 0) {
+        return { ok: true };
     }
+    // table missing / RLS denied, or the post only ever existed in localStorage
+    writeLS(LS_JOBS, readLS(LS_JOBS).filter((j) => j.id !== id));
+    return { ok: false, reason: error ? error.message : 'blocked' };
 };
 
 export const removeCourse = async (id) => {
     const { data, error } = await supabase.from('courses').delete().eq('id', id).select();
-    if (error || !data || data.length === 0) {
-        writeLS(LS_COURSES, readLS(LS_COURSES).filter((c) => c.id !== id));
+    if (!error && data && data.length > 0) {
+        return { ok: true };
     }
+    writeLS(LS_COURSES, readLS(LS_COURSES).filter((c) => c.id !== id));
+    return { ok: false, reason: error ? error.message : 'blocked' };
 };

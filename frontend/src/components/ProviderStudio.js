@@ -25,8 +25,9 @@ const ProviderStudio = () => {
         const me = user?.id;
         const [jobs, courses] = await Promise.all([getJobs(), getCourses()]);
         setMine({
-            jobs: jobs.filter((j) => j.source === 'custom' && j.by === me),
-            courses: courses.filter((c) => c.source === 'custom' && c.by === me),
+            // own posts + unowned demo/seed items so the platform can be managed
+            jobs: jobs.filter((j) => j.source === 'custom' && (j.by === me || !j.by)),
+            courses: courses.filter((c) => c.source === 'custom' && (c.by === me || !c.by)),
         });
     };
 
@@ -257,7 +258,11 @@ const ProviderStudio = () => {
                                                 <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{item.role}</h3>
                                                 <span className="card-copy">{item.company} · {item.location}</span>
                                             </div>
-                                            <PremiumButton variant="danger" onClick={async () => { await removeJob(item.id); loadMine(); }}>
+                                            <PremiumButton variant="danger" onClick={async () => {
+                                                const res = await removeJob(item.id);
+                                                if (res && !res.ok) setMessage(isArabic ? 'تعذّر حذف هذا العنصر.' : 'Could not delete this item.');
+                                                loadMine();
+                                            }}>
                                                 {t('deleteItem')}
                                             </PremiumButton>
                                         </div>
@@ -277,7 +282,11 @@ const ProviderStudio = () => {
                                             <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{item.title}</h3>
                                             <span className="card-copy">{item.provider} · {item.location}</span>
                                         </div>
-                                        <PremiumButton variant="danger" onClick={async () => { await removeCourse(item.id); loadMine(); }}>
+                                        <PremiumButton variant="danger" onClick={async () => {
+                                            const res = await removeCourse(item.id);
+                                            if (res && !res.ok) setMessage(isArabic ? 'تعذّر حذف هذا العنصر.' : 'Could not delete this item.');
+                                            loadMine();
+                                        }}>
                                             {t('deleteItem')}
                                         </PremiumButton>
                                     </div>

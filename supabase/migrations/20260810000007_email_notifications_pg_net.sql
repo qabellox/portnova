@@ -8,8 +8,15 @@
 --
 -- HOW TO USE:
 --   1. In this file, replace RESEND_API_KEY_HERE with your Resend
---      key (it appears TWICE). Keep the quotes.
+--      key (it appears THREE times). Keep the quotes.
 --   2. Paste the whole file into Supabase → SQL Editor → Run.
+--
+-- ⚠️ FREE-TIER LIMIT: the default sender onboarding@resend.dev can
+--    ONLY deliver to the email you used to sign up at Resend. For
+--    real delivery to anyone, add a custom domain in Resend.
+--    To see WHY an email failed, after testing run:
+--      select id, status_code, error_message from net._http_response order by id desc limit 5;
+--    (200 = delivered · 401 = wrong API key · 403 = recipient blocked)
 -- =============================================================
 
 create extension if not exists pg_net;
@@ -117,3 +124,11 @@ drop trigger if exists applications_notify_status on public.applications;
 create trigger applications_notify_status
 after update on public.applications
 for each row execute function public.notify_applicant_status();
+
+-- ------------------------------------------------------------------
+-- DIAGNOSTIC (run after testing to see what Resend returned):
+--   select id, status_code, error_message, created_at
+--   from net._http_response order by id desc limit 5;
+--   200 = delivered · 401 = bad API key · 403 = recipient not allowed
+-- ------------------------------------------------------------------
+

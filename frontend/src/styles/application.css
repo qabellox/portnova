@@ -21,6 +21,10 @@
     animation: appSlide 0.22s ease-out;
 }
 
+.app-modal--small {
+    width: min(440px, 100%);
+}
+
 .app-modal__close {
     position: absolute;
     top: 0.9rem;

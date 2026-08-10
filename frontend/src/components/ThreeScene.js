@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo, useRef } from 'react';
+import React, { memo, Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
@@ -225,7 +225,7 @@ const Water = () => {
 
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.35, 0]}>
-            <planeGeometry args={[70, 70, 128, 128]} />
+            <planeGeometry args={[70, 70, 96, 96]} />
             <shaderMaterial
                 ref={mat}
                 uniforms={{
@@ -985,4 +985,4 @@ const ThreeScene = ({ className = '', fleet = [], positionsRef = null }) => (
     </div>
 );
 
-export default ThreeScene;
+export default memo(ThreeScene);

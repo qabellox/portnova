@@ -80,6 +80,8 @@ const MarineScene = ({ className = '' }) => {
     // the newest job/course, so freshly published provider posts appear on the
     // front boats. Refreshes on mount and on window focus so cards never go stale.
     const [cards, setCards] = useState(null);
+    const cardsSig = useRef('');
+    const lastFetchAt = useRef(0);
     useEffect(() => {
         let mounted = true;
         const load = async () => {
@@ -110,10 +112,25 @@ const MarineScene = ({ className = '' }) => {
                     };
                 }
             });
-            setCards(next);
+            // Only re-render the boats when the content actually changed —
+            // avoids a pointless scene re-render on every window focus.
+            const sig = JSON.stringify(next);
+            if (sig !== cardsSig.current) {
+                cardsSig.current = sig;
+                setCards(next);
+            }
         };
         load();
-        const onFocus = () => load();
+        lastFetchAt.current = Date.now();
+        // Refresh when the user returns to the tab, but never more often than
+        // once every 20s, so alt-tabbing during development doesn't hammer
+        // Supabase or re-render the scene on every focus event.
+        const onFocus = () => {
+            const now = Date.now();
+            if (now - lastFetchAt.current < 20000) return;
+            lastFetchAt.current = now;
+            load();
+        };
         window.addEventListener('focus', onFocus);
         return () => {
             mounted = false;

@@ -218,6 +218,7 @@ export const messages = {
         myItems: 'منشوراتك',
         emptyItems: 'لم تنشر شيئًا بعد.',
         deleteItem: 'حذف',
+        providerQuick: 'أنشر وأدر فرصك',
 
         // Dashboard profile
         dashAvatar: 'صورة شخصية',
@@ -456,6 +457,7 @@ export const messages = {
         myItems: 'Your posts',
         emptyItems: 'You have not published anything yet.',
         deleteItem: 'Delete',
+        providerQuick: 'Publish and manage your opportunities',
 
         // Dashboard profile
         dashAvatar: 'Profile picture',

@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { getJobs } from '../services/content';
 
 const Jobs = () => {
     const { t } = useLanguage();
+    const { isProvider } = useAuth();
     const [searchParams] = useSearchParams();
     const focusRole = searchParams.get('focus');
     const [jobs, setJobs] = useState([]);
@@ -100,33 +102,35 @@ const Jobs = () => {
                 </div>
             </GlassCard>
 
-            {/* CV: required part of the profile for applying */}
-            <GlassCard className="cv-card">
-                <SectionHeading kicker={t('cvKicker')} title={t('cvRequiredTitle')} subtitle={t('cvRequiredSubtitle')} />
-                <div className="cv-card__body">
-                    <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" hidden onChange={onPickCv} />
-                    {cvName ? (
-                        <div className="cv-card__attached">
-                            <span className="cv-card__file-icon" aria-hidden="true">📄</span>
-                            <div>
-                                <strong>{cvName}</strong>
-                                <span className="muted">{t('cvAttached')}</span>
+            {/* CV upload is a seeker action — providers don't apply, so hide it */}
+            {!isProvider ? (
+                <GlassCard className="cv-card">
+                    <SectionHeading kicker={t('cvKicker')} title={t('cvRequiredTitle')} subtitle={t('cvRequiredSubtitle')} />
+                    <div className="cv-card__body">
+                        <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" hidden onChange={onPickCv} />
+                        {cvName ? (
+                            <div className="cv-card__attached">
+                                <span className="cv-card__file-icon" aria-hidden="true">📄</span>
+                                <div>
+                                    <strong>{cvName}</strong>
+                                    <span className="muted">{t('cvAttached')}</span>
+                                </div>
+                                <PremiumButton variant="ghost" onClick={() => { setCvName(''); if (cvInputRef.current) cvInputRef.current.value = ''; }}>
+                                    {t('cvRemove')}
+                                </PremiumButton>
                             </div>
-                            <PremiumButton variant="ghost" onClick={() => { setCvName(''); if (cvInputRef.current) cvInputRef.current.value = ''; }}>
-                                {t('cvRemove')}
-                            </PremiumButton>
-                        </div>
-                    ) : (
-                        <div className="cv-card__empty">
-                            <span className="muted">{t('cvNoFile')}</span>
-                            <PremiumButton variant="gold" onClick={() => cvInputRef.current?.click()}>
-                                {t('cvUpload')}
-                            </PremiumButton>
-                            <span className="muted">{t('cvFileHint')}</span>
-                        </div>
-                    )}
-                </div>
-            </GlassCard>
+                        ) : (
+                            <div className="cv-card__empty">
+                                <span className="muted">{t('cvNoFile')}</span>
+                                <PremiumButton variant="gold" onClick={() => cvInputRef.current?.click()}>
+                                    {t('cvUpload')}
+                                </PremiumButton>
+                                <span className="muted">{t('cvFileHint')}</span>
+                            </div>
+                        )}
+                    </div>
+                </GlassCard>
+            ) : null}
 
             {filtered.length ? (
                 <div className="card-grid card-grid--compact">
@@ -163,9 +167,11 @@ const Jobs = () => {
                                 <span className="course-detail__item">📅 {job.posted === 1 ? t('jobPostedToday') : t('jobPostedDays', { n: job.posted })}</span>
                             </div>
 
-                            <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                                <PremiumButton variant="gold">{t('apply')}</PremiumButton>
-                            </div>
+                            {!isProvider ? (
+                                <div className="inline-actions" style={{ marginTop: '1rem' }}>
+                                    <PremiumButton variant="gold">{t('apply')}</PremiumButton>
+                                </div>
+                            ) : null}
                         </GlassCard>
                     ))}
                 </div>

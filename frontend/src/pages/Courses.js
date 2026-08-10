@@ -2,10 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { getCourses } from '../services/content';
 
 const Courses = () => {
     const { t } = useLanguage();
+    const { isProvider } = useAuth();
     const [searchParams] = useSearchParams();
     const focusTitle = searchParams.get('focus');
     const [courses, setCourses] = useState([]);
@@ -110,9 +112,11 @@ const Courses = () => {
                                 <span className="course-detail__item">📅 {course.date}</span>
                             </div>
 
-                            <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                                <PremiumButton variant="gold">{t('enroll')}</PremiumButton>
-                            </div>
+                            {!isProvider ? (
+                                <div className="inline-actions" style={{ marginTop: '1rem' }}>
+                                    <PremiumButton variant="gold">{t('enroll')}</PremiumButton>
+                                </div>
+                            ) : null}
                         </GlassCard>
                     ))}
                 </div>

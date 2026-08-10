@@ -144,12 +144,19 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <GlassCard className="quick-card">
-                        <SectionHeading kicker={t('dashQuick')} title={isArabic ? 'ابدأ الآن' : 'Get started'} />
-                        <div className="inline-actions quick-card__actions">
-                            <PremiumButton variant="primary" to="/jobs">{isArabic ? 'تصفح الوظائف' : 'Browse jobs'}</PremiumButton>
-                            <PremiumButton variant="primary" to="/courses">{isArabic ? 'تصفح الدورات' : 'Browse courses'}</PremiumButton>
-                            <PremiumButton variant="gold" to="/cv-service">{isArabic ? 'خدمة السيرة الذاتية' : 'CV service'}</PremiumButton>
-                        </div>
+                        <SectionHeading kicker={t('dashQuick')} title={isProvider ? t('providerQuick') : (isArabic ? 'ابدأ الآن' : 'Get started')} />
+                        {isProvider ? (
+                            <div className="inline-actions quick-card__actions">
+                                <PremiumButton variant="gold" to="/jobs">{t('viewJobs')}</PremiumButton>
+                                <PremiumButton variant="gold" to="/courses">{t('viewCourses')}</PremiumButton>
+                            </div>
+                        ) : (
+                            <div className="inline-actions quick-card__actions">
+                                <PremiumButton variant="primary" to="/jobs">{isArabic ? 'تصفح الوظائف' : 'Browse jobs'}</PremiumButton>
+                                <PremiumButton variant="primary" to="/courses">{isArabic ? 'تصفح الدورات' : 'Browse courses'}</PremiumButton>
+                                <PremiumButton variant="gold" to="/cv-service">{isArabic ? 'خدمة السيرة الذاتية' : 'CV service'}</PremiumButton>
+                            </div>
+                        )}
                     </GlassCard>
                 </div>
             </GlassCard>

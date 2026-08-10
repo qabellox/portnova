@@ -1,12 +1,17 @@
 /**
  * Shared content store for jobs & courses.
  *
- * Providers publish jobs/courses from their dashboard; seekers see them on
- * the Jobs & Courses pages. Items are persisted in localStorage so the flow
- * works end-to-end with no backend dependency and survives reloads.
- * (Swap these functions for Supabase calls when the backend is deployed —
- *  nothing else in the app changes.)
+ * Phase 1 (real data layer): jobs & courses are backed by Postgres via
+ * Supabase with row-level security. Providers publish from their dashboard
+ * and seekers see the same records on the Jobs & Courses pages.
+ *
+ * The store degrades gracefully: if the `jobs`/`courses` tables are not
+ * deployed yet (or a query fails), it falls back to the old localStorage +
+ * seed behaviour so the app keeps working. Run the migration in
+ * supabase/migrations/20260810000001_create_jobs_courses.sql to switch it on.
  */
+
+import { supabase } from './supabase';
 
 const SEED_JOBS = [
     { id: 'seed-job-1', company: 'Nova Labs', role: 'Frontend Product Intern', salary: '$450/mo', location: 'Port Said', category: 'Tech', type: 'intern', experience: 'entry', posted: 2, tone: 'blue', emoji: '💻' },
@@ -47,21 +52,104 @@ const writeLS = (key, arr) => {
 
 const uid = () => `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-/* Custom posts appear above the built-in seed items (newest first). */
-export const getJobs = () => [...readLS(LS_JOBS), ...SEED_JOBS];
-export const getCourses = () => [...readLS(LS_COURSES), ...SEED_COURSES];
+/* Only pick columns that exist on the Supabase tables (spreading the whole
+   form object would include fields like `by` that are not columns). */
+const JOB_COLUMNS = ['company', 'role', 'salary', 'location', 'category', 'type', 'experience', 'emoji', 'tone'];
+const COURSE_COLUMNS = ['title', 'provider', 'price', 'hours', 'mode', 'location', 'date', 'level', 'emoji', 'tone'];
 
-export const addJob = (job) => {
+const pick = (obj, keys) => {
+    const out = {};
+    for (const k of keys) if (obj[k] !== undefined) out[k] = obj[k];
+    return out;
+};
+
+const jobFromRow = (row) => ({
+    id: row.id,
+    company: row.company,
+    role: row.role,
+    salary: row.salary,
+    location: row.location,
+    category: row.category,
+    type: row.type,
+    experience: row.experience,
+    emoji: row.emoji,
+    tone: row.tone || 'gold',
+    posted: 0,
+    source: 'custom',
+    by: row.created_by ?? null,
+});
+
+const courseFromRow = (row) => ({
+    id: row.id,
+    title: row.title,
+    provider: row.provider,
+    price: row.price,
+    hours: row.hours,
+    mode: row.mode,
+    location: row.location,
+    date: row.date,
+    level: row.level,
+    emoji: row.emoji,
+    tone: row.tone || 'gold',
+    source: 'custom',
+    by: row.created_by ?? null,
+});
+
+/* Phase 1: read/write Postgres through Supabase. If the tables aren't
+   deployed yet (or a query fails), fall back to localStorage + seeds. */
+export const getJobs = async () => {
+    const { data, error } = await supabase.from('jobs').select('*').order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) {
+        return data.map(jobFromRow);
+    }
+    return [...readLS(LS_JOBS), ...SEED_JOBS];
+};
+
+export const getCourses = async () => {
+    const { data, error } = await supabase.from('courses').select('*').order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) {
+        return data.map(courseFromRow);
+    }
+    return [...readLS(LS_COURSES), ...SEED_COURSES];
+};
+
+export const addJob = async (job) => {
+    const { data, error } = await supabase
+        .from('jobs')
+        .insert({ ...pick(job, JOB_COLUMNS), created_by: job.by ?? null })
+        .select();
+    if (!error && data?.[0]) {
+        return jobFromRow(data[0]);
+    }
     const item = { id: uid(), source: 'custom', posted: 0, tone: 'gold', ...job };
     writeLS(LS_JOBS, [item, ...readLS(LS_JOBS)]);
     return item;
 };
 
-export const addCourse = (course) => {
+export const addCourse = async (course) => {
+    const { data, error } = await supabase
+        .from('courses')
+        .insert({ ...pick(course, COURSE_COLUMNS), created_by: course.by ?? null })
+        .select();
+    if (!error && data?.[0]) {
+        return courseFromRow(data[0]);
+    }
     const item = { id: uid(), source: 'custom', tone: 'gold', ...course };
     writeLS(LS_COURSES, [item, ...readLS(LS_COURSES)]);
     return item;
 };
 
-export const removeJob = (id) => writeLS(LS_JOBS, readLS(LS_JOBS).filter((j) => j.id !== id));
-export const removeCourse = (id) => writeLS(LS_COURSES, readLS(LS_COURSES).filter((c) => c.id !== id));
+export const removeJob = async (id) => {
+    const { data, error } = await supabase.from('jobs').delete().eq('id', id).select();
+    if (error || !data || data.length === 0) {
+        // table missing / RLS denied, or the post only ever existed in localStorage
+        writeLS(LS_JOBS, readLS(LS_JOBS).filter((j) => j.id !== id));
+    }
+};
+
+export const removeCourse = async (id) => {
+    const { data, error } = await supabase.from('courses').delete().eq('id', id).select();
+    if (error || !data || data.length === 0) {
+        writeLS(LS_COURSES, readLS(LS_COURSES).filter((c) => c.id !== id));
+    }
+};

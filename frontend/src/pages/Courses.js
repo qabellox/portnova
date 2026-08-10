@@ -16,7 +16,13 @@ const Courses = () => {
     const focusRef = useRef(null);
 
     useEffect(() => {
-        setCourses(getCourses());
+        let mounted = true;
+        getCourses().then((items) => {
+            if (mounted) setCourses(items);
+        });
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     useEffect(() => {

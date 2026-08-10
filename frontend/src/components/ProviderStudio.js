@@ -16,11 +16,12 @@ const ProviderStudio = () => {
     const [mine, setMine] = useState({ jobs: [], courses: [] });
     const [message, setMessage] = useState('');
 
-    const loadMine = () => {
+    const loadMine = async () => {
         const me = user?.id;
+        const [jobs, courses] = await Promise.all([getJobs(), getCourses()]);
         setMine({
-            jobs: getJobs().filter((j) => j.source === 'custom' && j.by === me),
-            courses: getCourses().filter((c) => c.source === 'custom' && c.by === me),
+            jobs: jobs.filter((j) => j.source === 'custom' && j.by === me),
+            courses: courses.filter((c) => c.source === 'custom' && c.by === me),
         });
     };
 
@@ -32,17 +33,17 @@ const ProviderStudio = () => {
     const setJobField = (key, value) => setJob((prev) => ({ ...prev, [key]: value }));
     const setCourseField = (key, value) => setCourse((prev) => ({ ...prev, [key]: value }));
 
-    const publishJob = (event) => {
+    const publishJob = async (event) => {
         event.preventDefault();
-        addJob({ ...job, by: user?.id });
+        await addJob({ ...job, by: user?.id });
         setJob(EMPTY_JOB);
         setMessage(t('publishedJob'));
         loadMine();
     };
 
-    const publishCourse = (event) => {
+    const publishCourse = async (event) => {
         event.preventDefault();
-        addCourse({ ...course, by: user?.id });
+        await addCourse({ ...course, by: user?.id });
         setCourse(EMPTY_COURSE);
         setMessage(t('publishedCourse'));
         loadMine();
@@ -189,7 +190,7 @@ const ProviderStudio = () => {
                                             <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{item.role}</h3>
                                             <span className="card-copy">{item.company} · {item.location}</span>
                                         </div>
-                                        <PremiumButton variant="danger" onClick={() => { removeJob(item.id); loadMine(); }}>
+                                        <PremiumButton variant="danger" onClick={async () => { await removeJob(item.id); loadMine(); }}>
                                             {t('deleteItem')}
                                         </PremiumButton>
                                     </div>
@@ -209,7 +210,7 @@ const ProviderStudio = () => {
                                         <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{item.title}</h3>
                                         <span className="card-copy">{item.provider} · {item.location}</span>
                                     </div>
-                                    <PremiumButton variant="danger" onClick={() => { removeCourse(item.id); loadMine(); }}>
+                                    <PremiumButton variant="danger" onClick={async () => { await removeCourse(item.id); loadMine(); }}>
                                         {t('deleteItem')}
                                     </PremiumButton>
                                 </div>

@@ -19,7 +19,13 @@ const Jobs = () => {
     const focusRef = useRef(null);
 
     useEffect(() => {
-        setJobs(getJobs());
+        let mounted = true;
+        getJobs().then((items) => {
+            if (mounted) setJobs(items);
+        });
+        return () => {
+            mounted = false;
+        };
     }, []);
 
     useEffect(() => {

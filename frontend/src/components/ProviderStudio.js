@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { addCourse, addJob, getCourses, getJobs, removeCourse, removeJob } from '../services/content';
-import { getJobApplicants, openCv } from '../services/applications';
+import { getJobApplicants, openCv, updateApplicationStatus } from '../services/applications';
 import { Badge, GlassCard, PremiumButton, SectionHeading } from './PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -34,6 +34,15 @@ const ProviderStudio = () => {
     const loadApplicants = async () => {
         const apps = await getJobApplicants();
         setApplicants(apps);
+    };
+
+    const setAppStatus = async (id, status) => {
+        const res = await updateApplicationStatus(id, status);
+        if (res && res.ok) {
+            loadApplicants();
+        } else {
+            setMessage(isArabic ? 'تعذّر تحديث حالة المتقدم.' : 'Could not update applicant status.');
+        }
     };
 
     useEffect(() => {
@@ -218,7 +227,9 @@ const ProviderStudio = () => {
                                 <GlassCard key={app.id} className="data-card">
                                     <div className="card-head">
                                         <div>
-                                            <Badge tone="gold">⏳ {t('applied')}</Badge>
+                                            <Badge tone={app.appStatus === 'accepted' ? 'success' : app.appStatus === 'rejected' ? 'danger' : 'gold'}>
+                                                {app.appStatus === 'accepted' ? `✅ ${t('statusAccepted')}` : app.appStatus === 'rejected' ? `✖️ ${t('statusRejected')}` : `⏳ ${t('applied')}`}
+                                            </Badge>
                                             <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{app.fullName}</h3>
                                             <span className="card-copy">{app.job ? `${app.job.role} · ${app.job.company}` : app.email}</span>
                                         </div>
@@ -235,6 +246,14 @@ const ProviderStudio = () => {
                                     {app.cvPath ? (
                                         <PremiumButton variant="ghost" onClick={() => openCv(app.cvPath)}>{t('openCv')}</PremiumButton>
                                     ) : null}
+                                    <div className="inline-actions" style={{ marginTop: '0.75rem' }}>
+                                        <PremiumButton variant="primary" onClick={() => setAppStatus(app.id, 'accepted')} disabled={app.appStatus === 'accepted'}>
+                                            ✅ {t('acceptBtn')}
+                                        </PremiumButton>
+                                        <PremiumButton variant="danger" onClick={() => setAppStatus(app.id, 'rejected')} disabled={app.appStatus === 'rejected'}>
+                                            ✖️ {t('rejectBtn')}
+                                        </PremiumButton>
+                                    </div>
                                     {app.skills ? <p className="muted card-copy" style={{ fontSize: '0.82rem' }}>{app.skills}</p> : null}
                                     {app.coverLetter ? <p className="muted" style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>{app.coverLetter}</p> : null}
                                 </GlassCard>

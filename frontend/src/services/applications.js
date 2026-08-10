@@ -71,6 +71,7 @@ export const submitApplication = async ({ cvFile, ...application }) => {
     const item = {
         id: `a-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
         ...application,
+        appStatus: 'pending',
         createdAt: new Date().toISOString(),
     };
     writeLS(LS_APPS, [item, ...readLS(LS_APPS)]);
@@ -97,6 +98,7 @@ const appFromRow = (row) => ({
     referral: row.referral_source,
     cvName: row.cv_name,
     cvPath: row.cv_path,
+    appStatus: row.app_status || 'pending',
     createdAt: row.created_at,
 });
 
@@ -136,4 +138,17 @@ export const openCv = async (cvPath) => {
     if (!error && data?.signedUrl) {
         window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
     }
+};
+
+/* A job owner updates an applicant's status (pending → accepted/rejected). */
+export const updateApplicationStatus = async (id, appStatus) => {
+    const { data, error } = await supabase
+        .from('applications')
+        .update({ app_status: appStatus })
+        .eq('id', id)
+        .select();
+    if (!error && data?.[0]) {
+        return { ok: true, app: appFromRow(data[0]) };
+    }
+    return { ok: false, reason: error ? error.message : 'blocked' };
 };

@@ -184,7 +184,9 @@ const Dashboard = () => {
                                 <GlassCard key={app.id} className="data-card">
                                     <div className="card-head">
                                         <div>
-                                            <Badge tone="gold">⏳ {t('applied')}</Badge>
+                                            <Badge tone={app.appStatus === 'accepted' ? 'success' : app.appStatus === 'rejected' ? 'danger' : 'gold'}>
+                                                {app.appStatus === 'accepted' ? `✅ ${t('statusAccepted')}` : app.appStatus === 'rejected' ? `✖️ ${t('statusRejected')}` : `⏳ ${t('applied')}`}
+                                            </Badge>
                                             <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{app.job?.role || t('appUntitled')}</h3>
                                             <span className="card-copy">{app.job ? `${app.job.company} · ${app.job.location}` : app.email}</span>
                                         </div>

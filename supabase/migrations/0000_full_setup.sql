@@ -161,6 +161,7 @@ create table if not exists public.applications (
   phone text,
   city text,
   status text,
+  app_status text not null default 'pending',
   education text,
   experience_years numeric,
   skills text,
@@ -186,6 +187,15 @@ create policy "applicants read own" on public.applications
 drop policy if exists "job owner read applicants" on public.applications;
 create policy "job owner read applicants" on public.applications
   for select using (
+    exists (select 1 from public.jobs j where j.id = applications.job_id and j.created_by = auth.uid())
+  );
+
+drop policy if exists "job owner update applicants" on public.applications;
+create policy "job owner update applicants" on public.applications
+  for update using (
+    exists (select 1 from public.jobs j where j.id = applications.job_id and j.created_by = auth.uid())
+  )
+  with check (
     exists (select 1 from public.jobs j where j.id = applications.job_id and j.created_by = auth.uid())
   );
 

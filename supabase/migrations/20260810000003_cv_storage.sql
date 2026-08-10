@@ -4,14 +4,15 @@
 -- HOW TO RUN: Supabase → SQL Editor → New query → paste → Run
 -- (run AFTER the 0002 applications migration)
 --
+-- NOTE: no `alter table storage.objects` here — that internal table is
+-- owned by Supabase and RLS is already on for it.
+--
 -- * Creates a PRIVATE `cvs` bucket
 -- * Users can upload/read/update/delete only their OWN files
 --   (files live under a folder named with the user's id)
 -- * The provider who owns a job can READ that job's applicants' CVs
 -- * Adds cv_path to applications so each application points at its file
 -- =============================================================
-
-alter table storage.objects enable row level security;
 
 insert into storage.buckets (id, name, public) values ('cvs', 'cvs', false)
 on conflict (id) do nothing;

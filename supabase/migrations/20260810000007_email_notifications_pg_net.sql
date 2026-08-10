@@ -9,14 +9,14 @@
 -- HOW TO USE:
 --   1. In this file, replace RESEND_API_KEY_HERE with your Resend
 --      key (it appears THREE times). Keep the quotes.
---   2. Paste the whole file into Supabase → SQL Editor → Run.
+--   2. Paste the whole file into Supabase -> SQL Editor -> Run.
 --
--- ⚠️ FREE-TIER LIMIT: the default sender onboarding@resend.dev can
+-- FREE-TIER LIMIT: the default sender onboarding@resend.dev can
 --    ONLY deliver to the email you used to sign up at Resend. For
 --    real delivery to anyone, add a custom domain in Resend.
 --    To see WHY an email failed, after testing run:
 --      select id, status_code, error_message from net._http_response order by id desc limit 5;
---    (200 = delivered · 401 = wrong API key · 403 = recipient blocked)
+--    (200 = delivered / 401 = wrong API key / 403 = recipient blocked)
 -- =============================================================
 
 create extension if not exists pg_net;
@@ -59,7 +59,7 @@ begin
         '<b>Email:</b> ' || coalesce(new.email, '') || '<br/>' ||
         '<b>Phone:</b> ' || coalesce(new.phone, '-') || '<br/>' ||
         '<b>City:</b> ' || coalesce(new.city, '-') || '</p>' ||
-        '<p>Review it in your Studio → Applicants.</p>'
+        '<p>Review it in your Studio -> Applicants.</p>'
     )
   );
   return new;
@@ -97,9 +97,9 @@ begin
       body := jsonb_build_object(
         'from', 'PortNova <onboarding@resend.dev>',
         'to', jsonb_build_array(new.email),
-        'subject', '🎉 Application accepted - ' || coalesce(j_role, 'the role'),
+        'subject', 'Application accepted - ' || coalesce(j_role, 'the role'),
         'html', '<p>Great news! <b>' || coalesce(j_company, 'The company') || '</b> accepted your application for <b>' ||
-                coalesce(j_role, 'the role') || '</b>.</p><p>They will contact you at ' || new.email || '. Good luck! 🚀</p>'
+                coalesce(j_role, 'the role') || '</b>.</p><p>They will contact you at ' || new.email || '. Good luck!</p>'
       )
     );
   else
@@ -112,7 +112,7 @@ begin
         'subject', 'Update on your application - ' || coalesce(j_role, 'the role'),
         'html', '<p>Thank you for applying for <b>' || coalesce(j_role, 'the role') || '</b> at <b>' ||
                 coalesce(j_company, 'the company') || '</b>.</p><p>Unfortunately, they moved on with other candidates this time. ' ||
-                'Don''t give up — new opportunities are posted on PortNova regularly.</p>'
+                'Don''t give up - new opportunities are posted on PortNova regularly.</p>'
       )
     );
   end if;
@@ -129,6 +129,5 @@ for each row execute function public.notify_applicant_status();
 -- DIAGNOSTIC (run after testing to see what Resend returned):
 --   select id, status_code, error_message, created_at
 --   from net._http_response order by id desc limit 5;
---   200 = delivered · 401 = bad API key · 403 = recipient not allowed
+--   200 = delivered / 401 = bad API key / 403 = recipient not allowed
 -- ------------------------------------------------------------------
-

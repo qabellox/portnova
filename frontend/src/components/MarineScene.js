@@ -1,6 +1,7 @@
-﻿import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { getCourses, getJobs } from '../services/content';
 import ThreeScene from './ThreeScene';
 
 /**
@@ -75,6 +76,51 @@ const MarineScene = ({ className = '' }) => {
         return () => cancelAnimationFrame(rafId);
     }, []);
 
+    // Live content from the shared store (newest first): each boat sails with
+    // the newest job/course, so freshly published provider posts appear on the
+    // front boats. Refreshes on mount and on window focus so cards never go stale.
+    const [cards, setCards] = useState(null);
+    useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+            const [jobs, courses] = await Promise.all([getJobs(), getCourses()]);
+            if (!mounted) return;
+            const jobIt = (Array.isArray(jobs) ? jobs : [])[Symbol.iterator]();
+            const courseIt = (Array.isArray(courses) ? courses : [])[Symbol.iterator]();
+            const jobTypeKey = { full: 'jobTypeFull', part: 'jobTypePart', intern: 'jobTypeIntern', contract: 'jobTypeContract' };
+            const next = {};
+            FLEET.forEach((vessel) => {
+                const item = vessel.kind === 'jobs' ? jobIt.next().value : courseIt.next().value;
+                if (!item) return;
+                if (vessel.kind === 'jobs') {
+                    next[vessel.id] = {
+                        kicker: t('boatJobs'),
+                        title: item.role,
+                        meta: `${item.company} · ${item.location}`,
+                        desc: `${item.salary} · ${t(jobTypeKey[item.type] || 'jobTypeFull')}`,
+                        focus: item.role,
+                    };
+                } else {
+                    next[vessel.id] = {
+                        kicker: t('boatCourses'),
+                        title: item.title,
+                        meta: `${item.provider} · ${item.location}`,
+                        desc: `${item.price} · ${item.hours} ${t('courseHours')} · ${item.mode === 'online' ? t('courseOnline') : t('courseOffline')}`,
+                        focus: item.title,
+                    };
+                }
+            });
+            setCards(next);
+        };
+        load();
+        const onFocus = () => load();
+        window.addEventListener('focus', onFocus);
+        return () => {
+            mounted = false;
+            window.removeEventListener('focus', onFocus);
+        };
+    }, [t]);
+
     // Gull split into two wings + body so each wing can swing with life
     const gullLeft = 'M30 12 C 23 7, 14 4, 4 8 C 13 10, 22 11, 30 12 Z';
     const gullRight = 'M30 12 C 37 7, 46 4, 56 8 C 47 10, 38 11, 30 12 Z';
@@ -110,43 +156,49 @@ const MarineScene = ({ className = '' }) => {
             {/* Info cards follow each 3D boat; hover/tap reveals the real
                 job/course name + deep-link button. */}
             <div className="marine-fleet">
-                {FLEET.map((vessel) => (
-                    <div
-                        key={vessel.id}
-                        className={`marine-vessel marine-vessel--${vessel.kind}`}
-                        ref={(el) => { vesselRefs.current[vessel.id] = el; }}
-                        tabIndex="0"
-                        role="button"
-                        aria-label={t(vessel.titleKey)}
-                        onClick={(event) => event.currentTarget.focus()}
-                        onKeyDown={(event) => {
-                            if (event.key === 'Enter' || event.key === ' ') event.currentTarget.focus();
-                        }}
-                    >
-                        <div className="marine-vessel__card">
-                            <span className="marine-vessel__kicker">
-                                {vessel.kind === 'jobs' ? '⚓ ' : '🧭 '}
-                                {t(vessel.kickerKey)}
-                            </span>
-                            <strong className="marine-vessel__title">{t(vessel.titleKey)}</strong>
-                            <span className="marine-vessel__meta">
-                                {t(vessel.orgKey)} · {t(vessel.metaKey)}
-                            </span>
-                            <span className="marine-vessel__desc">{t(vessel.descKey)}</span>
-                            <Link
-                                className="marine-vessel__btn"
-                                to={
-                                    vessel.kind === 'jobs'
-                                        ? `/jobs?focus=${encodeURIComponent(vessel.focus)}`
-                                        : `/courses?focus=${encodeURIComponent(vessel.focus)}`
-                                }
-                                tabIndex="-1"
-                            >
-                                {vessel.kind === 'jobs' ? t('boatSeeJobs') : t('boatSeeCourses')}
-                            </Link>
+                {FLEET.map((vessel) => {
+                    const card = cards?.[vessel.id];
+                    const title = card?.title ?? t(vessel.titleKey);
+                    const kicker = card?.kicker ?? t(vessel.kickerKey);
+                    const meta = card?.meta ?? `${t(vessel.orgKey)} · ${t(vessel.metaKey)}`;
+                    const desc = card?.desc ?? t(vessel.descKey);
+                    const focus = card?.focus ?? vessel.focus;
+                    return (
+                        <div
+                            key={vessel.id}
+                            className={`marine-vessel marine-vessel--${vessel.kind}`}
+                            ref={(el) => { vesselRefs.current[vessel.id] = el; }}
+                            tabIndex="0"
+                            role="button"
+                            aria-label={title}
+                            onClick={(event) => event.currentTarget.focus()}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') event.currentTarget.focus();
+                            }}
+                        >
+                            <div className="marine-vessel__card">
+                                <span className="marine-vessel__kicker">
+                                    {vessel.kind === 'jobs' ? '⚓ ' : '🧭 '}
+                                    {kicker}
+                                </span>
+                                <strong className="marine-vessel__title">{title}</strong>
+                                <span className="marine-vessel__meta">{meta}</span>
+                                <span className="marine-vessel__desc">{desc}</span>
+                                <Link
+                                    className="marine-vessel__btn"
+                                    to={
+                                        vessel.kind === 'jobs'
+                                            ? `/jobs?focus=${encodeURIComponent(focus)}`
+                                            : `/courses?focus=${encodeURIComponent(focus)}`
+                                    }
+                                    tabIndex="-1"
+                                >
+                                    {vessel.kind === 'jobs' ? t('boatSeeJobs') : t('boatSeeCourses')}
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

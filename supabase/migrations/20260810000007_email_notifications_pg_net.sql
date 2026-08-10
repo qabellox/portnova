@@ -1,5 +1,5 @@
 -- =============================================================
--- PortNova — Autonomous email notifications (pure SQL, no CLI)
+-- PortNova â€” Autonomous email notifications (pure SQL, no CLI)
 -- -------------------------------------------------------------
 -- Uses pg_net (built into Supabase) so NO Edge Function / CLI /
 -- GitHub integration is needed. Emails fire automatically:

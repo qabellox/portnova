@@ -90,9 +90,13 @@ const ProviderStudio = () => {
             setMessage(isArabic ? 'أضف اسم شركتك إلى حسابك أولًا.' : 'Add your company name to your account first.');
             return;
         }
-        await addJob({ ...job, company: companyName, by: user?.id });
-        setJob(EMPTY_JOB);
-        setMessage(t('publishedJob'));
+        try {
+            await addJob({ ...job, company: companyName, by: user?.id });
+            setJob(EMPTY_JOB);
+            setMessage(t('publishedJob'));
+        } catch (err) {
+            setMessage(isArabic ? 'تعذّر نشر الوظيفة.' : 'Could not publish the job.');
+        }
         loadMine();
     };
 
@@ -102,9 +106,13 @@ const ProviderStudio = () => {
             setMessage(isArabic ? 'أضف اسم شركتك إلى حسابك أولًا.' : 'Add your company name to your account first.');
             return;
         }
-        await addCourse({ ...course, provider: companyName, by: user?.id });
-        setCourse(EMPTY_COURSE);
-        setMessage(t('publishedCourse'));
+        try {
+            await addCourse({ ...course, provider: companyName, by: user?.id });
+            setCourse(EMPTY_COURSE);
+            setMessage(t('publishedCourse'));
+        } catch (err) {
+            setMessage(isArabic ? 'تعذّر نشر الدورة.' : 'Could not publish the course.');
+        }
         loadMine();
     };
 

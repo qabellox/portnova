@@ -64,31 +64,32 @@ const JobApplicationModal = ({ job, onClose }) => {
             return;
         }
         setSubmitting(true);
-        const result = await submitApplication({
-            jobId: job.id,
-            userId: user?.id,
-            fullName: fullName.trim(),
-            email: email.trim(),
-            phone: phone.trim(),
-            city: city.trim(),
-            status,
-            education,
-            experienceYears: experienceYears.trim(),
-            skills: skills.trim(),
-            coverLetter: coverLetter.trim(),
-            availability,
-            portfolioUrl: portfolioUrl.trim(),
-            linkedin: linkedin.trim(),
-            referral,
-            cvFile,
-            cvName,
-        });
-        setSubmitting(false);
-        if (result?.ok) {
+        try {
+            const result = await submitApplication({
+                jobId: job.id,
+                userId: user?.id,
+                fullName: fullName.trim(),
+                email: email.trim(),
+                phone: phone.trim(),
+                city: city.trim(),
+                status,
+                education,
+                experienceYears: experienceYears.trim(),
+                skills: skills.trim(),
+                coverLetter: coverLetter.trim(),
+                availability,
+                portfolioUrl: portfolioUrl.trim(),
+                linkedin: linkedin.trim(),
+                referral,
+                cvFile,
+                cvName,
+            });
             setStored(result.stored || '');
             setDone(true);
-        } else {
-            setError(t('appSubmitError'));
+        } catch (err) {
+            setError(err?.message || t('appSubmitError'));
+        } finally {
+            setSubmitting(false);
         }
     };
 

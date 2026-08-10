@@ -18,7 +18,7 @@ update public.applications set app_status = 'offer'        where app_status = 'a
 update public.applications set app_status = 'not_selected' where app_status = 'rejected';
 
 -- ------------------------------------------------------------------
--- Email trigger for the new stages (placeholder key — replace it)
+-- Email trigger for the new stages (placeholder key â€” replace it)
 -- ------------------------------------------------------------------
 create or replace function public.notify_applicant_status()
 returns trigger

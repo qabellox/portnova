@@ -4,28 +4,10 @@ import { getJobs } from './content';
 /**
  * Job applications — the structured youth data the platform collects.
  *
- * Persists to Postgres via Supabase (`applications` table, run the
- * 0002 migration). If the table isn't deployed yet, it falls back to
- * localStorage so the flow never breaks mid-switch (same pattern as content.js).
+ * SINGLE SOURCE OF TRUTH: applications live only in Postgres via Supabase.
+ * A failed insert throws (the UI shows it) instead of silently storing to
+ * localStorage where no one else would ever see it.
  */
-
-const LS_APPS = 'portnova_applications';
-
-const readLS = (key) => {
-    try {
-        return JSON.parse(window.localStorage.getItem(key) || '[]');
-    } catch {
-        return [];
-    }
-};
-
-const writeLS = (key, arr) => {
-    try {
-        window.localStorage.setItem(key, JSON.stringify(arr));
-    } catch {
-        /* storage unavailable — ignore */
-    }
-};
 
 export const submitApplication = async ({ cvFile, ...application }) => {
     // Upload the CV to private Supabase Storage (folder = the applicant's id),
@@ -63,19 +45,10 @@ export const submitApplication = async ({ cvFile, ...application }) => {
         })
         .select();
 
-    if (!error && data?.[0]) {
-        return { ok: true, id: data[0].id, stored: 'db' };
+    if (error || !data?.[0]) {
+        throw new Error(error?.message || 'Could not submit application');
     }
-
-    // Table missing / RLS denied → localStorage fallback.
-    const item = {
-        id: `a-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-        ...application,
-        appStatus: 'new',
-        createdAt: new Date().toISOString(),
-    };
-    writeLS(LS_APPS, [item, ...readLS(LS_APPS)]);
-    return { ok: true, id: item.id, stored: 'local' };
+    return { ok: true, id: data[0].id, stored: 'db' };
 };
 
 const LEGACY = { pending: 'new', accepted: 'offer', rejected: 'not_selected' };
@@ -126,10 +99,11 @@ export const getMyApplications = async () => {
         .from('applications')
         .select('*')
         .order('created_at', { ascending: false });
-    if (!error && Array.isArray(data)) {
-        return withJob(data.map(appFromRow));
+    if (error) {
+        console.error('getMyApplications failed:', error.message);
+        return [];
     }
-    return withJob(readLS(LS_APPS));
+    return withJob((data || []).map(appFromRow));
 };
 
 /* A provider's applicants: RLS returns only applications for jobs they own. */
@@ -138,10 +112,11 @@ export const getJobApplicants = async () => {
         .from('applications')
         .select('*')
         .order('created_at', { ascending: false });
-    if (!error && Array.isArray(data)) {
-        return withJob(data.map(appFromRow));
+    if (error) {
+        console.error('getJobApplicants failed:', error.message);
+        return [];
     }
-    return [];
+    return withJob((data || []).map(appFromRow));
 };
 
 /* Open a CV via a short-lived signed URL (applicant owner / job owner only). */

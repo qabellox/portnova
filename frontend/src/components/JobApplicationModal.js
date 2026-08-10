@@ -21,7 +21,6 @@ const JobApplicationModal = ({ job, onClose }) => {
     const [experienceYears, setExperienceYears] = useState('');
     const [skills, setSkills] = useState('');
     const [coverLetter, setCoverLetter] = useState('');
-    const [expectedSalary, setExpectedSalary] = useState('');
     const [availability, setAvailability] = useState('immediate');
     const [portfolioUrl, setPortfolioUrl] = useState('');
     const [linkedin, setLinkedin] = useState('');
@@ -77,7 +76,6 @@ const JobApplicationModal = ({ job, onClose }) => {
             experienceYears: experienceYears.trim(),
             skills: skills.trim(),
             coverLetter: coverLetter.trim(),
-            expectedSalary: expectedSalary.trim(),
             availability,
             portfolioUrl: portfolioUrl.trim(),
             linkedin: linkedin.trim(),
@@ -227,10 +225,6 @@ const JobApplicationModal = ({ job, onClose }) => {
                                 <div className="app-form__wide">
                                     {fieldLabel(t('appCover'))}
                                     <textarea className="field" rows="3" placeholder={t('appCoverPlaceholder')} value={coverLetter} onChange={(e) => setCoverLetter(e.target.value)} />
-                                </div>
-                                <div>
-                                    {fieldLabel(t('appSalary'))}
-                                    <input className="field" type="text" placeholder="$500/mo" value={expectedSalary} onChange={(e) => setExpectedSalary(e.target.value)} />
                                 </div>
                                 <div>
                                     {fieldLabel(t('appPortfolio'))}

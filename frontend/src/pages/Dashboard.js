@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
-import { getMyApplications, openCv } from '../services/applications';
+import { APP_STAGES, getMyApplications, openCv, stageLabelKey, stageTone } from '../services/applications';
 import ProviderStudio from '../components/ProviderStudio';
 import { Badge, GlassCard, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
@@ -184,9 +184,7 @@ const Dashboard = () => {
                                 <GlassCard key={app.id} className="data-card">
                                     <div className="card-head">
                                         <div>
-                                            <Badge tone={app.appStatus === 'accepted' ? 'success' : app.appStatus === 'rejected' ? 'danger' : 'gold'}>
-                                                {app.appStatus === 'accepted' ? `✅ ${t('statusAccepted')}` : app.appStatus === 'rejected' ? `✖️ ${t('statusRejected')}` : `⏳ ${t('applied')}`}
-                                            </Badge>
+                                            <Badge tone={stageTone(app.appStatus)}>{t(stageLabelKey(app.appStatus))}</Badge>
                                             <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{app.job?.role || t('appUntitled')}</h3>
                                             <span className="card-copy">{app.job ? `${app.job.company} · ${app.job.location}` : app.email}</span>
                                         </div>
@@ -197,6 +195,21 @@ const Dashboard = () => {
                                     {app.phone ? <p className="muted card-copy">{app.phone}{app.city ? ` · ${app.city}` : ''}</p> : null}
                                     {app.cvPath ? (
                                         <PremiumButton variant="ghost" onClick={() => openCv(app.cvPath)}>{t('openCv')}</PremiumButton>
+                                    ) : null}
+                                    {app.appStatus !== 'not_selected' ? (
+                                        <div className="app-timeline">
+                                            {APP_STAGES.map((s) => {
+                                                const idx = APP_STAGES.indexOf(s);
+                                                const cur = APP_STAGES.indexOf(app.appStatus);
+                                                const on = cur >= 0 && idx <= cur;
+                                                return (
+                                                    <span key={s} className={`app-timeline__dot${on ? ' app-timeline__dot--on' : ''}`}>
+                                                        <span className="app-timeline__dot-mark" />
+                                                        <small>{t(stageLabelKey(s))}</small>
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
                                     ) : null}
                                 </GlassCard>
                             ))}

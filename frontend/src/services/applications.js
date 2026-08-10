@@ -71,12 +71,24 @@ export const submitApplication = async ({ cvFile, ...application }) => {
     const item = {
         id: `a-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
         ...application,
-        appStatus: 'pending',
+        appStatus: 'new',
         createdAt: new Date().toISOString(),
     };
     writeLS(LS_APPS, [item, ...readLS(LS_APPS)]);
     return { ok: true, id: item.id, stored: 'local' };
 };
+
+const LEGACY = { pending: 'new', accepted: 'offer', rejected: 'not_selected' };
+
+/* The professional hiring pipeline (LinkedIn-style). */
+export const APP_STAGES = ['new', 'review', 'interview', 'offer', 'hired'];
+export const APP_END_STAGE = 'not_selected';
+
+export const stageTone = (s) =>
+    ({ new: 'blue', review: 'gold', interview: 'gold', offer: 'success', hired: 'success', not_selected: 'danger' }[s] || 'blue');
+
+export const stageLabelKey = (s) =>
+    ({ new: 'stageNew', review: 'stageReview', interview: 'stageInterview', offer: 'stageOffer', hired: 'stageHired', not_selected: 'stageNotSelected' }[s] || 'stageNew');
 
 const appFromRow = (row) => ({
     id: row.id,
@@ -98,7 +110,8 @@ const appFromRow = (row) => ({
     referral: row.referral_source,
     cvName: row.cv_name,
     cvPath: row.cv_path,
-    appStatus: row.app_status || 'pending',
+    appStatus: LEGACY[row.app_status] || row.app_status || 'new',
+    stageNote: row.stage_note || '',
     createdAt: row.created_at,
 });
 
@@ -149,6 +162,19 @@ export const updateApplicationStatus = async (id, appStatus) => {
         .select();
     if (!error && data?.[0]) {
         return { ok: true, app: appFromRow(data[0]) };
+    }
+    return { ok: false, reason: error ? error.message : 'blocked' };
+};
+
+/* A job owner saves a private note on an application. */
+export const updateApplicationNote = async (id, note) => {
+    const { data, error } = await supabase
+        .from('applications')
+        .update({ stage_note: note })
+        .eq('id', id)
+        .select();
+    if (!error && data?.[0]) {
+        return { ok: true };
     }
     return { ok: false, reason: error ? error.message : 'blocked' };
 };

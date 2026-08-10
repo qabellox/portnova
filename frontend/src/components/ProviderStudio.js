@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { addCourse, addJob, getCourses, getJobs, removeCourse, removeJob } from '../services/content';
-import { getJobApplicants, openCv, updateApplicationStatus } from '../services/applications';
+import { APP_END_STAGE, APP_STAGES, getJobApplicants, openCv, stageLabelKey, stageTone, updateApplicationNote, updateApplicationStatus } from '../services/applications';
 import { Badge, GlassCard, PremiumButton, SectionHeading } from './PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -21,6 +21,8 @@ const ProviderStudio = () => {
     const [applicants, setApplicants] = useState([]);
     const [message, setMessage] = useState('');
     const [confirming, setConfirming] = useState(null);
+    const [viewing, setViewing] = useState(null);
+    const [note, setNote] = useState('');
 
     const loadMine = async () => {
         const me = user?.id;
@@ -45,6 +47,33 @@ const ProviderStudio = () => {
             setMessage(isArabic ? 'تعذّر تحديث حالة المتقدم.' : 'Could not update applicant status.');
         }
     };
+
+    const handleMove = (id, name, value) => {
+        if (value === APP_END_STAGE) {
+            setConfirming({ id, name, action: 'not_selected' });
+        } else {
+            setAppStatus(id, value);
+        }
+    };
+
+    const openView = (app) => {
+        setViewing(app);
+        setNote(app.stageNote || '');
+    };
+
+    const saveNote = async () => {
+        if (!viewing) return;
+        const res = await updateApplicationNote(viewing.id, note);
+        if (res && res.ok) {
+            loadApplicants();
+            setMessage(isArabic ? 'تم حفظ الملاحظة.' : 'Note saved.');
+        } else {
+            setMessage(isArabic ? 'تعذّر حفظ الملاحظة.' : 'Could not save note.');
+        }
+    };
+
+    const availLabel = (v) => ({ immediate: t('availImmediate'), '2weeks': t('avail2weeks'), '1month': t('avail1month') }[v] || '—');
+    const referralLabel = (v) => ({ social: t('refSocial'), friend: t('refFriend'), school: t('refSchool'), other: t('refOther') }[v] || '—');
 
     useEffect(() => {
         loadMine();
@@ -229,9 +258,7 @@ const ProviderStudio = () => {
                                     <GlassCard key={app.id} className="data-card">
                                         <div className="card-head">
                                             <div>
-                                                <Badge tone={app.appStatus === 'accepted' ? 'success' : app.appStatus === 'rejected' ? 'danger' : 'gold'}>
-                                                    {app.appStatus === 'accepted' ? `✅ ${t('statusAccepted')}` : app.appStatus === 'rejected' ? `✖️ ${t('statusRejected')}` : `⏳ ${t('applied')}`}
-                                                </Badge>
+                                                <Badge tone={stageTone(app.appStatus)}>{t(stageLabelKey(app.appStatus))}</Badge>
                                                 <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{app.fullName}</h3>
                                                 <span className="card-copy">{app.job ? `${app.job.role} · ${app.job.company}` : app.email}</span>
                                             </div>
@@ -245,19 +272,16 @@ const ProviderStudio = () => {
                                         <div className="card-meta">
                                             {app.cvName ? <Badge tone="blue">📄 {app.cvName}</Badge> : null}
                                         </div>
-                                        {app.cvPath ? (
-                                            <PremiumButton variant="ghost" onClick={() => openCv(app.cvPath)}>{t('openCv')}</PremiumButton>
-                                        ) : null}
-                                        <div className="inline-actions" style={{ marginTop: '0.75rem' }}>
-                                            <PremiumButton variant="primary" onClick={() => setConfirming({ id: app.id, name: app.fullName, action: 'accepted' })} disabled={app.appStatus !== 'pending'}>
-                                                ✅ {t('acceptBtn')}
-                                            </PremiumButton>
-                                            <PremiumButton variant="danger" onClick={() => setConfirming({ id: app.id, name: app.fullName, action: 'rejected' })} disabled={app.appStatus !== 'pending'}>
-                                                ✖️ {t('rejectBtn')}
-                                            </PremiumButton>
-                                        </div>
                                         {app.skills ? <p className="muted card-copy" style={{ fontSize: '0.82rem' }}>{app.skills}</p> : null}
-                                        {app.coverLetter ? <p className="muted" style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>{app.coverLetter}</p> : null}
+                                        <div className="inline-actions" style={{ marginTop: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                            <label className="filter-label" style={{ textTransform: 'none', margin: 0 }}>{t('moveStage')}</label>
+                                            <select className="select" value={app.appStatus} onChange={(e) => handleMove(app.id, app.fullName, e.target.value)}>
+                                                {[...APP_STAGES, APP_END_STAGE].map((s) => (
+                                                    <option key={s} value={s}>{t(stageLabelKey(s))}</option>
+                                                ))}
+                                            </select>
+                                            <PremiumButton variant="ghost" onClick={() => openView(app)}>{t('viewDetails')}</PremiumButton>
+                                        </div>
                                     </GlassCard>
                                 ))}
                             </div>
@@ -334,7 +358,7 @@ const ProviderStudio = () => {
                     <GlassCard className="app-modal app-modal--small">
                         <button type="button" className="app-modal__close" onClick={() => setConfirming(null)} aria-label="Close">×</button>
                         <div className="app-modal__body app-signin">
-                            <strong>{confirming.action === 'accepted' ? t('confirmAccept') : t('confirmReject')}</strong>
+                            <strong>{t('confirmNotSelected')}</strong>
                             <p className="muted">{confirming.name}</p>
                             <div className="inline-actions">
                                 <PremiumButton variant="primary" onClick={async () => {
@@ -346,6 +370,57 @@ const ProviderStudio = () => {
                                 <PremiumButton variant="ghost" onClick={() => setConfirming(null)}>
                                     {t('confirmNo')}
                                 </PremiumButton>
+                            </div>
+                        </div>
+                    </GlassCard>
+                </div>
+            ) : null}
+            {viewing ? (
+                <div
+                    className="app-modal-overlay"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) setViewing(null);
+                    }}
+                >
+                    <GlassCard className="app-modal">
+                        <button type="button" className="app-modal__close" onClick={() => setViewing(null)} aria-label="Close">×</button>
+                        <div className="app-modal__head">
+                            <div className="course-cover" aria-hidden="true">🧑‍💼</div>
+                            <div>
+                                <Badge tone={stageTone(viewing.appStatus)}>{t(stageLabelKey(viewing.appStatus))}</Badge>
+                                <h3 className="card-title">{viewing.fullName}</h3>
+                                <span className="card-copy">{viewing.job ? `${viewing.job.role} · ${viewing.job.company}` : viewing.email}</span>
+                            </div>
+                        </div>
+                        <div className="app-modal__body">
+                            <div className="course-detail">
+                                <span className="course-detail__item">📞 {viewing.phone || '—'}</span>
+                                <span className="course-detail__item">✉️ {viewing.email}</span>
+                                <span className="course-detail__item">📍 {viewing.city || '—'}</span>
+                                <span className="course-detail__item">🎓 {eduLabel(viewing.education)}</span>
+                                <span className="course-detail__item">⏱ {viewing.experienceYears ? `${viewing.experienceYears} ${t('courseHours')}` : '—'}</span>
+                                <span className="course-detail__item">🗓 {availLabel(viewing.availability)}</span>
+                            </div>
+                            {viewing.referral ? <p className="muted">{t('appReferral')}: {referralLabel(viewing.referral)}</p> : null}
+                            {viewing.skills ? <p className="muted card-copy"><strong>{t('appSkills')}:</strong> {viewing.skills}</p> : null}
+                            {viewing.coverLetter ? <p className="muted" style={{ color: '#cbd5e1' }}>{viewing.coverLetter}</p> : null}
+                            {viewing.cvPath ? (
+                                <PremiumButton variant="ghost" onClick={() => openCv(viewing.cvPath)}>{t('openCv')}</PremiumButton>
+                            ) : viewing.cvName ? (
+                                <Badge tone="blue">📄 {viewing.cvName}</Badge>
+                            ) : null}
+                            <div>
+                                <label className="filter-label" style={{ textTransform: 'none' }}>{t('applicantNote')}</label>
+                                <textarea className="textarea" rows="3" value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('applicantNotePlaceholder')} />
+                                <PremiumButton variant="gold" style={{ marginTop: '0.5rem' }} onClick={saveNote}>{t('saveNote')}</PremiumButton>
+                            </div>
+                            <div className="inline-actions">
+                                <label className="filter-label" style={{ textTransform: 'none', margin: 0 }}>{t('moveStage')}</label>
+                                <select className="select" value={viewing.appStatus} onChange={(e) => handleMove(viewing.id, viewing.fullName, e.target.value)}>
+                                    {[...APP_STAGES, APP_END_STAGE].map((s) => (
+                                        <option key={s} value={s}>{t(stageLabelKey(s))}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                     </GlassCard>

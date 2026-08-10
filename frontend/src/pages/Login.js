@@ -27,7 +27,7 @@ const Login = () => {
             if (text.toLowerCase().includes('email not confirmed')) {
                 setError(isArabic ? 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.' : 'Please verify your email before signing in.');
             } else if (text.toLowerCase().includes('invalid login credentials')) {
-                setError(isArabic ? 'بيانات الدخول غير صحيحة. راجع البريد وكلمة المرور.' : 'Invalid credentials. Check your email and password.');
+                setError(isArabic ? 'بيانات الدخول غير صحيحة. إذا كنت قد سجّلت للتو، أكّد بريدك الإلكتروني أولًا ثم أعد المحاولة.' : 'Invalid credentials. If you just registered, confirm your email first, then try again.');
             } else {
                 setError(text);
             }

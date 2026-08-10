@@ -20,7 +20,7 @@ const Register = () => {
         setLoading(true);
         setError('');
 
-        const { error: authError } = await register({
+        const { data, error: authError } = await register({
             email,
             password,
             fullName,
@@ -33,11 +33,30 @@ const Register = () => {
             return;
         }
 
+        // If Supabase returns a session, the account is live — go straight in.
+        if (data?.session) {
+            navigate('/dashboard');
+            return;
+        }
+
+        // Supabase hides "already registered" by returning an empty identities
+        // array for an existing email — surface it instead of a silent reset.
+        if (data?.user && data.user.identities && data.user.identities.length === 0) {
+            setError(
+                isArabic
+                    ? 'هذا البريد مسجّل بالفعل. استخدمه لتسجيل الدخول مباشرة.'
+                    : 'This email is already registered. Use it to sign in instead.'
+            );
+            setLoading(false);
+            return;
+        }
+
+        // Otherwise email confirmation is required before the first login.
         navigate('/login', {
             state: {
                 message: isArabic
-                    ? 'تم إنشاء الحساب. راجع بريدك الإلكتروني لتأكيده ثم سجّل الدخول.'
-                    : 'Registration completed. Check your email to verify your account, then sign in.',
+                    ? 'تم إنشاء الحساب. راجع بريدك الإلكتروني، اضغط رابط التأكيد، ثم سجّل الدخول.'
+                    : 'Account created. Check your email, click the confirmation link, then sign in.',
             },
         });
     };

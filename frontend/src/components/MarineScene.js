@@ -93,9 +93,6 @@ const MarineScene = ({ className = '' }) => {
         return () => cancelAnimationFrame(rafId);
     }, []);
 
-    // Live content from the shared store (newest first): each boat sails with
-    // the newest job/course, so freshly published provider posts appear on the
-    // front boats. Refreshes on mount and on window focus so cards never go stale.
     // Live content from the shared store, newest first (jobs/courses come back
     // sorted by release time, most recent first). The ships are a rolling
     // time-slice over that list: every ROTATE_MS the window slides forward one

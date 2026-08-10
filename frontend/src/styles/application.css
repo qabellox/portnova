@@ -1,0 +1,157 @@
+/* Job application modal — matches the premium marine theme, pure DOM. */
+.app-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(3, 10, 22, 0.68);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    animation: appFade 0.18s ease-out;
+}
+
+.app-modal {
+    position: relative;
+    width: min(620px, 100%);
+    max-height: 88vh;
+    overflow-y: auto;
+    animation: appSlide 0.22s ease-out;
+}
+
+.app-modal__close {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    z-index: 2;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: #e2e8f0;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.app-modal__close:hover {
+    background: rgba(255, 255, 255, 0.14);
+    transform: rotate(90deg);
+}
+
+.app-modal__head {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    padding-right: 2.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.app-modal__head .course-cover {
+    font-size: 2.2rem;
+}
+
+.app-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.app-cv {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.app-cv__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 1.2rem;
+    border: 1.5px dashed rgba(148, 197, 255, 0.35);
+    border-radius: 0.9rem;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.app-cv__empty:hover {
+    border-color: rgba(252, 211, 77, 0.7);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.app-cv__icon {
+    font-size: 1.8rem;
+}
+
+.app-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem 0.75rem;
+}
+
+.app-form__wide {
+    grid-column: 1 / -1;
+}
+
+.app-form textarea {
+    resize: vertical;
+    min-height: 74px;
+}
+
+.app-signin,
+.app-success {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    text-align: center;
+    padding: 1.5rem 0;
+}
+
+.app-success__mark {
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 1.7rem;
+    color: #052e16;
+    background: radial-gradient(circle at 30% 30%, #86efac, #22c55e);
+    box-shadow: 0 0 24px rgba(34, 197, 94, 0.5);
+}
+
+@keyframes appFade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes appSlide {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 720px) {
+    .app-form {
+        grid-template-columns: 1fr;
+    }
+}

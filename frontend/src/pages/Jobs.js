@@ -4,6 +4,7 @@ import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { getJobs } from '../services/content';
+import JobApplicationModal from '../components/JobApplicationModal';
 
 const Jobs = () => {
     const { t } = useLanguage();
@@ -15,6 +16,7 @@ const Jobs = () => {
     const [location, setLocation] = useState('All');
     const [category, setCategory] = useState('All');
     const [cvName, setCvName] = useState('');
+    const [applyJob, setApplyJob] = useState(null);
     const cvInputRef = useRef(null);
     const focusRef = useRef(null);
 
@@ -175,7 +177,7 @@ const Jobs = () => {
 
                             {!isProvider ? (
                                 <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                                    <PremiumButton variant="gold">{t('apply')}</PremiumButton>
+                                    <PremiumButton variant="gold" onClick={() => setApplyJob(job)}>{t('apply')}</PremiumButton>
                                 </div>
                             ) : null}
                         </GlassCard>
@@ -186,6 +188,8 @@ const Jobs = () => {
                     {t('noJobs')}
                 </GlassCard>
             )}
+
+            {applyJob ? <JobApplicationModal job={applyJob} onClose={() => setApplyJob(null)} /> : null}
         </div>
     );
 };

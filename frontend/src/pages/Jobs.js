@@ -4,6 +4,7 @@ import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { getJobs } from '../services/content';
+import { getMyApplications } from '../services/applications';
 import JobApplicationModal from '../components/JobApplicationModal';
 
 const Jobs = () => {
@@ -17,6 +18,7 @@ const Jobs = () => {
     const [category, setCategory] = useState('All');
     const [cvName, setCvName] = useState('');
     const [applyJob, setApplyJob] = useState(null);
+    const [appliedIds, setAppliedIds] = useState({});
     const cvInputRef = useRef(null);
     const focusRef = useRef(null);
 
@@ -28,6 +30,20 @@ const Jobs = () => {
         return () => {
             mounted = false;
         };
+    }, []);
+
+    const refreshApplied = () => {
+        getMyApplications().then((apps) => {
+            const map = {};
+            apps.forEach((a) => {
+                if (a.jobId) map[a.jobId] = true;
+            });
+            setAppliedIds(map);
+        });
+    };
+
+    useEffect(() => {
+        refreshApplied();
     }, []);
 
     useEffect(() => {
@@ -177,7 +193,11 @@ const Jobs = () => {
 
                             {!isProvider ? (
                                 <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                                    <PremiumButton variant="gold" onClick={() => setApplyJob(job)}>{t('apply')}</PremiumButton>
+                                    {appliedIds[job.id] ? (
+                                        <Badge tone="gold">⏳ {t('applied')}</Badge>
+                                    ) : (
+                                        <PremiumButton variant="gold" onClick={() => setApplyJob(job)}>{t('apply')}</PremiumButton>
+                                    )}
                                 </div>
                             ) : null}
                         </GlassCard>
@@ -189,7 +209,15 @@ const Jobs = () => {
                 </GlassCard>
             )}
 
-            {applyJob ? <JobApplicationModal job={applyJob} onClose={() => setApplyJob(null)} /> : null}
+            {applyJob ? (
+                <JobApplicationModal
+                    job={applyJob}
+                    onClose={() => {
+                        setApplyJob(null);
+                        refreshApplied();
+                    }}
+                />
+            ) : null}
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { addCourse, addJob, getCourses, getJobs, removeCourse, removeJob } from '../services/content';
+import { getJobApplicants } from '../services/applications';
 import { Badge, GlassCard, PremiumButton, SectionHeading } from './PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -17,6 +18,7 @@ const ProviderStudio = () => {
     const [job, setJob] = useState(EMPTY_JOB);
     const [course, setCourse] = useState(EMPTY_COURSE);
     const [mine, setMine] = useState({ jobs: [], courses: [] });
+    const [applicants, setApplicants] = useState([]);
     const [message, setMessage] = useState('');
 
     const loadMine = async () => {
@@ -28,8 +30,14 @@ const ProviderStudio = () => {
         });
     };
 
+    const loadApplicants = async () => {
+        const apps = await getJobApplicants();
+        setApplicants(apps);
+    };
+
     useEffect(() => {
         loadMine();
+        loadApplicants();
         // load when the signed-in user changes
     }, [user]); // eslint-disable-line
 
@@ -64,6 +72,9 @@ const ProviderStudio = () => {
         <label className="filter-label" style={{ textTransform: 'none' }}>{text}</label>
     );
 
+    const eduLabel = (value) =>
+        ({ highschool: t('eduHigh'), diploma: t('eduDiploma'), bachelor: t('eduBachelor'), master: t('eduMaster'), other: t('eduOther') }[value] || '—');
+
     return (
         <GlassCard>
             <SectionHeading
@@ -80,6 +91,9 @@ const ProviderStudio = () => {
                 </PremiumButton>
                 <PremiumButton variant={tab === 'courses' ? 'gold' : 'ghost'} onClick={() => setTab('courses')}>
                     {t('tabCourses')}
+                </PremiumButton>
+                <PremiumButton variant={tab === 'applicants' ? 'gold' : 'ghost'} onClick={() => setTab('applicants')}>
+                    {t('tabApplicants')}
                 </PremiumButton>
             </div>
 
@@ -138,7 +152,7 @@ const ProviderStudio = () => {
                         {t('publishBtn')}
                     </PremiumButton>
                 </form>
-            ) : (
+            ) : tab === 'courses' ? (
                 <form onSubmit={publishCourse}>
                     <div className="field-group split-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
                         <div>
@@ -192,22 +206,75 @@ const ProviderStudio = () => {
                         {t('publishBtn')}
                     </PremiumButton>
                 </form>
-            )}
+            ) : null}
 
-            <div style={{ marginTop: '1.5rem' }}>
-                <SectionHeading kicker={isArabic ? 'منشوراتك' : 'Your posts'} title={t('myItems')} />
-                {tab === 'jobs' ? (
-                    mine.jobs.length ? (
+            {tab === 'applicants' ? (
+                <div style={{ marginTop: '1.5rem' }}>
+                    <SectionHeading kicker="📬" title={t('tabApplicants')} />
+                    {applicants.length ? (
                         <div className="card-grid card-grid--wide">
-                            {mine.jobs.map((item) => (
+                            {applicants.map((app) => (
+                                <GlassCard key={app.id} className="data-card">
+                                    <div className="card-head">
+                                        <div>
+                                            <Badge tone="gold">⏳ {t('applied')}</Badge>
+                                            <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{app.fullName}</h3>
+                                            <span className="card-copy">{app.job ? `${app.job.role} · ${app.job.company}` : app.email}</span>
+                                        </div>
+                                    </div>
+                                    <div className="course-detail">
+                                        <span className="course-detail__item">📞 {app.phone || '—'}</span>
+                                        <span className="course-detail__item">✉️ {app.email}</span>
+                                        <span className="course-detail__item">📍 {app.city || '—'}</span>
+                                        <span className="course-detail__item">🎓 {eduLabel(app.education)}</span>
+                                    </div>
+                                    <div className="card-meta">
+                                        {app.cvName ? <Badge tone="blue">📄 {app.cvName}</Badge> : null}
+                                    </div>
+                                    {app.skills ? <p className="muted card-copy" style={{ fontSize: '0.82rem' }}>{app.skills}</p> : null}
+                                    {app.coverLetter ? <p className="muted" style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>{app.coverLetter}</p> : null}
+                                </GlassCard>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="muted">{t('applicantsEmpty')}</p>
+                    )}
+                </div>
+            ) : (
+                <div style={{ marginTop: '1.5rem' }}>
+                    <SectionHeading kicker={isArabic ? 'منشوراتك' : 'Your posts'} title={t('myItems')} />
+                    {tab === 'jobs' ? (
+                        mine.jobs.length ? (
+                            <div className="card-grid card-grid--wide">
+                                {mine.jobs.map((item) => (
+                                    <GlassCard key={item.id} className="data-card">
+                                        <div className="card-head">
+                                            <div>
+                                                <Badge tone="gold">{item.salary}</Badge>
+                                                <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{item.role}</h3>
+                                                <span className="card-copy">{item.company} · {item.location}</span>
+                                            </div>
+                                            <PremiumButton variant="danger" onClick={async () => { await removeJob(item.id); loadMine(); }}>
+                                                {t('deleteItem')}
+                                            </PremiumButton>
+                                        </div>
+                                    </GlassCard>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="muted">{t('emptyItems')}</p>
+                        )
+                    ) : mine.courses.length ? (
+                        <div className="card-grid card-grid--wide">
+                            {mine.courses.map((item) => (
                                 <GlassCard key={item.id} className="data-card">
                                     <div className="card-head">
                                         <div>
-                                            <Badge tone="gold">{item.salary}</Badge>
-                                            <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{item.role}</h3>
-                                            <span className="card-copy">{item.company} · {item.location}</span>
+                                            <Badge tone="gold">{item.price}</Badge>
+                                            <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{item.title}</h3>
+                                            <span className="card-copy">{item.provider} · {item.location}</span>
                                         </div>
-                                        <PremiumButton variant="danger" onClick={async () => { await removeJob(item.id); loadMine(); }}>
+                                        <PremiumButton variant="danger" onClick={async () => { await removeCourse(item.id); loadMine(); }}>
                                             {t('deleteItem')}
                                         </PremiumButton>
                                     </div>
@@ -216,32 +283,13 @@ const ProviderStudio = () => {
                         </div>
                     ) : (
                         <p className="muted">{t('emptyItems')}</p>
-                    )
-                ) : mine.courses.length ? (
-                    <div className="card-grid card-grid--wide">
-                        {mine.courses.map((item) => (
-                            <GlassCard key={item.id} className="data-card">
-                                <div className="card-head">
-                                    <div>
-                                        <Badge tone="gold">{item.price}</Badge>
-                                        <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{item.title}</h3>
-                                        <span className="card-copy">{item.provider} · {item.location}</span>
-                                    </div>
-                                    <PremiumButton variant="danger" onClick={async () => { await removeCourse(item.id); loadMine(); }}>
-                                        {t('deleteItem')}
-                                    </PremiumButton>
-                                </div>
-                            </GlassCard>
-                        ))}
+                    )}
+                    <div className="inline-actions" style={{ marginTop: '1rem' }}>
+                        <PremiumButton variant="ghost" to="/jobs">{t('viewJobs')}</PremiumButton>
+                        <PremiumButton variant="ghost" to="/courses">{t('viewCourses')}</PremiumButton>
                     </div>
-                ) : (
-                    <p className="muted">{t('emptyItems')}</p>
-                )}
-                <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                    <PremiumButton variant="ghost" to="/jobs">{t('viewJobs')}</PremiumButton>
-                    <PremiumButton variant="ghost" to="/courses">{t('viewCourses')}</PremiumButton>
                 </div>
-            </div>
+            )}
         </GlassCard>
     );
 };

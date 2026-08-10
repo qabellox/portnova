@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { getJobs } from './content';
 
 /**
  * Job applications — the structured youth data the platform collects.
@@ -62,4 +63,55 @@ export const submitApplication = async (application) => {
     };
     writeLS(LS_APPS, [item, ...readLS(LS_APPS)]);
     return { ok: true, id: item.id, stored: 'local' };
+};
+
+const appFromRow = (row) => ({
+    id: row.id,
+    jobId: row.job_id,
+    userId: row.user_id,
+    fullName: row.applicant_name,
+    email: row.email,
+    phone: row.phone,
+    city: row.city,
+    status: row.status,
+    education: row.education,
+    experienceYears: row.experience_years,
+    skills: row.skills,
+    coverLetter: row.cover_letter,
+    expectedSalary: row.expected_salary,
+    availability: row.availability,
+    portfolioUrl: row.portfolio_url,
+    linkedin: row.linkedin_url,
+    referral: row.referral_source,
+    cvName: row.cv_name,
+    createdAt: row.created_at,
+});
+
+const withJob = async (apps) => {
+    const jobs = await getJobs();
+    return apps.map((app) => ({ ...app, job: jobs.find((j) => j.id === app.jobId) || null }));
+};
+
+/* A seeker's own applications (RLS returns only rows where user_id = auth.uid()). */
+export const getMyApplications = async () => {
+    const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) {
+        return withJob(data.map(appFromRow));
+    }
+    return withJob(readLS(LS_APPS));
+};
+
+/* A provider's applicants: RLS returns only applications for jobs they own. */
+export const getJobApplicants = async () => {
+    const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+    if (!error && Array.isArray(data)) {
+        return withJob(data.map(appFromRow));
+    }
+    return [];
 };

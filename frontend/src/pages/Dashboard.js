@@ -1,6 +1,7 @@
-﻿import React, { useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
+import { getMyApplications } from '../services/applications';
 import ProviderStudio from '../components/ProviderStudio';
 import { Badge, GlassCard, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
@@ -35,6 +36,19 @@ const Dashboard = () => {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [myApps, setMyApps] = useState([]);
+
+    useEffect(() => {
+        let mounted = true;
+        if (!isProvider) {
+            getMyApplications().then((apps) => {
+                if (mounted) setMyApps(apps);
+            });
+        }
+        return () => {
+            mounted = false;
+        };
+    }, [isProvider]);
 
     const onPickImage = (event) => {
         const file = event.target.files?.[0];
@@ -160,6 +174,32 @@ const Dashboard = () => {
                     </GlassCard>
                 </div>
             </GlassCard>
+
+            {!isProvider ? (
+                <GlassCard>
+                    <SectionHeading kicker="📬" title={t('myApplications')} subtitle={t('myApplicationsSub')} />
+                    {myApps.length ? (
+                        <div className="card-grid card-grid--wide">
+                            {myApps.map((app) => (
+                                <GlassCard key={app.id} className="data-card">
+                                    <div className="card-head">
+                                        <div>
+                                            <Badge tone="gold">⏳ {t('applied')}</Badge>
+                                            <h3 className="card-title" style={{ marginTop: '0.6rem' }}>{app.job?.role || t('appUntitled')}</h3>
+                                            <span className="card-copy">{app.job ? `${app.job.company} · ${app.job.location}` : app.email}</span>
+                                        </div>
+                                    </div>
+                                    <div className="card-meta">
+                                        {app.cvName ? <Badge tone="blue">📄 {app.cvName}</Badge> : null}
+                                    </div>
+                                </GlassCard>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="muted">{t('noApplications')}</p>
+                    )}
+                </GlassCard>
+            ) : null}
 
             {isProvider ? <ProviderStudio /> : null}
         </div>

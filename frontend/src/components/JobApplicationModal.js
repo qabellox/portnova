@@ -30,6 +30,7 @@ const JobApplicationModal = ({ job, onClose }) => {
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [done, setDone] = useState(false);
+    const [stored, setStored] = useState('');
 
     useEffect(() => {
         const onKey = (event) => {
@@ -81,6 +82,7 @@ const JobApplicationModal = ({ job, onClose }) => {
         });
         setSubmitting(false);
         if (result?.ok) {
+            setStored(result.stored || '');
             setDone(true);
         } else {
             setError(t('appSubmitError'));
@@ -123,6 +125,7 @@ const JobApplicationModal = ({ job, onClose }) => {
                         <div className="app-success__mark" aria-hidden="true">✓</div>
                         <strong>{t('appSuccessTitle')}</strong>
                         <p className="muted">{t('appSuccessDesc')}</p>
+                        {stored === 'local' ? <p className="muted" style={{ color: '#fcd34d', fontSize: '0.8rem' }}>{t('appLocalNote')}</p> : null}
                         <PremiumButton variant="gold" onClick={onClose}>{t('appClose')}</PremiumButton>
                     </div>
                 ) : (

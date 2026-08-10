@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { addCourse, addJob, getCourses, getJobs, removeCourse, removeJob } from '../services/content';
-import { getJobApplicants } from '../services/applications';
+import { getJobApplicants, openCv } from '../services/applications';
 import { Badge, GlassCard, PremiumButton, SectionHeading } from './PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -231,6 +231,9 @@ const ProviderStudio = () => {
                                     <div className="card-meta">
                                         {app.cvName ? <Badge tone="blue">📄 {app.cvName}</Badge> : null}
                                     </div>
+                                    {app.cvPath ? (
+                                        <PremiumButton variant="ghost" onClick={() => openCv(app.cvPath)}>{t('openCv')}</PremiumButton>
+                                    ) : null}
                                     {app.skills ? <p className="muted card-copy" style={{ fontSize: '0.82rem' }}>{app.skills}</p> : null}
                                     {app.coverLetter ? <p className="muted" style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>{app.coverLetter}</p> : null}
                                 </GlassCard>

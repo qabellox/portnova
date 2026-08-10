@@ -27,6 +27,7 @@ const JobApplicationModal = ({ job, onClose }) => {
     const [linkedin, setLinkedin] = useState('');
     const [referral, setReferral] = useState('social');
     const [cvName, setCvName] = useState('');
+    const [cvFile, setCvFile] = useState(null);
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [done, setDone] = useState(false);
@@ -42,7 +43,10 @@ const JobApplicationModal = ({ job, onClose }) => {
 
     const onPickCv = (event) => {
         const file = event.target.files?.[0];
-        if (file) setCvName(file.name);
+        if (file) {
+            setCvFile(file);
+            setCvName(file.name);
+        }
     };
 
     const fieldLabel = (text) => (
@@ -78,6 +82,7 @@ const JobApplicationModal = ({ job, onClose }) => {
             portfolioUrl: portfolioUrl.trim(),
             linkedin: linkedin.trim(),
             referral,
+            cvFile,
             cvName,
         });
         setSubmitting(false);
@@ -145,6 +150,7 @@ const JobApplicationModal = ({ job, onClose }) => {
                                         <PremiumButton
                                             variant="ghost"
                                             onClick={() => {
+                                                setCvFile(null);
                                                 setCvName('');
                                                 if (cvInputRef.current) cvInputRef.current.value = '';
                                             }}

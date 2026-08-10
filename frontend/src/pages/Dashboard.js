@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
-import { getMyApplications } from '../services/applications';
+import { getMyApplications, openCv } from '../services/applications';
 import ProviderStudio from '../components/ProviderStudio';
 import { Badge, GlassCard, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
@@ -192,6 +192,10 @@ const Dashboard = () => {
                                     <div className="card-meta">
                                         {app.cvName ? <Badge tone="blue">📄 {app.cvName}</Badge> : null}
                                     </div>
+                                    {app.phone ? <p className="muted card-copy">{app.phone}{app.city ? ` · ${app.city}` : ''}</p> : null}
+                                    {app.cvPath ? (
+                                        <PremiumButton variant="ghost" onClick={() => openCv(app.cvPath)}>{t('openCv')}</PremiumButton>
+                                    ) : null}
                                 </GlassCard>
                             ))}
                         </div>

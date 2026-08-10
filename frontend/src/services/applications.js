@@ -27,7 +27,18 @@ const writeLS = (key, arr) => {
     }
 };
 
-export const submitApplication = async (application) => {
+export const submitApplication = async ({ cvFile, ...application }) => {
+    // Upload the CV to private Supabase Storage (folder = the applicant's id),
+    // so it can actually be opened later — not just a filename. If storage
+    // isn't ready yet, we still submit and just skip the file.
+    let cvPath = null;
+    if (cvFile && application.userId) {
+        const ext = (cvFile.name.split('.').pop() || 'pdf').toLowerCase();
+        const path = `${application.userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('cvs').upload(path, cvFile, { upsert: false });
+        if (!upErr) cvPath = path;
+    }
+
     const { data, error } = await supabase
         .from('applications')
         .insert({
@@ -48,6 +59,7 @@ export const submitApplication = async (application) => {
             linkedin_url: application.linkedin,
             referral_source: application.referral,
             cv_name: application.cvName,
+            cv_path: cvPath,
         })
         .select();
 
@@ -84,6 +96,7 @@ const appFromRow = (row) => ({
     linkedin: row.linkedin_url,
     referral: row.referral_source,
     cvName: row.cv_name,
+    cvPath: row.cv_path,
     createdAt: row.created_at,
 });
 
@@ -114,4 +127,13 @@ export const getJobApplicants = async () => {
         return withJob(data.map(appFromRow));
     }
     return [];
+};
+
+/* Open a CV via a short-lived signed URL (applicant owner / job owner only). */
+export const openCv = async (cvPath) => {
+    if (!cvPath) return;
+    const { data, error } = await supabase.storage.from('cvs').createSignedUrl(cvPath, 3600);
+    if (!error && data?.signedUrl) {
+        window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    }
 };

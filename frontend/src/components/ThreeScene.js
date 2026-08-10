@@ -225,7 +225,7 @@ const Water = () => {
 
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.35, 0]}>
-            <planeGeometry args={[70, 70, 96, 96]} />
+            <planeGeometry args={[70, 70, 72, 72]} />
             <shaderMaterial
                 ref={mat}
                 uniforms={{
@@ -961,7 +961,12 @@ const SceneContents = () => (
 );
 
 const PostFX = () => (
-    <EffectComposer>
+    // Post-processing runs at half resolution: Bloom + Vignette are full-screen
+    // passes that dominate the GPU frame cost (they render the whole canvas a
+    // few times per frame). Half-res FX is visually near-identical but ~4x
+    // cheaper — the single biggest perf win for the scene, especially on an
+    // integrated/laptop GPU.
+    <EffectComposer resolutionScale={0.5}>
         <Bloom intensity={0.32} luminanceThreshold={0.62} luminanceSmoothing={0.5} mipmapBlur radius={0.6} />
         <Vignette eskil={false} offset={0.22} darkness={0.5} />
     </EffectComposer>

@@ -1,0 +1,9 @@
+# Supabase project configuration
+# Used by the GitHub integration to deploy Edge Functions automatically.
+# (No secrets live here.)
+project_id = "portnova"
+
+[functions.notify]
+# The database webhook calls this function with our secret header, not a
+# Supabase JWT — so JWT verification is disabled for this function.
+verify_jwt = false

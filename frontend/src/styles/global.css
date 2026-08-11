@@ -1843,7 +1843,7 @@ body[dir='rtl'] .user-menu__link:hover {
     .nav-actions .premium-button {
         flex-shrink: 0;
         white-space: nowrap;
-        padding: 0.55rem 0.85rem;
+        padding: 0.5rem 0.75rem;
         font-size: 0.85rem;
     }
 
@@ -1881,6 +1881,9 @@ body[dir='rtl'] .user-menu__link:hover {
        just the logo mark (desktop keeps the full name + tag). */
     .brand {
         gap: 0.4rem;
+        /* Keep the logo at its natural size so its wrap never overflows and
+           collides with the hamburger/buttons. */
+        flex-shrink: 0;
     }
 
     .brand__text {

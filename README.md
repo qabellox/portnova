@@ -2,6 +2,14 @@
 
 PortNova is a platform for youth services, employer job posting, and learning and CV support.
 
+## Live Deployment
+
+- **Website (Vercel):** https://portnova-olive.vercel.app/
+- **Backend (Vercel):** API deployed alongside the frontend
+- **Database (Supabase):** PostgreSQL with migrations in `supabase/`
+
+Edits pushed to the `main` branch trigger an automatic Vercel deployment.
+
 ## Setup
 Install dependencies in both app folders:
 

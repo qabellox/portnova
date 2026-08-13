@@ -191,6 +191,7 @@
 
 .cv-chat__inputbar {
     display: flex;
+    align-items: flex-end;
     gap: 0.6rem;
     padding: 0.9rem 1.3rem 1.2rem;
     border-top: 1px solid rgba(125, 211, 252, 0.12);
@@ -198,7 +199,14 @@
 
 .cv-chat__input {
     flex: 1;
-    border-radius: 999px;
+    min-height: 2.8rem;
+    max-height: 160px;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    border-radius: 1.1rem;
+    resize: none;
+    overflow-y: auto;
+    line-height: 1.5;
 }
 
 .cv-chat__send {

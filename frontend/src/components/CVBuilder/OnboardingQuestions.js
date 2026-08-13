@@ -14,10 +14,30 @@ const OnboardingQuestions = ({ messages = [], input, setInput, onSend, typing = 
         if (el) el.scrollTop = el.scrollHeight;
     }, [messages, typing]);
 
+    // Keep the reply box flexible: it grows with the answer (especially for
+    // the "write 2–3 sentences" summary question) and shrinks back after send.
+    const autoResize = (el) => {
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+    };
+
+    useEffect(() => {
+        autoResize(inputRef.current);
+    }, [input]);
+
     const handleSubmit = (event) => {
         event.preventDefault();
         if (!input.trim() || busy) return;
         onSend(input.trim());
+    };
+
+    const handleKeyDown = (event) => {
+        // Enter sends the reply; Shift+Enter inserts a new line.
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            if (input.trim() && !busy) onSend(input.trim());
+        }
     };
 
     return (
@@ -53,14 +73,20 @@ const OnboardingQuestions = ({ messages = [], input, setInput, onSend, typing = 
             </div>
 
             <form className="cv-chat__inputbar" onSubmit={handleSubmit}>
-                <input
+                <textarea
                     ref={inputRef}
+                    rows={1}
                     className="input cv-chat__input"
                     value={input}
-                    onChange={(event) => setInput(event.target.value)}
+                    onChange={(event) => {
+                        setInput(event.target.value);
+                        autoResize(event.currentTarget);
+                    }}
+                    onKeyDown={handleKeyDown}
                     placeholder={busy ? (isArabic ? 'انتظر…' : 'Wait…') : isArabic ? 'اكتب ردّك هنا…' : 'Type your reply here…'}
                     disabled={busy}
                     autoFocus
+                    aria-label={isArabic ? 'الرد' : 'Reply'}
                 />
                 <button
                     type="submit"

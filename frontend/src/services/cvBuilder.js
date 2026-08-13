@@ -31,3 +31,42 @@ export const writeSummary = (data, language = 'en') =>
 /** Generate the full structured CV for a template + collected answers. */
 export const generateCV = (data, template = 'modern', language = 'en') =>
     invoke('generate', { data, template, language });
+
+/** Deterministic, offline CV builder — assembles the exact same CV structure
+ *  from the collected answers WITHOUT any AI call. Used as a graceful fallback
+ *  so the flow always completes and downloads work even if the Edge Function
+ *  is unreachable. When the AI is available it simply overrides this. */
+export const buildLocalCV = (data, template = 'modern') => {
+    const experience = (data.experience || []).map((j) => ({
+        role: j.role || '',
+        company: j.company || '',
+        dates: j.dates || '',
+        bullets: (j.bullets || []).filter(Boolean),
+    }));
+    const education = data.education
+        ? [{ degree: data.education, institution: data.fieldOfStudy || '', years: '', gpa: '' }]
+        : [];
+    const fallbackSummary = `A motivated ${data.title || 'professional'} from ${data.location || 'Port Said'} seeking ${data.targetRole || 'a fitting role'} in ${data.targetIndustry || 'the field'}.`;
+
+    return {
+        header: {
+            name: data.name || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            location: data.location || '',
+            linkedin: data.linkedin || '',
+            title: data.title || '',
+        },
+        summary: data.summary || fallbackSummary,
+        skills: data.technicalSkills || [],
+        softSkills: data.softSkills || [],
+        experience,
+        education,
+        certifications: data.certifications || [],
+        languages: data.languages || [],
+        projects: [],
+        template,
+        generatedAt: new Date().toISOString(),
+        source: 'local',
+    };
+};

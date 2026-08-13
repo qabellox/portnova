@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { writeSummary, generateCV } from '../../services/cvBuilder';
+import { writeSummary, generateCV, buildLocalCV } from '../../services/cvBuilder';
 import OnboardingQuestions from './OnboardingQuestions';
 import AchievementExtractor from './AchievementExtractor';
 import CVPreview from './CVPreview';
@@ -323,8 +323,20 @@ const CVBuilder = () => {
                 )
             );
         } catch (err) {
-            setError(err.message || 'CV generation failed.');
-            pushBot(say('تعذّر توليد السيرة — يرجى المحاولة مجددًا.', 'Could not generate the CV — please try again.'));
+            // Graceful fallback: assemble the CV locally so the flow always
+            // completes and downloads work even when the AI is unreachable.
+            setCv(buildLocalCV(data, template));
+            setError(
+                isArabic
+                    ? 'الذكاء الاصطناعي غير متاح حاليًا — لكن سيرتك جاهزة من بياناتك، وستُحسَّن آليًا فور توفّره.'
+                    : 'The AI is unavailable right now — but your CV is ready from your data, and we’ll polish it automatically once it’s back.'
+            );
+            pushBot(
+                say(
+                    'سيرتك جاهزة! 🎉 بنيتها من إجاباتك مباشرة. اختر القالب ثم حمّلها PDF أو Word — وعند توفّر الذكاء الاصطناعي ستُحسَّن تلقائيًا.',
+                    'Your CV is ready! 🎉 Built directly from your answers. Pick a template and download as PDF or Word — it’ll be AI-polished automatically when the AI is available.'
+                )
+            );
         } finally {
             setBusy(false);
         }

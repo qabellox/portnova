@@ -55,7 +55,7 @@ const ProfileGate = ({ children }) => {
 
 const ProfileForm = ({ existing = {} }) => {
     const { user } = useAuth();
-    const { isArabic } = useLanguage();
+    const { isArabic, t } = useLanguage();
     const [step, setStep] = useState(0);
     const [form, setForm] = useState({
         fullName: existing.fullName || '',

@@ -13,21 +13,21 @@ import '../../styles/cv-builder.css';
 
 /* ----------------------------- flow config ----------------------------- */
 const FLOW = [
-    { key: 'name', askAr: 'ما اسمك الكامل؟', askEn: 'What is your full name?' },
-    { key: 'email', askAr: 'ما هو بريدك الإلكتروني؟', askEn: 'What is your email address?' },
-    { key: 'phone', askAr: 'ما هو رقم هاتفك؟', askEn: 'What is your phone number?' },
-    { key: 'location', askAr: 'أين تسكن؟ (المدينة، الدولة)', askEn: 'What is your current location? (City, Country)' },
-    { key: 'title', askAr: 'ما هو مسمّاك الوظيفي الحالي؟ (أو "طالب" إن كنت تدرس)', askEn: 'What is your current job title? (or "Student")' },
-    { key: 'summary', askAr: 'اكتب سطرين أو ثلاثة عنك وعن مسارك المهني.', askEn: 'Write 2-3 sentences about who you are professionally.' },
-    { key: 'education', askAr: 'ما هو أعلى مستوى تعليمي لديك؟ (ثانوية، دبلوم، بكالوريوس، ماجستير، دكتوراه)', askEn: 'What is your highest education level? (High School, Diploma, Bachelor’s, Master’s, PhD)' },
-    { key: 'fieldOfStudy', askAr: 'ما هو تخصصك الدراسي؟', askEn: 'What is your field of study?' },
-    { key: 'technicalSkills', askAr: 'اذكر أهم 3-5 مهارات تقنية لديك، مفصولة بفواصل.', askEn: 'List your top 3-5 technical skills, separated by commas.' },
-    { key: 'softSkills', askAr: 'اذكر أهم 3-5 مهارات شخصية لديك.', askEn: 'List your top 3-5 soft skills.' },
-    { key: 'certifications', askAr: 'هل لديك شهادات؟ اذكرها - أو اكتب "لا يوجد".', askEn: 'Do you have any certifications? List them - or type "none".' },
-    { key: 'languages', askAr: 'ما اللغات التي تتحدثها بجانب العربية؟ اذكرها مع المستوى (أو "لا يوجد").', askEn: 'Which languages do you speak besides Arabic, and at what level? (or "none")' },
-    { key: 'linkedin', askAr: 'هل لديك حساب لينكدإن؟ (اختياري - أو اكتب "لا")', askEn: 'Do you have a LinkedIn profile? (optional - or type "none")' },
-    { key: 'targetRole', askAr: 'ما نوع الوظيفة التي تبحث عنها؟', askEn: 'What kind of job are you looking for?' },
-    { key: 'targetIndustry', askAr: 'في أي قطاع أو مجال تفضّل العمل؟', askEn: 'Which industry or field do you prefer?' },
+    { key: 'name', askAr: 'لنبدأ بالأساسيات - ما اسمك الكامل الذي سيظهر في ترويسة السيرة الذاتية؟', askEn: 'Let’s start with the essentials - what is your full name, exactly as it should appear on the CV?' },
+    { key: 'email', askAr: 'ما هو بريدك الإلكتروني الاحترافي؟ سأستخدمه للتواصل معك بخصوص الفرص.', askEn: 'What is your professional email? I’ll use it for any opportunity-related contact.' },
+    { key: 'phone', askAr: 'ما رقم هاتفك؟ من المهم أن يصل إليك أصحاب العمل بسرعة عند الحاجة.', askEn: 'What is your phone number? It’s important that employers can reach you quickly.' },
+    { key: 'location', askAr: 'أين تقيم حاليًا؟ (المدينة والمحافظة) - يساعد هذا الشركات على تقدير قربك من فرص العمل.', askEn: 'Where are you currently based? (City and area) - this helps employers gauge your proximity to opportunities.' },
+    { key: 'title', askAr: 'أخبرني عن هويتك المهنية الحالية - ما المنصب الذي تشغله، وما نطاق مسؤولياتك؟', askEn: 'Tell me about your current professional identity - what role do you hold, and what is the scope of your responsibilities?' },
+    { key: 'summary', askAr: 'لأكتب لك ملخصًا مهنيًا مقنعًا، أحتاج أن أفهم ما الذي يعرّف مسيرتك.\nأخبرني عن العمل الذي تفتخر به أكثر، والأثر الذي صنعته، وأين ترى نفسك في السنوات القادمة.', askEn: 'To craft a compelling professional summary, I need to understand what defines your career.\nTell me about the work you’re most proud of, the impact you made, and where you see yourself heading next.' },
+    { key: 'education', askAr: 'ما أعلى مؤهل علمي حصلت عليه؟ (ثانوية، دبلوم، بكالوريوس، ماجستير، دكتوراه)', askEn: 'What is your highest level of education? (High School, Diploma, Bachelor’s, Master’s, PhD)' },
+    { key: 'fieldOfStudy', askAr: 'في أي تخصص درست؟ هذا يمنح مسارك المهني مصداقية أكبر.', askEn: 'What field did you study? It adds real credibility to your career story.' },
+    { key: 'technicalSkills', askAr: 'ما المهارات التقنية التي اعتمدت عليها في نجاحك المهني؟ اذكر أهم 3-5 مهارات.', askEn: 'What technical skills have defined your career success? List your top 3-5.' },
+    { key: 'softSkills', askAr: 'وما نقاط القوة الشخصية التي تميّزك عن غيرك في مجالك؟ (مثل القيادة، التواصل، حل المشكلات)', askEn: 'And what personal strengths set you apart from others in your field? (e.g. leadership, communication, problem-solving)' },
+    { key: 'certifications', askAr: 'هل تملك شهادات أو دورات معتمدة تقوّي ملفك؟ اذكرها - أو اكتب "لا يوجد".', askEn: 'Do you hold any certifications or courses that strengthen your profile? List them - or type "none".' },
+    { key: 'languages', askAr: 'ما اللغات التي تتقنها إلى جانب العربية، وما مستواك في كل منها؟ (أو "لا يوجد")', askEn: 'Which languages do you speak besides Arabic, and at what level? (or "none")' },
+    { key: 'linkedin', askAr: 'هل لديك ملف لينكدإن؟ إن وُجد، سأضيفه لتعزيز مصداقيتك أمام أصحاب العمل. (اختياري)', askEn: 'Do you have a LinkedIn profile? If so, I’ll include it to boost your credibility. (optional)' },
+    { key: 'targetRole', askAr: 'ما الدور الذي تستهدفه في خطوتك المهنية القادمة؟', askEn: 'What kind of role are you targeting in your next career move?' },
+    { key: 'targetIndustry', askAr: 'في أي قطاع تفضّل التقدّم؟ سأوجّه لهجة سيرتك بدقة نحو هذا المجال.', askEn: 'Which industry are you aiming for? I’ll tailor the CV tone precisely to that field.' },
 ];
 
 const DONE_WORDS = ['done', 'تم', 'لا', 'لا يوجد', 'none', 'n/a', 'na', 'انتهيت', 'no'];
@@ -43,6 +43,10 @@ const FILLER_WORDS = [
     'لا يوجد', 'مش عارف', 'مش متأكد', 'ما أدري', 'أي شيء',
 ];
 const isFiller = (v) => FILLER_WORDS.includes(String(v || '').trim().toLowerCase());
+
+// Pushback phrases ("is it necessary?", "do I need this?"...) deserve a
+// reassuring explanation instead of a canned acknowledgment.
+const PUSHBACK = /is it (necessary|required|needed)|do i (need|have to)|why (do you|are you asking|ask)|really need|لازم|ضروري|هل هذا ضروري|مش لازم|ليه|ليش|ما في داعي/i;
 
 const cleanString = (v) => String(v || '').replace(/\s+/g, ' ').trim();
 
@@ -153,11 +157,11 @@ const CVBuilder = () => {
 
         const welcome = arabic
             ? name
-                ? `أهلًا بعودتك يا ${name} 👋 أنا نوفا. بياناتك الأساسية محفوظة - لنكمل بناء سيرتك الذكية!`
-                : 'أهلًا بك 👋 أنا نوفا، مستشارك الشخصي لبناء السيرة الذاتية.\nسأسألك بعض الأسئلة البسيطة ثم أصوغ لك سيرة ذاتية احترافية.'
+                ? `أهلًا بعودتك يا ${name} 👋 أنا مستشار السيرة الذاتية من PortNova. بياناتك الأساسية محفوظة - لنكمل بناء سيرتك معًا.`
+                : 'أهلًا بك 👋 أنا مستشار السيرة الذاتية من PortNova.\nسأعمل معك خطوة بخطوة لأبني سيرة ذاتية تعرض أفضل ما في مسيرتك وتفتح لك الأبواب في سوق عمل بورسعيد.'
             : name
-                ? `Welcome back, ${name}! 👋 I’m Nova. Your basic details are saved - let’s keep building your CV!`
-                : 'Welcome! 👋 I’m Nova, your personal CV consultant.\nI’ll ask a few simple questions, then craft you a professional CV.';
+                ? `Welcome back, ${name}! 👋 I’m your PortNova CV Consultant. Your basic details are saved - let’s keep building your CV together.`
+                : 'Welcome! 👋 I’m your PortNova CV Consultant.\nI’ll work with you step by step to build a CV that showcases the best of your career and opens doors in Port Said’s job market.';
 
         setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: welcome }]);
         setFlowIndex(startIndex);
@@ -172,8 +176,8 @@ const CVBuilder = () => {
                         id: nextId(),
                         from: 'bot',
                         text: arabic
-                            ? 'بياناتك محفوظة بالكامل 🎉 لننتقل إلى الخبرة العملية.\nأخبرني عن وظيفة: الدور @ الشركة (التواريخ). مثال: "أخصائي تسويق @ نوفا لابز (2022-2024)".\nاكتب "انتهيت" إذا لم تكن لديك خبرة.'
-                            : 'Your profile is fully saved 🎉 Let’s move to experience.\nTell me about a job: role @ company (dates). e.g. "Marketing Specialist @ Nova Labs (2022-2024)".\nType "done" if you have no experience.',
+                            ? 'بياناتك محفوظة بالكامل 🎉 لننتقل إلى مسارك المهني.\nأخبرني عن كل دور عملت فيه: الدور @ الشركة (التواريخ). مثال: "أخصائي تسويق @ Nova Labs (2022-2024)".\nاكتب "انتهيت" عند الانتهاء.'
+                            : 'Your profile is fully saved 🎉 Let’s move to your career progression.\nTell me about each role: position @ company (dates). e.g. "Marketing Specialist @ Nova Labs (2022-2024)".\nType "done" when finished.',
                     },
                 ]);
             } else {
@@ -227,12 +231,12 @@ const CVBuilder = () => {
     const clarifyMsg = (key) =>
         key === 'summary'
             ? say(
-                'هذا مختصر قليلًا - أخبرني بأكثر قليلًا عن أقوى ما تميّزت به وهدفك المهني؟ (حتى سطر إضافي يساعدني في كتابة ملخص قوي)',
-                'That was a bit brief - can you tell me a little more about your strongest strengths and your career goal? Even one more line helps me write a strong summary.'
+                'هذه بداية جيدة. لأجعل ملخصك قويًا بحق، أخبرني عن أهم ما أنجزته والنتيجة المهنية التي تطمح إليها في السنتين القادمتين؟ حتى سطر إضافي يصنع فرقًا.',
+                'That gives me a foundation. To make your summary truly stand out, tell me about your key differentiators and the career outcome you’re aiming for in the next 2-3 years? Even one more line helps.'
               )
             : say(
-                'ممتاز - هل يمكنك إضافة مهارة أو مهارتين أخريين؟ سيرتك تصبح أقوى بمهارات أوسع.',
-                'Nice - can you add one or two more skills? Your CV gets stronger with a fuller set.'
+                'شكرًا لك - هل يمكنك إضافة مهارة أو مهارتين أخريين؟ كلما كانت قائمتك أغنى، كانت سيرتك أقوى أمام أصحاب العمل.',
+                'Thanks - could you add one or two more skills? A fuller list makes your CV noticeably stronger to employers.'
               );
 
     const nextQuestion = () => {
@@ -255,11 +259,11 @@ const CVBuilder = () => {
                 pushBot(
                     say(
                         isStudent
-                            ? 'رائع! 🎉 الآن عن أي تدريب أو عمل جزئي أو مشاريع.\nأخبرني عن وظيفة: الدور @ الشركة (التواريخ). مثال: "متدرب تطوير @ نوفا لابز (2024)".\nاكتب "انتهيت" إذا لم تكن لديك خبرة.'
-                            : 'رائع! 🎉 الآن عن الخبرة العملية.\nأخبرني عن وظيفة: الدور @ الشركة (التواريخ). مثال: "أخصائي تسويق @ نوفا لابز (2022-2024)".\nاكتب "انتهيت" إذا لم تكن لديك خبرة.',
+                            ? 'ممتاز! 🎉 لننتقل الآن إلى ما يعزز مسيرتك - أي تدريب أو عمل جزئي أو مشاريع قمت بها.\nأخبرني عن واحدة: الدور @ الجهة (التواريخ). مثال: "متدرب تطوير @ Nova Labs (2024)".\nاكتب "انتهيت" إن لم يتوفر شيء.'
+                            : 'ممتاز! 🎉 لننتقل الآن إلى مسارك المهني.\nأخبرني عن كل دور عملت فيه: الدور @ الشركة (التواريخ). مثال: "أخصائي تسويق @ Nova Labs (2022-2024)".\nاكتب "انتهيت" عند الانتهاء.',
                         isStudent
-                            ? 'Great! 🎉 Now any internships, part-time work or projects.\nTell me about one: role @ company (dates). e.g. "Dev Intern @ Nova Labs (2024)".\nType "done" if you have none.'
-                            : 'Great! 🎉 Now work experience.\nTell me about a job: role @ company (dates). e.g. "Marketing Specialist @ Nova Labs (2022-2024)".\nType "done" if you have no experience.'
+                            ? 'Excellent! 🎉 Now let’s cover what strengthens your path - any internships, part-time work or projects you’ve done.\nTell me about one: role @ organisation (dates). e.g. "Dev Intern @ Nova Labs (2024)".\nType "done" if you have none.'
+                            : 'Excellent! 🎉 Now let’s walk through your career progression.\nTell me about each role: position @ company (dates). e.g. "Marketing Specialist @ Nova Labs (2022-2024)".\nType "done" when finished.'
                     )
                 );
             }, 700);
@@ -281,8 +285,8 @@ const CVBuilder = () => {
                     setPhase('experience');
                     pushBot(
                         say(
-                            'إنجازات رائعة! هل لديك وظيفة أخرى؟ أخبرني بها (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت".',
-                            'Great achievements! Any other job? Tell me (role @ company (dates)) or type "done".'
+                            'إنجازات مميزة حقًا! هل لديك دور آخر تضيفه؟ أخبرني به (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت".',
+                            'Those are strong achievements! Do you have another role to add? Tell me (role @ company (dates)) or type "done".'
                         )
                     );
                 }}
@@ -315,6 +319,19 @@ const CVBuilder = () => {
                 return;
             }
 
+            // If the user pushes back ("is it necessary?", "do I need this?"),
+            // reassure them and let them skip - never make them feel judged.
+            if (PUSHBACK.test(raw)) {
+                pushBot(
+                    say(
+                        'سؤال وجيه. هذه المعلومة تساعدني على إبراز نقاط قوتك بدقة بدل التخمين - وإن أردت، اكتب "لا" للتخطي ونكمل. 😊',
+                        'Fair question. This detail lets me highlight your strengths precisely instead of guessing - and if you prefer, type "none" to skip and we’ll move on. 😊'
+                    )
+                );
+                nextQuestion();
+                return;
+            }
+
             storeValue(q.key, raw);
 
             // A non-answer ("a lot", "N/A", "idk"...) is never stored or used
@@ -330,15 +347,15 @@ const CVBuilder = () => {
             const ack = {
                 name: say(`تشريف يا ${raw.split(' ')[0]}!`, `Nice to meet you, ${raw.split(' ')[0]}!`),
                 title: /طالب|student|متدرب|intern/i.test(raw)
-                    ? say('رائع - سنركّز على تعليمك ومهاراتك ومسيرتك الدراسية. 🎓', 'Great - as a student we’ll emphasise your education, skills and coursework. 🎓')
-                    : say(`ممتاز، ${titleCase(raw)} - سنبرز هذه الخبرة.`, `Excellent, ${titleCase(raw)} - we’ll highlight that.`),
-                summary: say('ملاحظة رائعة - سنعتمد عليها في سيرتك.', 'Noted - we’ll build on that.'),
-                technicalSkills: say(`ممتاز، ${splitList(raw).length} مهارات قوية. 👌`, `Nice, ${splitList(raw).length} strong skills. 👌`),
-                softSkills: say('ممتاز - سنبرزها.', 'Great - we’ll highlight those.'),
-                education: say('تمام - سنوثّقها بدقة في قسم التعليم.', 'Perfect - we’ll document it precisely under education.'),
-                location: say('تمام، سنضع موقعك الحالي في ترويسة السيرة.', 'Got it - we’ll put your location in the CV header.'),
-                targetRole: say(`واضح، ${titleCase(raw)} - سنصيغ ملخصك وسيرتك حول هذا الدور.`, `Clear - ${titleCase(raw)} - we’ll shape your summary and CV around that role.`),
-                targetIndustry: say('ممتاز - سنوائم لغة السيرة مع هذا القطاع.', 'Excellent - we’ll match the CV tone to that industry.'),
+                    ? say('رائع - سأركّز على تعليمك ومهاراتك ومسيرتك الدراسية. 🎓', 'Great - I’ll centre the CV on your education, skills and coursework. 🎓')
+                    : say(`ممتاز، ${titleCase(raw)} - سنبرز هذا الدور في مقدمة سيرتك.`, `Excellent, ${titleCase(raw)} - I’ll position this role front and centre.`),
+                summary: say('شكرًا لك - سأحوّلها إلى افتتاحية قوية لسيرتك.', 'Thank you - I’ll shape this into a strong opening for your CV.'),
+                technicalSkills: say(`ممتاز - ${splitList(raw).length} مهارات نبني عليها. 👌`, `Great - ${splitList(raw).length} skills to build on. 👌`),
+                softSkills: say('ممتاز - هذه النقاط الشخصية تضيف عمقًا حقيقيًا لملفك.', 'Good - these personal strengths add real depth to your profile.'),
+                education: say('تمام - سأبرز هذا بوضوح في قسم التعليم.', 'Perfect - I’ll present this prominently under education.'),
+                location: say('تمام - سيظهر موقعك في ترويسة السيرة.', 'Got it - your location will sit in the CV header.'),
+                targetRole: say(`واضح - ${titleCase(raw)} - سأخصّص سيرتك بالكامل لهذا الدور.`, `Understood - ${titleCase(raw)} - I’ll tailor your whole CV to this role.`),
+                targetIndustry: say('ممتاز - سأوائم لهجة السيرة مع هذا القطاع.', 'Excellent - I’ll match the tone to that industry.'),
             }[q.key];
             if (ack) pushBot(ack);
 
@@ -380,7 +397,7 @@ const CVBuilder = () => {
                     setTyping(false);
                     pushBot(
                         say(
-                            `تم التسجيل! الآن أخبرني بإنجاز مميّز في "${job.role || 'هذه الوظيفة'}" وسأعيد صياغته بشكل احترافي. اكتب "تم" عند الانتهاء.`,
+                            `تم التسجيل! الآن أخبرني بإنجاز مميّز في دور "${job.role || 'هذا الدور'}" وسأعيد صياغته بشكل احترافي. اكتب "تم" عند الانتهاء.`,
                             `Logged! Now tell me a standout achievement in "${job.role || 'this role'}" and I’ll rewrite it professionally. Type "done" when finished.`
                         )
                     );
@@ -401,8 +418,8 @@ const CVBuilder = () => {
                     setTyping(false);
                     pushBot(
                         say(
-                            `في أي شركة كان "${job.role}"؟ (أو اكتب "تخطي")`,
-                            `Which company was "${job.role}" at? (or type "skip")`
+                            `في أي جهة عملت بدور "${job.role}"؟ (أو اكتب "تخطي")`,
+                            `Which company did you work for as "${job.role}"? (or type "skip")`
                         )
                     );
                 }, 600);
@@ -415,8 +432,8 @@ const CVBuilder = () => {
                 setTyping(false);
                 pushBot(
                     say(
-                        `تم تسجيل "${job.role}" في ${job.company} 🙌\nالآن أخبرني عن إنجاز مميّز في هذه الوظيفة - سأعيد صياغته بشكل احترافي. يمكنك إضافة أكثر من إنجاز، وعند الانتهاء اكتب "تم" لإنهاء هذه الوظيفة.`,
-                        `Logged "${job.role}" at ${job.company} 🙌\nNow tell me a standout achievement in this role - I’ll rewrite it professionally. You can add more than one, and type "done" when finished with this job.`
+                        `تم تسجيل "${job.role}" في ${job.company} 🙌\nالآن أخبرني بإنجاز مميّز في هذا الدور - سأصقله ليصبح قويًا ومقنعًا. يمكنك إضافة أكثر من إنجاز، واكتب "تم" عند الانتهاء.`,
+                        `Logged "${job.role}" at ${job.company} 🙌\nNow tell me a standout achievement in this role - I’ll polish it into something powerful. You can add more than one, and type "done" when finished.`
                     )
                 );
                 askNextAchievement(job);
@@ -430,12 +447,12 @@ const CVBuilder = () => {
                 setPhase('experience');
                 pushBot(
                     say(
-                        'إنجازات رائعة! هل لديك وظيفة أخرى؟ أخبرني بها (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت".',
-                        'Great achievements! Any other job? Tell me (role @ company (dates)) or type "done".'
+                        'إنجازات مميزة حقًا! هل لديك دور آخر تضيفه؟ أخبرني به (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت".',
+                        'Those are strong achievements! Do you have another role to add? Tell me (role @ company (dates)) or type "done".'
                     )
                 );
             } else {
-                pushBot(say('اكتب إنجازك في الصندوق أعلاه، وسأقوم بتحسينه لك ✨', 'Type your achievement in the box above and I’ll polish it ✨'));
+                pushBot(say('اكتب إنجازك في الصندوق أعلاه وسأعمل على صقله ليصبح مقنعًا ✨', 'Type your achievement in the box above and I’ll polish it into something compelling ✨'));
             }
             return;
         }
@@ -459,20 +476,20 @@ const CVBuilder = () => {
         setBusy(true);
         pushBot(
             say(
-                `فهمتك! ${data.name || ''}، ${data.title || 'باحث عن فرصة'} من ${data.location || 'بورسعيد'} - الهدف: ${data.targetRole || 'فرصة مناسبة'} في ${data.targetIndustry || 'مجالك'}. سأبني سيرتك حول هذه الصورة.`,
+                `فهمتك! ${data.name || ''}، ${data.title || 'محترف'} من ${data.location || 'بورسعيد'} - الهدف: ${data.targetRole || 'دور مناسب'} في ${data.targetIndustry || 'مجالك'}. سأبني سيرتك حول هذه الصورة.`,
                 `Got it! ${data.name || ''} - a ${data.title || 'professional'} from ${data.location || 'Port Said'}, targeting ${data.targetRole || 'a fitting role'} in ${data.targetIndustry || 'your field'}. I’ll build your CV around that.`
             )
         );
-        pushBot(say('أقوم الآن بكتابة ملخصك الاحترافي…', 'Writing your professional summary…'));
+        pushBot(say('أكتب لك الآن ملخصًا مهنيًا يعرض أفضل ما لديك…', 'I’m writing a professional summary that showcases your strengths…'));
         try {
             const { summary } = await writeSummary(data, isArabic ? 'ar' : 'en');
             setData((prev) => ({ ...prev, summary }));
-            pushBot(say(`هذا ملخصك:`, `Here is your summary:`));
+            pushBot(say(`إليك مسودّة ملخصك:`, `Here’s a draft of your summary:`));
             pushBot(summary);
             pushBot(
                 say(
                     'يمكنك تعديله بكتابة "تعديل: النص الجديد"، أو اكتب "متابعة" لبناء سيرتك الكاملة.',
-                    'You can edit it by typing "edit: your new text", or type "continue" to build your full CV.'
+                    'You can refine it by typing "edit: your new text", or type "continue" to build your full CV.'
                 )
             );
         } catch (err) {
@@ -487,7 +504,7 @@ const CVBuilder = () => {
     const finishToGenerate = async () => {
         setPhase('done');
         setBusy(true);
-        pushBot(say('أبني سيرتك الاحترافية الآن… 🛠️', 'Building your professional CV now… 🛠️'));
+        pushBot(say('أصوغ سيرتك الاحترافية الآن… ✨', 'Crafting your professional CV now… ✨'));
         try {
             const result = await generateCV(data, template, isArabic ? 'ar' : 'en');
             setCv(result);

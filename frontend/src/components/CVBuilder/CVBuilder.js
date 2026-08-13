@@ -100,7 +100,9 @@ const CVBuilder = () => {
 
     /* ------------------------- kick-off on mount ------------------------- */
     useEffect(() => {
-        const arabic = document.documentElement.getAttribute('lang') === 'ar';
+        // Use the context language (first render) — document lang isn't set yet
+        // because this effect runs before the LanguageProvider's own effect.
+        const arabic = isArabic;
         const first = FLOW[0];
         const welcome = arabic
             ? 'أهلًا بك 👋 أنا نوفا، مستشارك الشخصي لبناء السيرة الذاتية.\nسأسألك بعض الأسئلة البسيطة ثم أصوغ لك سيرة ذاتية احترافية جاهزة للتحميل. لنبدأ!'

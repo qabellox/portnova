@@ -1,0 +1,101 @@
+/* ============================================================
+   PROFILE GATE — persistent sign-in + credentials wizard
+   Smooth, step-by-step, premium nautical theme. No AI calls.
+   ============================================================ */
+
+.page-shell--narrow {
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.profile-gate {
+    text-align: center;
+    padding: 2rem 1.6rem;
+    animation: pageEnter 0.55s ease both;
+}
+
+.profile-gate__icon {
+    width: 4.4rem;
+    height: 4.4rem;
+    margin: 0 auto 1.1rem;
+    display: grid;
+    place-items: center;
+    font-size: 2.1rem;
+    border-radius: 1.4rem;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.35), rgba(212, 175, 55, 0.28));
+    border: 1px solid rgba(125, 211, 252, 0.4);
+    box-shadow: 0 14px 34px rgba(6, 16, 30, 0.5);
+}
+
+.profile-gate__icon--success {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.45), rgba(13, 148, 136, 0.3));
+    border-color: rgba(45, 212, 191, 0.6);
+}
+
+.profile-gate__steps {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.profile-gate__dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: rgba(125, 211, 252, 0.25);
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.profile-gate__dot--on {
+    background: linear-gradient(90deg, var(--turquoise), var(--sandy));
+    transform: scale(1.35);
+}
+
+.profile-gate__step {
+    text-align: start;
+    animation: profileStepIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes profileStepIn {
+    from { opacity: 0; transform: translateX(18px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.field-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.profile-gate__cv {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 1.4rem 1rem;
+    cursor: pointer;
+    font: inherit;
+    color: var(--text);
+    border-radius: 1rem;
+    background: rgba(8, 26, 46, 0.6);
+    border: 1px dashed rgba(125, 211, 252, 0.4);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.profile-gate__cv:hover {
+    border-color: var(--sandy);
+    transform: translateY(-2px);
+}
+
+.profile-gate__error {
+    margin-top: 0.75rem;
+    color: var(--danger);
+}
+
+.profile-gate__actions {
+    margin-top: 1.2rem;
+}

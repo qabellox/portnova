@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { writeSummary, generateCV, buildLocalCV } from '../../services/cvBuilder';
 import OnboardingQuestions from './OnboardingQuestions';
 import AchievementExtractor from './AchievementExtractor';
@@ -64,11 +65,24 @@ const nextId = () => `cv-msg-${messageSeq++}`;
 /* ------------------------------ component ------------------------------ */
 const CVBuilder = () => {
     const { isArabic } = useLanguage();
+    const { user } = useAuth();
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [typing, setTyping] = useState(false);
     const [busy, setBusy] = useState(false);
-    const [data, setData] = useState(DEFAULT_DATA);
+    // Seed from the saved profile (ProfileGate) so the agent starts fluent:
+    // name/email/phone/location are already known and their questions are skipped.
+    const [data, setData] = useState(() => {
+        const meta = user?.user_metadata || {};
+        return {
+            ...DEFAULT_DATA,
+            name: meta.fullName || '',
+            email: user?.email || '',
+            phone: meta.phone || '',
+            location: meta.location || '',
+            cvPath: meta.cvPath || '',
+        };
+    });
     const [flowIndex, setFlowIndex] = useState(0);
     const [phase, setPhase] = useState('intro'); // intro | questions | experience | achievements | summary | done
     const [cv, setCv] = useState(null);
@@ -103,14 +117,40 @@ const CVBuilder = () => {
         // Use the context language (first render) — document lang isn't set yet
         // because this effect runs before the LanguageProvider's own effect.
         const arabic = isArabic;
-        const first = FLOW[0];
+        const name = data.name;
+        // Skip onboarding questions already answered in the saved profile.
+        const startIndex = Math.max(0, FLOW.findIndex((q) => !String(data[q.key] || '').trim()));
+
         const welcome = arabic
-            ? 'أهلًا بك 👋 أنا نوفا، مستشارك الشخصي لبناء السيرة الذاتية.\nسأسألك بعض الأسئلة البسيطة ثم أصوغ لك سيرة ذاتية احترافية جاهزة للتحميل. لنبدأ!'
-            : 'Welcome! 👋 I’m Nova, your personal CV consultant.\nI’ll ask a few simple questions, then craft you a professional CV ready to download. Let’s begin!';
+            ? name
+                ? `أهلًا بعودتك يا ${name} 👋 أنا نوفا. بياناتك الأساسية محفوظة — لنكمل بناء سيرتك الذكية!`
+                : 'أهلًا بك 👋 أنا نوفا، مستشارك الشخصي لبناء السيرة الذاتية.\nسأسألك بعض الأسئلة البسيطة ثم أصوغ لك سيرة ذاتية احترافية.'
+            : name
+                ? `Welcome back, ${name}! 👋 I’m Nova. Your basic details are saved — let’s keep building your CV!`
+                : 'Welcome! 👋 I’m Nova, your personal CV consultant.\nI’ll ask a few simple questions, then craft you a professional CV.';
+
         setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: welcome }]);
+        setFlowIndex(startIndex);
+
         const timer = window.setTimeout(() => {
-            setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: arabic ? first.askAr : first.askEn }]);
-            setPhase('questions');
+            if (startIndex >= FLOW.length) {
+                // Everything is already known from the profile — straight to experience.
+                setPhase('experience');
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        id: nextId(),
+                        from: 'bot',
+                        text: arabic
+                            ? 'بياناتك محفوظة بالكامل 🎉 لننتقل إلى الخبرة العملية.\nأخبرني عن وظيفة: الدور @ الشركة (التواريخ). مثال: "أخصائي تسويق @ نوفا لابز (2022–2024)".\nاكتب "انتهيت" إذا لم تكن لديك خبرة.'
+                            : 'Your profile is fully saved 🎉 Let’s move to experience.\nTell me about a job: role @ company (dates). e.g. "Marketing Specialist @ Nova Labs (2022–2024)".\nType "done" if you have no experience.',
+                    },
+                ]);
+            } else {
+                const first = FLOW[startIndex];
+                setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: arabic ? first.askAr : first.askEn }]);
+                setPhase('questions');
+            }
         }, 900);
         return () => window.clearTimeout(timer);
     }, []);

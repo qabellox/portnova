@@ -91,29 +91,26 @@ const CVBuilder = () => {
         return 4;
     }, [phase, flowIndex]);
 
-    const phaseLabel = useMemo(() => {
-        if (phase === 'done') return say('اكتمل بناء سيرتك الذاتية ✨', 'Your CV is ready ✨');
-        if (phase === 'summary') return say('كتابة الملخص الاحترافي…', 'Writing your professional summary…');
-        if (phase === 'achievements') return say('استخراج الإنجازات المميّزة', 'Extracting standout achievements');
-        if (phase === 'experience') return say('الخبرة العملية', 'Work experience');
-        return say('أسئلة التهيئة', 'Onboarding questions');
-    }, [phase, isArabic]);
+    const phaseLabel =
+        phase === 'done' ? say('اكتمل بناء سيرتك الذاتية ✨', 'Your CV is ready ✨')
+            : phase === 'summary' ? say('كتابة الملخص الاحترافي…', 'Writing your professional summary…')
+                : phase === 'achievements' ? say('استخراج الإنجازات المميّزة', 'Extracting standout achievements')
+                    : phase === 'experience' ? say('الخبرة العملية', 'Work experience')
+                        : say('أسئلة التهيئة', 'Onboarding questions');
 
     /* ------------------------- kick-off on mount ------------------------- */
     useEffect(() => {
-        const welcome = say(
-            'أهلًا بك 👋 أنا نوفا، مستشارك الشخصي لبناء السيرة الذاتية.\nسأسألك بعض الأسئلة البسيطة ثم أصوغ لك سيرة ذاتية احترافية جاهزة للتحميل. لنبدأ!',
-            'Welcome! 👋 I’m Nova, your personal CV consultant.\nI’ll ask a few simple questions, then craft you a professional CV ready to download. Let’s begin!'
-        );
-        pushBot(welcome);
+        const arabic = document.documentElement.getAttribute('lang') === 'ar';
         const first = FLOW[0];
-        setTyping(true);
-        setTimeout(() => {
-            setTyping(false);
-            pushBot(say(first.askAr, first.askEn));
+        const welcome = arabic
+            ? 'أهلًا بك 👋 أنا نوفا، مستشارك الشخصي لبناء السيرة الذاتية.\nسأسألك بعض الأسئلة البسيطة ثم أصوغ لك سيرة ذاتية احترافية جاهزة للتحميل. لنبدأ!'
+            : 'Welcome! 👋 I’m Nova, your personal CV consultant.\nI’ll ask a few simple questions, then craft you a professional CV ready to download. Let’s begin!';
+        setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: welcome }]);
+        const timer = window.setTimeout(() => {
+            setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: arabic ? first.askAr : first.askEn }]);
             setPhase('questions');
         }, 900);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        return () => window.clearTimeout(timer);
     }, []);
 
     /* ------------------------- store + advance flow ------------------------- */
@@ -136,7 +133,7 @@ const CVBuilder = () => {
         return next;
     };
 
-    const nextQuestion = (updated) => {
+    const nextQuestion = () => {
         const idx = flowIndex + 1;
         if (idx < FLOW.length) {
             setFlowIndex(idx);
@@ -184,7 +181,7 @@ const CVBuilder = () => {
         /* phase: questions */
         if (phase === 'questions') {
             const q = FLOW[flowIndex];
-            const updated = storeValue(q.key, raw);
+            storeValue(q.key, raw);
 
             // friendly acknowledgment for skills/summary to keep it premium
             const ack = {
@@ -195,7 +192,7 @@ const CVBuilder = () => {
             }[q.key];
             if (ack) pushBot(ack);
 
-            nextQuestion(updated);
+            nextQuestion();
             return;
         }
 

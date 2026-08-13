@@ -62,7 +62,7 @@ const buildWordDoc = (cv, isArabic) => {
     return html;
 };
 
-const CVDownload = ({ cv, template = 'modern', fileName = 'PortNova-CV' }) => {
+const CVDownload = ({ cv, fileName = 'PortNova-CV' }) => {
     const { isArabic } = useLanguage();
     const [busy, setBusy] = useState(null);
 

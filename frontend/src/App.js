@@ -7,7 +7,7 @@ import Home from './pages/Home';
 import Jobs from './pages/Jobs';
 import Courses from './pages/Courses';
 import CVService from './pages/CVService';
-import ProfileGate from './components/ProfileGate';
+import { RequireProfile } from './components/ProfileGate';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -15,20 +15,9 @@ import Admin from './pages/Admin';
 import About from './pages/About';
 import { useEffect } from 'react';
 
-const RequireAuth = ({ children }) => {
-    const { session, loading } = useAuth();
-    const { isArabic } = useLanguage();
-
-    if (loading) {
-        return <div className="empty-state">{isArabic ? 'جارٍ فحص الجلسة...' : 'Checking session...'}</div>;
-    }
-
-    if (!session) {
-        return <Navigate to="/login" replace />;
-    }
-
-    return children;
-};
+// `RequireProfile` (imported from ProfileGate) is the site-wide gate: every
+// visitor must sign in AND complete their saved profile credentials once
+// (name, phone, location). Applied to every page except /login and /register.
 
 const navItems = [
     { to: '/', ar: 'الرئيسية', en: 'Home', end: true },
@@ -200,15 +189,15 @@ function Shell() {
             <ShellNav />
             <main className="app-main">
                 <Routes>
-                    <Route path="/" element={<div key={location.pathname}><Home /></div>} />
-                    <Route path="/jobs" element={<div key={location.pathname}><Jobs /></div>} />
-                    <Route path="/courses" element={<div key={location.pathname}><Courses /></div>} />
+                    <Route path="/" element={<RequireProfile><div key={location.pathname}><Home /></div></RequireProfile>} />
+                    <Route path="/jobs" element={<RequireProfile><div key={location.pathname}><Jobs /></div></RequireProfile>} />
+                    <Route path="/courses" element={<RequireProfile><div key={location.pathname}><Courses /></div></RequireProfile>} />
                     <Route
                         path="/cv-service"
                         element={
-                            <ProfileGate>
+                            <RequireProfile>
                                 <div key={location.pathname}><CVService /></div>
-                            </ProfileGate>
+                            </RequireProfile>
                         }
                     />
                     <Route path="/cv-builder" element={<Navigate to="/cv-service" replace />} />
@@ -217,23 +206,25 @@ function Shell() {
                     <Route
                         path="/dashboard"
                         element={
-                            <RequireAuth>
+                            <RequireProfile>
                                 <div key={location.pathname}><Dashboard /></div>
-                            </RequireAuth>
+                            </RequireProfile>
                         }
                     />
                     <Route
                         path="/about"
                         element={
-                            <div key={location.pathname}><About /></div>
+                            <RequireProfile>
+                                <div key={location.pathname}><About /></div>
+                            </RequireProfile>
                         }
                     />
                     <Route
                         path="/admin"
                         element={
-                            <RequireAuth>
+                            <RequireProfile>
                                 <div key={location.pathname}><Admin /></div>
-                            </RequireAuth>
+                            </RequireProfile>
                         }
                     />
                 </Routes>

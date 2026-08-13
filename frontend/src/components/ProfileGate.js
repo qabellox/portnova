@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
@@ -12,10 +13,39 @@ const STEPS = [
     { key: 'cv' },
 ];
 
+const isProfileComplete = (meta = {}) => Boolean(meta.fullName && meta.phone && meta.location);
+
+/** Site-wide gate: requires sign-in AND the persisted credentials before any
+ *  page is usable. This is the "persistent identity" wall — no AI calls, no
+ *  extra APIs — every visitor fills their details once, then the whole
+ *  platform (jobs, courses, CV, dashboard) unlocks. */
+export const RequireProfile = ({ children }) => {
+    const { user, loading } = useAuth();
+    const { isArabic } = useLanguage();
+
+    if (loading) {
+        return (
+            <div className="page-shell">
+                <div className="empty-state">{isArabic ? 'جارٍ التحقق من الحساب…' : 'Checking your account…'}</div>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (!isProfileComplete(user.user_metadata || {})) {
+        return <ProfileForm existing={user.user_metadata || {}} children={children} />;
+    }
+
+    return children;
+};
+
 /** Gate that persists the user's identity + core credentials before they use
- *  the CV agent (and, as a follow-up, the rest of the site). Smooth, step-by-
- *  step, no AI calls. Everything is saved to the Supabase profile metadata so
- *  the CV builder can start from real data and ask smarter questions. */
+ *  the CV agent (and the rest of the site). Smooth, step-by-step, no AI calls.
+ *  Everything is saved to the Supabase profile metadata so the CV builder can
+ *  start from real data and ask smarter questions. */
 const ProfileGate = ({ children }) => {
     const { user, loading } = useAuth();
     const { isArabic } = useLanguage();
@@ -44,16 +74,15 @@ const ProfileGate = ({ children }) => {
     }
 
     const meta = user.user_metadata || {};
-    const complete = Boolean(meta.fullName && meta.phone && meta.location);
 
-    if (!complete) {
+    if (!isProfileComplete(meta)) {
         return <ProfileForm existing={meta} />;
     }
 
     return children;
 };
 
-const ProfileForm = ({ existing = {} }) => {
+const ProfileForm = ({ existing = {}, children }) => {
     const { user } = useAuth();
     const { isArabic, t } = useLanguage();
     const [step, setStep] = useState(0);
@@ -126,7 +155,11 @@ const ProfileForm = ({ existing = {} }) => {
 
     const skip = () => save();
 
+    // When used as the site-wide gate (children passed), unlock the content as
+    // soon as the details are saved — no dead-end. When used for the CV-only
+    // gate (no children), show the friendly confirmation card.
     if (done) {
+        if (children) return children;
         return (
             <div className="page-shell page-shell--narrow">
                 <GlassCard className="profile-gate">
@@ -134,7 +167,7 @@ const ProfileForm = ({ existing = {} }) => {
                     <SectionHeading
                         kicker={isArabic ? 'تم' : 'Done'}
                         title={isArabic ? 'شكرًا! بياناتك محفوظة 🎉' : 'Thanks — your details are saved 🎉'}
-                        subtitle={isArabic ? 'يمكنك الآن مواصلة بناء سيرتك الذكية مع نوفا.' : 'You can now continue building your CV with Nova.'}
+                        subtitle={isArabic ? 'تم تفعيل حسابك — يمكنك الآن تصفح المنصة كاملة.' : 'Your account is now active — you can browse the whole platform.'}
                     />
                 </GlassCard>
             </div>

@@ -1,0 +1,122 @@
+/* ============================================================
+   ENHANCED SIGNUP FLOW — multi-step registration wizard
+   Smooth transitions, progress dots, smart fields, review step.
+   ============================================================ */
+
+.field-label {
+    display: grid;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 0.9rem;
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+}
+
+/* progress dots */
+.signup-progress {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin: 0.2rem 0 1.1rem;
+}
+
+.signup-progress__dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: rgba(125, 211, 252, 0.25);
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.signup-progress__dot--on {
+    background: linear-gradient(90deg, var(--turquoise), var(--sandy));
+    transform: scale(1.4);
+}
+
+/* step container */
+.signup-flow {
+    animation: signupStepIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes signupStepIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* actions */
+.signup-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 1.2rem;
+}
+
+/* role picker pinned under the form */
+.signup-role {
+    margin-top: 1.2rem;
+}
+
+/* review */
+.signup-review {
+    display: grid;
+    gap: 0.45rem;
+    padding: 1rem 1.1rem;
+    border-radius: 1rem;
+    background: rgba(8, 26, 46, 0.6);
+    border: 1px solid rgba(125, 211, 252, 0.16);
+    margin-bottom: 1rem;
+}
+
+.signup-review__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    font-size: 0.88rem;
+}
+
+.signup-review__row span {
+    color: var(--muted);
+}
+
+.signup-review__row strong {
+    text-align: end;
+    color: var(--text);
+}
+
+/* consent */
+.signup-consent {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.signup-consent__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    cursor: pointer;
+    font-size: 0.84rem;
+    color: var(--text);
+    line-height: 1.45;
+}
+
+.signup-consent__item input {
+    margin-top: 0.2rem;
+    accent-color: var(--turquoise);
+    flex: 0 0 auto;
+}
+
+/* mobile */
+@media (max-width: 640px) {
+    .field-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}

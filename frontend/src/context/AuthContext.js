@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
         };
     }, []);
 
-    const register = async ({ email, password, fullName, role, companyName }) =>
+    const register = async ({ email, password, fullName, role, companyName, profile = {} }) =>
         supabase.auth.signUp({
             email,
             password,
@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }) => {
                     fullName,
                     role,
                     ...(role === 'provider' && companyName ? { companyName } : {}),
+                    ...(role === 'seeker' ? profile : {}),
                 },
             },
         });

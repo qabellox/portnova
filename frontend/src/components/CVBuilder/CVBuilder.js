@@ -32,24 +32,40 @@ const FLOW = [
 
 const DONE_WORDS = ['done', 'تم', 'لا', 'لا يوجد', 'none', 'n/a', 'na', 'انتهيت', 'no'];
 const isDone = (v) => DONE_WORDS.includes(String(v || '').trim().toLowerCase());
+const SKIP_WORDS = ['skip', 'تخطي', 'تجاوز'];
+
+const cleanString = (v) => String(v || '').replace(/\s+/g, ' ').trim();
+
+const isArabicText = (v) => /[\u0600-\u06FF]/.test(v);
+
+// Friendly English title-casing for names and job titles (Arabic left as-is).
+const titleCase = (v) => {
+    const s = cleanString(v);
+    if (!s || isArabicText(s)) return s;
+    return s
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .replace(/\b(and|of|the|for|in|at|with|on)\b/gi, (w) => w.toLowerCase());
+};
 
 const splitList = (v) =>
-    String(v || '')
-        .split(/[,،;؛\n]+/)
-        .map((s) => s.trim())
-        .filter(Boolean);
+    [...new Set(
+        String(v || '')
+            .split(/[,،;؛\n]+/)
+            .map((s) => cleanString(s))
+            .filter(Boolean)
+    )];
 
 const parseLanguages = (v) =>
     splitList(v).map((item) => {
         const m = item.match(/^(.*?)\s*[\(（](.*?)[\)）]\s*$/);
-        if (m) return { name: m[1].trim(), level: m[2].trim() };
+        if (m) return { name: cleanString(m[1]), level: cleanString(m[2]) };
         return { name: item, level: '' };
     });
 
 const parseJob = (v) => {
-    const m = String(v).match(/^\s*(.*?)\s*(?:@| at | - | - |-)\s*(.*?)\s*(?:\(([^)]*)\))?\s*$/);
-    if (m) return { role: m[1].trim(), company: m[2].trim(), dates: (m[3] || '').trim() };
-    return { role: String(v).trim(), company: '', dates: '' };
+    const m = String(v).match(/^\s*(.*?)\s*(?:@| at | - |-)\s*(.*?)\s*(?:\(([^)]*)\))?\s*$/);
+    if (m) return { role: titleCase(m[1]), company: titleCase(m[2]), dates: cleanString(m[3]) };
+    return { role: titleCase(String(v)), company: '', dates: '' };
 };
 
 const DEFAULT_DATA = {
@@ -88,6 +104,10 @@ const CVBuilder = () => {
     const [cv, setCv] = useState(null);
     const [template, setTemplate] = useState('modern');
     const [error, setError] = useState('');
+    // Adaptive follow-ups: which question is being clarified, and whether we're
+    // waiting for a missing company name after a job was logged.
+    const [clarify, setClarify] = useState(null);
+    const [askCompanyFor, setAskCompanyFor] = useState(null);
 
     const pushBot = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text }]);
     const pushUser = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'user', text }]);
@@ -156,24 +176,47 @@ const CVBuilder = () => {
     }, []);
 
     /* ------------------------- store + advance flow ------------------------- */
-    const storeValue = (key, raw) => {
+    const storeValue = (key, raw, append = false) => {
         const next = { ...data };
+        const v = cleanString(raw);
+        const mergeList = (existing) => [...new Set([...(existing || []), ...splitList(raw)])];
         switch (key) {
-            case 'technicalSkills': next.technicalSkills = splitList(raw); break;
-            case 'softSkills': next.softSkills = splitList(raw); break;
+            case 'technicalSkills': next.technicalSkills = append ? mergeList(data.technicalSkills) : splitList(raw); break;
+            case 'softSkills': next.softSkills = append ? mergeList(data.softSkills) : splitList(raw); break;
             case 'certifications':
                 next.certifications = isDone(raw) ? [] : splitList(raw).map((name) => ({ name, issuer: '', year: '' }));
                 break;
             case 'languages': next.languages = isDone(raw) ? [] : parseLanguages(raw); break;
-            case 'linkedin': next.linkedin = isDone(raw) ? '' : raw.trim(); break;
-            case 'education': next.education = raw.trim(); break;
-            case 'fieldOfStudy': next.fieldOfStudy = raw.trim(); break;
-            case 'summary': next.summary = raw.trim(); break;
-            default: next[key] = raw.trim();
+            case 'linkedin': next.linkedin = isDone(raw) ? '' : v; break;
+            case 'education': next.education = titleCase(v); break;
+            case 'fieldOfStudy': next.fieldOfStudy = titleCase(v); break;
+            case 'summary': next.summary = append && next.summary ? `${next.summary} ${v}` : v; break;
+            case 'name': next.name = titleCase(v); break;
+            case 'title': next.title = titleCase(v); break;
+            case 'location': next.location = titleCase(v); break;
+            default: next[key] = v;
         }
         setData(next);
         return next;
     };
+
+    // Ask a gentle follow-up when an answer is too thin to build a strong CV.
+    const needsClarify = (key, raw) => {
+        if (key === 'summary') return cleanString(raw).length < 24;
+        if (key === 'technicalSkills' || key === 'softSkills') return splitList(raw).length < 2;
+        return false;
+    };
+
+    const clarifyMsg = (key) =>
+        key === 'summary'
+            ? say(
+                'هذا مختصر قليلًا - أخبرني بأكثر قليلًا عن أقوى ما تميّزت به وهدفك المهني؟ (حتى سطر إضافي يساعدني في كتابة ملخص قوي)',
+                'That was a bit brief - can you tell me a little more about your strongest strengths and your career goal? Even one more line helps me write a strong summary.'
+              )
+            : say(
+                'ممتاز - هل يمكنك إضافة مهارة أو مهارتين أخريين؟ سيرتك تصبح أقوى بمهارات أوسع.',
+                'Nice - can you add one or two more skills? Your CV gets stronger with a fuller set.'
+              );
 
     const nextQuestion = () => {
         const idx = flowIndex + 1;
@@ -238,25 +281,44 @@ const CVBuilder = () => {
         /* phase: questions */
         if (phase === 'questions') {
             const q = FLOW[flowIndex];
+
+            // A follow-up answer was expected (thin summary / too-few skills):
+            // merge it in and move on.
+            if (clarify) {
+                storeValue(clarify, raw, true);
+                setClarify(null);
+                pushBot(say('شكرًا - أصبحت المعلومات أكثر دقة الآن. 👍', 'Thanks - that sharpens it. 👍'));
+                nextQuestion();
+                return;
+            }
+
             storeValue(q.key, raw);
 
             // Friendly, response-aware acknowledgments (no API call - instant).
+            // They reference the user's actual answer so it feels understood.
             const ack = {
                 name: say(`تشريف يا ${raw.split(' ')[0]}!`, `Nice to meet you, ${raw.split(' ')[0]}!`),
                 title: /طالب|student|متدرب|intern/i.test(raw)
                     ? say('رائع - سنركّز على تعليمك ومهاراتك ومسيرتك الدراسية. 🎓', 'Great - as a student we’ll emphasise your education, skills and coursework. 🎓')
-                    : say('ممتاز - سنبرز هذه الخبرة.', 'Great - we’ll highlight that experience.'),
+                    : say(`ممتاز، ${titleCase(raw)} - سنبرز هذه الخبرة.`, `Excellent, ${titleCase(raw)} - we’ll highlight that.`),
                 summary: say('ملاحظة رائعة - سنعتمد عليها في سيرتك.', 'Noted - we’ll build on that.'),
-                technicalSkills: say('ممتاز، مهارات قوية. 👌', 'Nice, strong skills. 👌'),
+                technicalSkills: say(`ممتاز، ${splitList(raw).length} مهارات قوية. 👌`, `Nice, ${splitList(raw).length} strong skills. 👌`),
                 softSkills: say('ممتاز - سنبرزها.', 'Great - we’ll highlight those.'),
                 education: say('تمام - سنوثّقها بدقة في قسم التعليم.', 'Perfect - we’ll document it precisely under education.'),
                 location: say('تمام، سنضع موقعك الحالي في ترويسة السيرة.', 'Got it - we’ll put your location in the CV header.'),
-                targetRole: say('واضح - سنصيغ ملخصك وسيرتك حول هذا الدور.', 'Clear - we’ll shape your summary and CV around that role.'),
+                targetRole: say(`واضح، ${titleCase(raw)} - سنصيغ ملخصك وسيرتك حول هذا الدور.`, `Clear - ${titleCase(raw)} - we’ll shape your summary and CV around that role.`),
                 targetIndustry: say('ممتاز - سنوائم لغة السيرة مع هذا القطاع.', 'Excellent - we’ll match the CV tone to that industry.'),
             }[q.key];
             if (ack) pushBot(ack);
 
-            nextQuestion();
+            // If the answer was too thin, ask one smart follow-up instead of
+            // blindly moving on.
+            if (needsClarify(q.key, raw)) {
+                setClarify(q.key);
+                pushBot(clarifyMsg(q.key));
+            } else {
+                nextQuestion();
+            }
             return;
         }
 
@@ -265,23 +327,65 @@ const CVBuilder = () => {
             if (isDone(raw)) {
                 if (!data.experience.length) {
                     pushBot(say('لا مشكلة - سنركّز على مهاراتك وتعليمك.', 'No problem - we’ll focus on your skills and education.'));
-                    beginSummary();
-                } else {
-                    beginSummary();
                 }
+                beginSummary();
                 return;
             }
+
+            // We're waiting for a missing company name for the job just logged.
+            if (askCompanyFor) {
+                const comp = isDone(raw) || SKIP_WORDS.includes(cleanString(raw).toLowerCase())
+                    ? ''
+                    : cleanString(raw).replace(/^at\s+/i, '');
+                setData((prev) => ({
+                    ...prev,
+                    experience: prev.experience.map((j) => (j._id === askCompanyFor ? { ...j, company: titleCase(comp) } : j)),
+                }));
+                setAskCompanyFor(null);
+                const job = data.experience.find((j) => j._id === askCompanyFor) || { _id: askCompanyFor, role: '' };
+                setPhase('achievements');
+                setTyping(true);
+                setTimeout(() => {
+                    setTyping(false);
+                    pushBot(
+                        say(
+                            `تم التسجيل! الآن أخبرني بإنجاز مميّز في "${job.role || 'هذه الوظيفة'}" وسأعيد صياغته بشكل احترافي. اكتب "تم" عند الانتهاء.`,
+                            `Logged! Now tell me a standout achievement in "${job.role || 'this role'}" and I’ll rewrite it professionally. Type "done" when finished.`
+                        )
+                    );
+                    askNextAchievement(job);
+                }, 600);
+                return;
+            }
+
             const job = { _id: `${Date.now()}`, ...parseJob(raw), bullets: [] };
             const updated = { ...data, experience: [...data.experience, job] };
             setData(updated);
+
+            // If no company came with the role, ask for it - a real consultant would.
+            if (!job.company) {
+                setAskCompanyFor(job._id);
+                setTyping(true);
+                setTimeout(() => {
+                    setTyping(false);
+                    pushBot(
+                        say(
+                            `في أي شركة كان "${job.role}"؟ (أو اكتب "تخطي")`,
+                            `Which company was "${job.role}" at? (or type "skip")`
+                        )
+                    );
+                }, 600);
+                return;
+            }
+
             setPhase('achievements');
             setTyping(true);
             setTimeout(() => {
                 setTyping(false);
                 pushBot(
                     say(
-                        `تم تسجيل "${job.role}"${job.company ? ` في ${job.company}` : ''} 🙌\nالآن أخبرني عن إنجاز مميّز في هذه الوظيفة - سأعيد صياغته بشكل احترافي. يمكنك إضافة أكثر من إنجاز، وعند الانتهاء اكتب "تم" لإنهاء هذه الوظيفة.`,
-                        `Logged "${job.role}"${job.company ? ` at ${job.company}` : ''} 🙌\nNow tell me a standout achievement in this role - I’ll rewrite it professionally. You can add more than one, and type "done" when finished with this job.`
+                        `تم تسجيل "${job.role}" في ${job.company} 🙌\nالآن أخبرني عن إنجاز مميّز في هذه الوظيفة - سأعيد صياغته بشكل احترافي. يمكنك إضافة أكثر من إنجاز، وعند الانتهاء اكتب "تم" لإنهاء هذه الوظيفة.`,
+                        `Logged "${job.role}" at ${job.company} 🙌\nNow tell me a standout achievement in this role - I’ll rewrite it professionally. You can add more than one, and type "done" when finished with this job.`
                     )
                 );
                 askNextAchievement(job);

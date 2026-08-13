@@ -105,15 +105,19 @@ const improveAchievement = async (body) => {
         {
             role: 'system',
             content:
-                `You are Nova, a premium CV consultant for PortNova (Port Said, Egypt). ` +
-                `Rewrite the user's raw achievement into ONE crisp, quantified, ATS-friendly bullet point in ${lang}. ` +
-                `Never invent numbers the user did not state - if a metric is missing, use the skills/actions they mention ` +
-                `and phrase it powerfully without fabricating data. Return ONLY the bullet point (no quotes, no intro). ` +
-                `Do not use em dashes or typographic punctuation; use plain ASCII only.`,
+                `You are Nova, a senior CV consultant for PortNova (Port Said, Egypt). ` +
+                `The user just told you a raw work achievement. Rewrite it into ONE outstanding, ` +
+                `quantified, ATS-friendly bullet point in ${lang}. ` +
+                `Rules: 1) start with a strong action verb (led, built, grew, reduced, launched...); ` +
+                `2) silently fix grammar, spelling, punctuation and casing errors in the original; ` +
+                `3) be specific and results-driven; 4) ONLY use numbers or percentages the user ` +
+                `actually mentioned - never invent metrics; if no metric was given, convey impact ` +
+                `through verbs and scope instead; 5) keep it a single tight line (under ~28 words). ` +
+                `Return ONLY the polished bullet with no quotes, bullets, or intro. Plain ASCII punctuation only.`,
         },
         { role: 'user', content: text + (role ? `\n(role context: ${role})` : '') },
     ];
-    const improved = await callDeepSeek(messages, { temperature: 0.4, maxTokens: 220 });
+    const improved = await callDeepSeek(messages, { temperature: 0.35, maxTokens: 240 });
     return { improved: clean(improved) };
 };
 
@@ -126,21 +130,23 @@ const writeSummary = async (body) => {
         data.title,
         data.location,
         `Goal: ${data.targetRole} in ${data.targetIndustry}`,
-        (data.skills || []).join(', '),
+        (data.technicalSkills || data.skills || []).join(', '),
         (data.experience || []).map((e) => `${e.role} at ${e.company}`).join('; '),
     ].filter(Boolean).join('. ');
     const messages = [
         {
             role: 'system',
             content:
-                `You are Nova, a premium CV consultant for PortNova (Port Said, Egypt). ` +
-                `Write a compelling 2-3 sentence professional summary in ${lang} for the candidate described. ` +
-                `Tailor it to their goal, highlight their strongest skills and experience, sound confident and human. ` +
-                `Return ONLY the summary text. Do not use em dashes or typographic punctuation; use plain ASCII only.`,
+                `You are Nova, a senior CV consultant for PortNova (Port Said, Egypt). ` +
+                `Write a persuasive, polished professional summary in ${lang} for the candidate described. ` +
+                `It must read like a senior consultant wrote it: correct grammar and punctuation, ` +
+                `confident yet human tone, tailored to their target role and industry, and weaving ` +
+                `in their strongest skills and experience. 2-3 sentences max. Do NOT invent facts ` +
+                `or numbers they did not state. Return ONLY the summary text. Plain ASCII punctuation only.`,
         },
         { role: 'user', content: profile || 'A motivated young professional from Port Said seeking to grow.' },
     ];
-    const summary = await callDeepSeek(messages, { temperature: 0.7, maxTokens: 300 });
+    const summary = await callDeepSeek(messages, { temperature: 0.65, maxTokens: 320 });
     return { summary: clean(summary) };
 };
 
@@ -159,7 +165,7 @@ const generateCV = async (body) => {
             title: data.title,
         },
         summary: data.summary || '',
-        skills: Array.isArray(data.skills) ? data.skills : [],
+        skills: Array.isArray(data.technicalSkills) ? data.technicalSkills : (Array.isArray(data.skills) ? data.skills : []),
         softSkills: Array.isArray(data.softSkills) ? data.softSkills : [],
         experience: Array.isArray(data.experience) ? data.experience : [],
         education: Array.isArray(data.education) ? data.education : [],
@@ -175,8 +181,8 @@ const generateCV = async (body) => {
         {
             role: 'system',
             content:
-                `You are Nova, a premium CV consultant for PortNova (Port Said, Egypt). ` +
-                `Given the candidate's raw answers below, produce a polished, professional CV as STRICT JSON ` +
+                `You are Nova, a senior CV consultant for PortNova (Port Said, Egypt). ` +
+                `The candidate's raw answers are below. Produce a polished, professional CV as STRICT JSON ` +
                 `in ${lang}. The JSON must match EXACTLY this shape (keep every key, use arrays even when empty):\n` +
                 `{\n` +
                 `  "summary": "string",\n` +
@@ -188,10 +194,16 @@ const generateCV = async (body) => {
                 `  "languages": [{"name":"string","level":"string"}],\n` +
                 `  "projects": [{"name":"string","description":"string"}]\n` +
                 `}\n` +
-                `Rewrite every bullet to be quantified and compelling where the user gave enough detail; keep it ` +
-                `honest (do not invent numbers). Keep the candidate's header data (name, email, phone, location, ` +
-                `title, linkedin) EXACTLY as provided - they live outside this JSON. Return ONLY the JSON object, ` +
-                `no markdown fences, no commentary.`,
+                `Work like a senior CV editor before you write anything:\n` +
+                `1) PROOFREAD every string - fix spelling, grammar, punctuation, spacing and inconsistent casing.\n` +
+                `2) RESOLVE CONTRADICTIONS - if the answers conflict (e.g. "student" but years of experience, ` +
+                `or a role that does not match the company), pick the honest, most sensible reading and reword.\n` +
+                `3) EXPAND terse or messy bullets into compelling, quantified, action-led sentences using ONLY ` +
+                `the details provided - never invent numbers, dates, employers or credentials.\n` +
+                `4) DEDUPE and tidy the skills lists; drop empty or junk entries.\n` +
+                `5) Write the summary so it is tailored to the target role and industry, confident and human.\n` +
+                `Keep the candidate's header data (name, email, phone, location, title, linkedin) EXACTLY as ` +
+                `provided - they live outside this JSON. Return ONLY the JSON object, no markdown fences, no commentary.`,
         },
         { role: 'user', content: JSON.stringify(cvInput) },
     ];

@@ -12,15 +12,19 @@ const buildWordDoc = (cv, isArabic) => {
     const esc = (v) => String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const section = (title, body) =>
-        `<h3 style="font-family:Arial;color:#0c4a6e;font-size:13pt;margin:14px 0 6px;border-bottom:1px solid #0d9488;">${esc(title)}</h3>${body}`;
+        `<h3 style="font-family:Arial;color:#0c4a6e;font-size:12pt;font-weight:bold;letter-spacing:0.04em;margin:16px 0 6px;border-bottom:2px solid #0d9488;padding-bottom:3px;">${esc(title)}</h3>${body}`;
 
     let html = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
 <head><meta charset="utf-8"><title>CV - ${esc(header.name)}</title></head>
-<body dir="${dir}" style="font-family:Arial, 'Cairo', sans-serif;color:#0f172a;font-size:11pt;">
-<h1 style="font-size:22pt;margin:0;color:#0c4a6e;">${esc(header.name)}</h1>
+<body dir="${dir}" style="font-family:Arial, 'Cairo', sans-serif;color:#0f172a;font-size:11pt;line-height:1.5;">
+<table width="100%" cellpadding="0" cellspacing="0"><tr>
+<td style="border-bottom:3px solid #0c4a6e;padding-bottom:8px;">
+<h1 style="font-size:24pt;margin:0;color:#0c4a6e;letter-spacing:-0.01em;">${esc(header.name)}</h1>
 <div style="font-size:12pt;color:#0d9488;font-weight:bold;">${esc(header.title)}</div>
-<div style="font-size:10pt;color:#475569;margin:4px 0 12px;">${[header.email, header.phone, header.location, header.linkedin].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ')}</div>`;
+<div style="font-size:10pt;color:#475569;margin:4px 0 0;">${[header.email, header.phone, header.location, header.linkedin].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ')}</div>
+</td>
+</tr></table>`;
 
     if (summary) html += section(isArabic ? 'الملخص المهني' : 'Professional Summary', `<p style="margin:6px 0;">${esc(summary)}</p>`);
 

@@ -386,8 +386,13 @@
     border-radius: 6px;
     box-shadow: 0 24px 70px rgba(3, 12, 26, 0.55);
     font-family: 'Inter', 'Cairo', sans-serif;
-    padding: 2.4rem 2.6rem;
+    padding: 0;
+    overflow: hidden;
     text-align: start;
+}
+
+.cv-sheet__body {
+    padding: 2.4rem 2.6rem;
 }
 
 .cv-header__name {
@@ -413,17 +418,17 @@
 }
 
 .cv-section {
-    margin-top: 1.2rem;
+    margin-top: 1.3rem;
 }
 
 .cv-section__title {
-    margin: 0 0 0.45rem;
-    font-size: 0.82rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding-bottom: 0.3rem;
-    border-bottom: 2px solid;
+    letter-spacing: 0.1em;
+    padding-bottom: 0.32rem;
+    border-bottom: 2px solid #e2e8f0;
 }
 
 .cv-text {
@@ -467,7 +472,7 @@
 }
 
 .cv-tag {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     padding: 0.25rem 0.7rem;
     border-radius: 999px;
     color: #fff;
@@ -503,38 +508,136 @@
 
 .cv-lang { color: #334155; }
 
-/* -------- template variants (accent the sheet) -------- */
-.cv-sheet--modern .cv-section__title {
-    color: #0d9488;
-    border-color: #0d9488;
+/* -------- MODERN: clean single column, big name, pill skills -------- */
+.cv-sheet--modern .cv-header {
+    text-align: center;
+    padding-bottom: 1.2rem;
+    border-bottom: 3px solid #0d9488;
 }
 
-.cv-sheet--modern .cv-tag { background: #0d9488; }
-.cv-sheet--modern .cv-header__name { color: #0f172a; }
+.cv-sheet--modern .cv-header__name { color: #0f172a; letter-spacing: -0.02em; }
 .cv-sheet--modern .cv-header__title { color: #0d9488; }
+.cv-sheet--modern .cv-header__meta { justify-content: center; color: #475569; }
+.cv-sheet--modern .cv-section__title { color: #0d9488; border-color: rgba(13, 148, 136, 0.35); }
+.cv-sheet--modern .cv-tag { background: #0d9488; }
+.cv-sheet--modern .cv-entry__head strong { color: #0f172a; }
+
+/* -------- PROFESSIONAL: two-column with a dark sidebar -------- */
+.cv-sheet--professional .cv-sheet__grid {
+    display: grid;
+    grid-template-columns: 34% 1fr;
+}
+
+.cv-sheet--professional .cv-sheet__aside {
+    background: #0f2a43;
+    color: #e2e8f0;
+    padding: 2.2rem 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+}
+
+.cv-sheet--professional .cv-sheet__main {
+    padding: 2.2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.cv-sheet--professional .cv-aside__name {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.7rem;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+.cv-sheet--professional .cv-aside__title {
+    margin: 0.35rem 0 0;
+    color: #fbbf24;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.cv-sheet--professional .cv-aside__contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    padding-top: 0.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.cv-sheet--professional .cv-aside__contact span { word-break: break-word; }
+
+.cv-sheet--professional .cv-section { margin-top: 0; }
 
 .cv-sheet--professional .cv-section__title {
-    color: #1d4ed8;
-    border-color: #1d4ed8;
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.35);
 }
 
-.cv-sheet--professional .cv-tag { background: #1d4ed8; }
-.cv-sheet--professional .cv-header__name { color: #0f172a; }
-.cv-sheet--professional .cv-header__title { color: #1d4ed8; }
+.cv-sheet--professional .cv-sheet__aside .cv-section__title {
+    color: #93c5fd;
+    border-color: rgba(147, 197, 253, 0.3);
+}
+
+.cv-sheet--professional .cv-sheet__aside .cv-text,
+.cv-sheet--professional .cv-sheet__aside .cv-lang,
+.cv-sheet--professional .cv-sheet__aside .cv-list li,
+.cv-sheet--professional .cv-sheet__aside .cv-skills__group strong {
+    color: #cbd5e1;
+}
+
+.cv-sheet--professional .cv-sheet__aside .cv-tag { background: #1e3a5f; border: 1px solid rgba(147, 197, 253, 0.4); }
+
+.cv-sheet--professional .cv-sheet__main .cv-section__title { color: #1d4ed8; border-color: #1d4ed8; }
+.cv-sheet--professional .cv-sheet__main .cv-entry__head strong { color: #0f172a; }
+
+/* -------- MARINE: nautical top band + gold section rules -------- */
+.cv-sheet--marine .cv-header {
+    background: linear-gradient(135deg, #0c4a6e, #0e7490);
+    color: #ffffff;
+    padding: 2rem 2.6rem 1.6rem;
+    position: relative;
+}
+
+.cv-sheet--marine .cv-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #a97f1f, #eab308, #a97f1f);
+}
+
+.cv-sheet--marine .cv-header__name { color: #ffffff; }
+.cv-sheet--marine .cv-header__title { color: #fde68a; }
+.cv-sheet--marine .cv-header__meta { color: #bae6fd; }
+
+.cv-sheet--marine .cv-sheet__body { padding-top: 1.8rem; }
 
 .cv-sheet--marine .cv-section__title {
-    color: #a97f1f;
-    border-color: #a97f1f;
+    color: #0c4a6e;
+    border-bottom: 0;
+    padding-inline-start: 0.6rem;
+    border-inline-start: 4px solid #a97f1f;
 }
 
-.cv-sheet--marine .cv-tag { background: #a97f1f; }
-.cv-sheet--marine .cv-header__name { color: #0c4a6e; }
-.cv-sheet--marine .cv-header__title { color: #a97f1f; }
+.cv-sheet--marine .cv-tag { background: #0c4a6e; }
+.cv-sheet--marine .cv-entry__head strong { color: #0c4a6e; }
 
 /* ----------------------------- responsive ----------------------------- */
 @media (max-width: 720px) {
     .cv-chat__scroll { max-height: 52vh; min-height: 280px; }
     .cv-bubble { max-width: 88%; }
-    .cv-sheet { padding: 1.6rem 1.3rem; }
+    .cv-sheet { padding: 0; }
+    .cv-sheet__body { padding: 1.6rem 1.3rem; }
     .cv-header__name { font-size: 1.5rem; }
+    .cv-sheet--professional .cv-sheet__grid { grid-template-columns: 1fr; }
+    .cv-sheet--professional .cv-sheet__aside { padding: 1.6rem 1.3rem; }
+    .cv-sheet--professional .cv-sheet__main { padding: 1.6rem 1.3rem; }
+    .cv-sheet--marine .cv-header { padding: 1.6rem 1.3rem 1.2rem; }
 }

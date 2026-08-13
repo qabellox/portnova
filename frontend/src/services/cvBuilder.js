@@ -59,34 +59,50 @@ export const generateCV = (data, template = 'modern', language = 'en') =>
  *  from the collected answers WITHOUT any AI call. Used as a graceful fallback
  *  so the flow always completes and downloads work even if the Edge Function
  *  is unreachable. When the AI is available it simply overrides this. */
+const cleanWord = (s) =>
+    String(s || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+const unique = (arr) => [...new Set(arr.map((s) => cleanWord(s)).filter(Boolean))];
+
 export const buildLocalCV = (data, template = 'modern') => {
     const experience = (data.experience || []).map((j) => ({
-        role: j.role || '',
-        company: j.company || '',
-        dates: j.dates || '',
-        bullets: (j.bullets || []).filter(Boolean),
+        role: cleanWord(j.role),
+        company: cleanWord(j.company),
+        dates: cleanWord(j.dates),
+        bullets: unique(j.bullets || []),
     }));
     const education = data.education
-        ? [{ degree: data.education, institution: data.fieldOfStudy || '', years: '', gpa: '' }]
+        ? [{ degree: cleanWord(data.education), institution: cleanWord(data.fieldOfStudy || ''), years: '', gpa: '' }]
         : [];
+    const skills = unique(data.technicalSkills || []);
+    const softSkills = unique(data.softSkills || []);
     const fallbackSummary = `A motivated ${data.title || 'professional'} from ${data.location || 'Port Said'} seeking ${data.targetRole || 'a fitting role'} in ${data.targetIndustry || 'the field'}.`;
 
     return {
         header: {
-            name: data.name || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            location: data.location || '',
-            linkedin: data.linkedin || '',
-            title: data.title || '',
+            name: cleanWord(data.name),
+            email: (data.email || '').trim(),
+            phone: (data.phone || '').trim(),
+            location: cleanWord(data.location),
+            linkedin: (data.linkedin || '').trim(),
+            title: cleanWord(data.title),
         },
-        summary: data.summary || fallbackSummary,
-        skills: data.technicalSkills || [],
-        softSkills: data.softSkills || [],
+        summary: cleanWord(data.summary || fallbackSummary),
+        skills,
+        softSkills,
         experience,
         education,
-        certifications: data.certifications || [],
-        languages: data.languages || [],
+        certifications: (data.certifications || []).map((c) => ({
+            name: cleanWord(c.name),
+            issuer: cleanWord(c.issuer || ''),
+            year: (c.year || '').trim(),
+        })),
+        languages: (data.languages || []).map((l) => ({
+            name: cleanWord(l.name),
+            level: cleanWord(l.level || ''),
+        })),
         projects: [],
         template,
         generatedAt: new Date().toISOString(),

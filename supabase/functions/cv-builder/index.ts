@@ -214,6 +214,12 @@ const generateCV = async (body) => {
 serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
+    // Lightweight health check — lets us verify the function is live and
+    // reachable from anywhere (used by CI and the deploy check).
+    if (req.method === 'GET') {
+        return json({ success: true, service: 'cv-builder', deployed: true, hasKey: !!DEEPSEEK_API_KEY });
+    }
+
     let payload;
     try {
         payload = await req.json();
@@ -222,6 +228,10 @@ serve(async (req) => {
     }
 
     const { action } = payload || {};
+    if (action === 'health') {
+        return json({ success: true, service: 'cv-builder', deployed: true, hasKey: !!DEEPSEEK_API_KEY });
+    }
+
     try {
         let result;
         switch (action) {

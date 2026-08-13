@@ -123,7 +123,7 @@ const Register = () => {
         });
 
         if (authError) {
-            setError(authError.message || 'Registration failed');
+            setError(authError.message || (isArabic ? 'تعذّر إنشاء الحساب.' : 'Registration failed'));
             setLoading(false);
             return;
         }
@@ -158,7 +158,7 @@ const Register = () => {
             role: 'provider',
             companyName: form.fullName.trim(),
         });
-        if (authError) { setError(authError.message || 'Registration failed'); setLoading(false); return; }
+        if (authError) { setError(authError.message || (isArabic ? 'تعذّر إنشاء الحساب.' : 'Registration failed')); setLoading(false); return; }
         if (data?.session) { navigate('/dashboard'); return; }
         if (data?.user && data.user.identities && data.user.identities.length === 0) {
             setError(isArabic ? 'هذا البريد مسجّل بالفعل. استخدمه لتسجيل الدخول مباشرة.' : 'This email is already registered. Use it to sign in instead.');
@@ -351,7 +351,7 @@ const Register = () => {
             <aside className="auth-aside">
                 <div className="auth-aside__logo">
                     <div className="brand__logo-wrap" style={{ width: '4rem', height: '4rem' }}>
-                        <img className="brand__logo" src="/images/logo.png" alt="PortNova logo" />
+                        <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
                     </div>
                     <div>
                         <div className="brand__name">PortNova</div>
@@ -382,8 +382,8 @@ const Register = () => {
                         role === 'provider'
                             ? isArabic ? 'استخدم اسم شركتك والبريد وكلمة المرور للبدء.' : 'Use your company name, email, and password to get started.'
                             : isArabic
-                                ? 'املأ بياناتك خطوة بخطوة — نحتاجها لتخصيص تجربتك ومساعدتك في العثور على فرصك.'
-                                : 'Fill in your details step by step — we use them to personalise your experience and match you with opportunities.'
+                                ? 'املأ بياناتك خطوة بخطوة - نحتاجها لتخصيص تجربتك ومساعدتك في العثور على فرصك.'
+                                : 'Fill in your details step by step - we use them to personalise your experience and match you with opportunities.'
                     }
                 />
                 {error ? <p className="muted" style={{ color: '#fecaca' }}>{error}</p> : null}

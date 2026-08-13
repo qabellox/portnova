@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import { getJobs } from './content';
 
 /**
- * Job applications — the structured youth data the platform collects.
+ * Job applications - the structured youth data the platform collects.
  *
  * SINGLE SOURCE OF TRUTH: applications live only in Postgres via Supabase.
  * A failed insert throws (the UI shows it) instead of silently storing to
@@ -11,7 +11,7 @@ import { getJobs } from './content';
 
 export const submitApplication = async ({ cvFile, ...application }) => {
     // Upload the CV to private Supabase Storage (folder = the applicant's id),
-    // so it can actually be opened later — not just a filename. If storage
+    // so it can actually be opened later - not just a filename. If storage
     // isn't ready yet, we still submit and just skip the file.
     let cvPath = null;
     if (cvFile && application.userId) {

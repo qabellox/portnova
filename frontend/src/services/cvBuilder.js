@@ -1,4 +1,4 @@
-// CV Builder Agent — client for the Supabase Edge Function
+// CV Builder Agent - client for the Supabase Edge Function
 // ---------------------------------------------------------------------
 // All AI work (achievement polishing, summary writing, full CV generation)
 // happens server-side in `supabase/functions/cv-builder` so the DeepSeek
@@ -55,7 +55,7 @@ export const writeSummary = (data, language = 'en') =>
 export const generateCV = (data, template = 'modern', language = 'en') =>
     invoke('generate', { data, template, language });
 
-/** Deterministic, offline CV builder — assembles the exact same CV structure
+/** Deterministic, offline CV builder - assembles the exact same CV structure
  *  from the collected answers WITHOUT any AI call. Used as a graceful fallback
  *  so the flow always completes and downloads work even if the Edge Function
  *  is unreachable. When the AI is available it simply overrides this. */

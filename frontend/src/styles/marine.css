@@ -1,5 +1,5 @@
 ﻿/* ============================================================
-   MARINE SCENE — cinematic Three.js seascape + 3D boat fleet
+   MARINE SCENE - cinematic Three.js seascape + 3D boat fleet
    ============================================================ */
 .marine-scene {
    position: absolute;
@@ -21,7 +21,7 @@
    overflow: hidden;
    pointer-events: none;
    /* Promote the WebGL canvas to its own GPU layer so the browser composites
-      it while scrolling instead of repainting it — this removes the white
+      it while scrolling instead of repainting it - this removes the white
       flash / glitch that appeared on scroll, especially on high-DPI screens. */
    transform: translateZ(0);
    will-change: transform;
@@ -163,7 +163,7 @@
 }
 
 /* ============================================================
-   FLEET — info cards glued to the 3D boats (positioned by JS)
+   FLEET - info cards glued to the 3D boats (positioned by JS)
    ============================================================ */
 .marine-fleet {
    position: absolute;
@@ -192,7 +192,7 @@
    z-index: 20;
 }
 
-/* Info card anchored above the boat — hidden by default. The vessel is a
+/* Info card anchored above the boat - hidden by default. The vessel is a
    generous hover zone that travels with the ship, so the card appears ONLY
    when the pointer gets close to the boat, then fades/slides in smoothly. */
 .marine-vessel__card {
@@ -289,7 +289,7 @@
    box-shadow: 0 14px 28px rgba(212, 175, 55, 0.42);
 }
 
-/* Gentle CSS vignette — replaces the GPU Vignette post-processing pass that
+/* Gentle CSS vignette - replaces the GPU Vignette post-processing pass that
    used to run full-screen every frame (a major source of the scroll lag and
    white flashes). Same cinematic framing, zero GPU cost. */
 .marine-overlay {
@@ -300,7 +300,7 @@
 }
 
 /* ============================================================
-   MOBILE — cards are smaller and easier to tap
+   MOBILE - cards are smaller and easier to tap
    ============================================================ */
 @media (max-width: 720px) {
    .marine-vessel {

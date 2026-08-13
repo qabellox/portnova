@@ -28,7 +28,7 @@ const CVPreview = ({ cv, template = 'modern' }) => {
     return (
         <div id="cv-print-area" className={`cv-sheet cv-sheet--${template}`} dir={dir}>
             <header className="cv-header">
-                <h1 className="cv-header__name">{header.name || '—'}</h1>
+                <h1 className="cv-header__name">{header.name || '-'}</h1>
                 {header.title ? <div className="cv-header__title">{header.title}</div> : null}
                 <div className="cv-header__meta">
                     {[header.email, header.phone, header.location, header.linkedin]
@@ -118,7 +118,7 @@ const CVPreview = ({ cv, template = 'modern' }) => {
                 ? section(isArabic ? 'اللغات' : 'Languages', (
                       <div className="cv-langs">
                           {languages.map((lang, i) => (
-                              <span key={i} className="cv-lang">{lang.name} — {lang.level}</span>
+                              <span key={i} className="cv-lang">{lang.name} - {lang.level}</span>
                           ))}
                       </div>
                   ))

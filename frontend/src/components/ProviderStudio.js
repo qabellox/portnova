@@ -72,8 +72,8 @@ const ProviderStudio = () => {
         }
     };
 
-    const availLabel = (v) => ({ immediate: t('availImmediate'), '2weeks': t('avail2weeks'), '1month': t('avail1month') }[v] || '—');
-    const referralLabel = (v) => ({ social: t('refSocial'), friend: t('refFriend'), school: t('refSchool'), other: t('refOther') }[v] || '—');
+    const availLabel = (v) => ({ immediate: t('availImmediate'), '2weeks': t('avail2weeks'), '1month': t('avail1month') }[v] || '-');
+    const referralLabel = (v) => ({ social: t('refSocial'), friend: t('refFriend'), school: t('refSchool'), other: t('refOther') }[v] || '-');
 
     useEffect(() => {
         loadMine();
@@ -121,7 +121,7 @@ const ProviderStudio = () => {
     );
 
     const eduLabel = (value) =>
-        ({ highschool: t('eduHigh'), diploma: t('eduDiploma'), bachelor: t('eduBachelor'), master: t('eduMaster'), other: t('eduOther') }[value] || '—');
+        ({ highschool: t('eduHigh'), diploma: t('eduDiploma'), bachelor: t('eduBachelor'), master: t('eduMaster'), other: t('eduOther') }[value] || '-');
 
     return (
         <>
@@ -152,7 +152,7 @@ const ProviderStudio = () => {
                             <div>
                                 {fieldLabel(t('fieldCompany'))}
                                 <div className="field" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fcd34d' }}>
-                                    🏢 {companyName || '—'}
+                                    🏢 {companyName || '-'}
                                 </div>
                                 <p className="muted" style={{ fontSize: '0.72rem', marginTop: '0.25rem' }}>{t('companyAutoNote')}</p>
                             </div>
@@ -162,11 +162,11 @@ const ProviderStudio = () => {
                             </div>
                             <div>
                                 {fieldLabel(t('fieldSalary'))}
-                                <input className="field" type="text" placeholder="$500/mo" value={job.salary} onChange={(e) => setJobField('salary', e.target.value)} required />
+                                <input className="field" type="text" placeholder={isArabic ? '500$ شهريًا' : '$500/mo'} value={job.salary} onChange={(e) => setJobField('salary', e.target.value)} required />
                             </div>
                             <div>
                                 {fieldLabel(t('locationLabel'))}
-                                <input className="field" type="text" placeholder="Port Said" value={job.location} onChange={(e) => setJobField('location', e.target.value)} required />
+                                <input className="field" type="text" placeholder={isArabic ? 'بورسعيد' : 'Port Said'} value={job.location} onChange={(e) => setJobField('location', e.target.value)} required />
                             </div>
                             <div>
                                 {fieldLabel(t('categoryLabel'))}
@@ -193,7 +193,7 @@ const ProviderStudio = () => {
                                 </select>
                             </div>
                             <div>
-                                {fieldLabel('Emoji')}
+                                {fieldLabel(isArabic ? 'رمز تعبيري' : 'Emoji')}
                                 <input className="field" type="text" value={job.emoji} onChange={(e) => setJobField('emoji', e.target.value)} />
                             </div>
                         </div>
@@ -211,13 +211,13 @@ const ProviderStudio = () => {
                             <div>
                                 {fieldLabel(t('fieldProvider'))}
                                 <div className="field" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', color: '#fcd34d' }}>
-                                    🏢 {companyName || '—'}
+                                    🏢 {companyName || '-'}
                                 </div>
                                 <p className="muted" style={{ fontSize: '0.72rem', marginTop: '0.25rem' }}>{t('companyAutoNote')}</p>
                             </div>
                             <div>
                                 {fieldLabel(t('fieldPrice'))}
-                                <input className="field" type="text" placeholder="Free" value={course.price} onChange={(e) => setCourseField('price', e.target.value)} required />
+                                <input className="field" type="text" placeholder={isArabic ? 'مجاني' : 'Free'} value={course.price} onChange={(e) => setCourseField('price', e.target.value)} required />
                             </div>
                             <div>
                                 {fieldLabel(t('fieldHours'))}
@@ -232,11 +232,11 @@ const ProviderStudio = () => {
                             </div>
                             <div>
                                 {fieldLabel(t('locationLabel'))}
-                                <input className="field" type="text" placeholder="Zoom" value={course.location} onChange={(e) => setCourseField('location', e.target.value)} required />
+                                <input className="field" type="text" placeholder={isArabic ? 'زووم' : 'Zoom'} value={course.location} onChange={(e) => setCourseField('location', e.target.value)} required />
                             </div>
                             <div>
                                 {fieldLabel(t('fieldDate'))}
-                                <input className="field" type="text" placeholder="Flexible" value={course.date} onChange={(e) => setCourseField('date', e.target.value)} required />
+                                <input className="field" type="text" placeholder={isArabic ? 'مرن' : 'Flexible'} value={course.date} onChange={(e) => setCourseField('date', e.target.value)} required />
                             </div>
                             <div>
                                 {fieldLabel(t('levelLabel'))}
@@ -247,7 +247,7 @@ const ProviderStudio = () => {
                                 </select>
                             </div>
                             <div>
-                                {fieldLabel('Emoji')}
+                                {fieldLabel(isArabic ? 'رمز تعبيري' : 'Emoji')}
                                 <input className="field" type="text" value={course.emoji} onChange={(e) => setCourseField('emoji', e.target.value)} />
                             </div>
                         </div>
@@ -272,9 +272,9 @@ const ProviderStudio = () => {
                                             </div>
                                         </div>
                                         <div className="course-detail">
-                                            <span className="course-detail__item">📞 {app.phone || '—'}</span>
+                                            <span className="course-detail__item">📞 {app.phone || '-'}</span>
                                             <span className="course-detail__item">✉️ {app.email}</span>
-                                            <span className="course-detail__item">📍 {app.city || '—'}</span>
+                                            <span className="course-detail__item">📍 {app.city || '-'}</span>
                                             <span className="course-detail__item">🎓 {eduLabel(app.education)}</span>
                                         </div>
                                         <div className="card-meta">
@@ -364,7 +364,7 @@ const ProviderStudio = () => {
                     }}
                 >
                     <GlassCard className="app-modal app-modal--small">
-                        <button type="button" className="app-modal__close" onClick={() => setConfirming(null)} aria-label="Close">×</button>
+                        <button type="button" className="app-modal__close" onClick={() => setConfirming(null)} aria-label={t('closeLabel')}>×</button>
                         <div className="app-modal__body app-signin">
                             <strong>{t('confirmNotSelected')}</strong>
                             <p className="muted">{confirming.name}</p>
@@ -391,7 +391,7 @@ const ProviderStudio = () => {
                     }}
                 >
                     <GlassCard className="app-modal">
-                        <button type="button" className="app-modal__close" onClick={() => setViewing(null)} aria-label="Close">×</button>
+                        <button type="button" className="app-modal__close" onClick={() => setViewing(null)} aria-label={t('closeLabel')}>×</button>
                         <div className="app-modal__head">
                             <div className="course-cover" aria-hidden="true">🧑‍💼</div>
                             <div>
@@ -402,11 +402,11 @@ const ProviderStudio = () => {
                         </div>
                         <div className="app-modal__body">
                             <div className="course-detail">
-                                <span className="course-detail__item">📞 {viewing.phone || '—'}</span>
+                                <span className="course-detail__item">📞 {viewing.phone || '-'}</span>
                                 <span className="course-detail__item">✉️ {viewing.email}</span>
-                                <span className="course-detail__item">📍 {viewing.city || '—'}</span>
+                                <span className="course-detail__item">📍 {viewing.city || '-'}</span>
                                 <span className="course-detail__item">🎓 {eduLabel(viewing.education)}</span>
-                                <span className="course-detail__item">⏱ {viewing.experienceYears ? `${viewing.experienceYears} ${t('courseHours')}` : '—'}</span>
+                                <span className="course-detail__item">⏱ {viewing.experienceYears ? `${viewing.experienceYears} ${t('courseHours')}` : '-'}</span>
                                 <span className="course-detail__item">🗓 {availLabel(viewing.availability)}</span>
                             </div>
                             {viewing.referral ? <p className="muted">{t('appReferral')}: {referralLabel(viewing.referral)}</p> : null}

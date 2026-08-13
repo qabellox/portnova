@@ -6,10 +6,10 @@ import { Badge, GlassCard, PremiumButton } from './PremiumUI';
 
 /* Modal for applying to a job: collects a CV plus rich profile data (exactly
    the structured youth data the platform wants). Styled with the same premium
-   glass theme; pure DOM — no 3D — so it opens instantly and never stutters. */
+   glass theme; pure DOM - no 3D - so it opens instantly and never stutters. */
 const JobApplicationModal = ({ job, onClose }) => {
     const { user } = useAuth();
-    const { t } = useLanguage();
+    const { t, isArabic } = useLanguage();
     const cvInputRef = useRef(null);
 
     const [fullName, setFullName] = useState(user?.user_metadata?.fullName || '');
@@ -115,7 +115,7 @@ const JobApplicationModal = ({ job, onClose }) => {
             }}
         >
             <GlassCard className="app-modal">
-                <button type="button" className="app-modal__close" onClick={onClose} aria-label="Close">×</button>
+                <button type="button" className="app-modal__close" onClick={onClose} aria-label={t('closeLabel')}>×</button>
                 {header}
 
                 {!user ? (
@@ -229,11 +229,11 @@ const JobApplicationModal = ({ job, onClose }) => {
                                 </div>
                                 <div>
                                     {fieldLabel(t('appPortfolio'))}
-                                    <input className="field" type="url" placeholder="github.com/you" value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} />
+                                    <input className="field" type="url" placeholder={isArabic ? 'github.com/اسمك' : 'github.com/you'} value={portfolioUrl} onChange={(e) => setPortfolioUrl(e.target.value)} />
                                 </div>
                                 <div>
                                     {fieldLabel(t('appLinkedin'))}
-                                    <input className="field" type="url" placeholder="linkedin.com/in/you" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} />
+                                    <input className="field" type="url" placeholder={isArabic ? 'linkedin.com/in/اسمك' : 'linkedin.com/in/you'} value={linkedin} onChange={(e) => setLinkedin(e.target.value)} />
                                 </div>
                                 <div>
                                     {fieldLabel(t('appReferral'))}

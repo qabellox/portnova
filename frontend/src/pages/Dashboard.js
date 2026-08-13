@@ -98,7 +98,7 @@ const Dashboard = () => {
                         <SectionHeading kicker={t('dashProfileTitle')} title="" />
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             {avatar ? (
-                                <img className="profile-avatar profile-avatar--img" src={avatar} alt={fullName || 'avatar'} />
+                                <img className="profile-avatar profile-avatar--img" src={avatar} alt={fullName || t('avatarAlt')} />
                             ) : (
                                 <div className="profile-avatar" style={{ width: '4.5rem', height: '4.5rem', fontSize: '1.5rem' }}>
                                     {getInitials(fullName || email)}
@@ -136,7 +136,7 @@ const Dashboard = () => {
                 />
                 {isProvider ? (
                     <p className="muted" style={{ fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                        {isArabic ? 'دورك ثابت ولا يمكن تغييره — أنت مقدّم.' : 'Your role is fixed — you are a provider.'}
+                        {isArabic ? 'دورك ثابت ولا يمكن تغييره - أنت مقدّم.' : 'Your role is fixed - you are a provider.'}
                     </p>
                 ) : null}
                 <div className="split-grid">

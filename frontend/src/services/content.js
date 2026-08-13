@@ -2,7 +2,7 @@
  * Shared content store for jobs & courses.
  *
  * SINGLE SOURCE OF TRUTH: everything is read/written to Postgres via Supabase.
- * No localStorage/seed fallbacks — if a query fails we fail honestly (return
+ * No localStorage/seed fallbacks - if a query fails we fail honestly (return
  * empty + log) instead of mixing stale browser data with the real database.
  */
 import { supabase } from './supabase';

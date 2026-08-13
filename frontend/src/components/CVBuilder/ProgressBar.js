@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 
-/** Step progress for the CV Builder chat — labels the current phase and
+/** Step progress for the CV Builder chat - labels the current phase and
  *  shows a smooth animated bar, styled with the site's premium tokens. */
 const ProgressBar = ({ value = 0, label = '' }) => {
     const { isArabic } = useLanguage();

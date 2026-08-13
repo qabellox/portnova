@@ -1,16 +1,16 @@
 // ---------------------------------------------------------------------
-// PortNova — AI CV Builder Agent (DeepSeek)
+// PortNova - AI CV Builder Agent (DeepSeek)
 // ---------------------------------------------------------------------
 // A Supabase Edge Function that powers the conversational CV Builder in
 // the CV section. It keeps the DeepSeek API key server-side (never exposed
 // to the browser) and exposes three premium actions:
 //
-//   * action: "improve"   — rewrite a raw achievement into a quantified,
+//   * action: "improve"   - rewrite a raw achievement into a quantified,
 //                           ATS-friendly bullet point (instant feedback in
 //                           the chat)
-//   * action: "summary"   — write a tailored 2-3 sentence professional
+//   * action: "summary"   - write a tailored 2-3 sentence professional
 //                           summary from the answers collected so far
-//   * action: "generate"  — produce the full structured CV (all sections)
+//   * action: "generate"  - produce the full structured CV (all sections)
 //                           from the collected answers, in the chosen format
 //
 // Client calls it with:  supabase.functions.invoke('cv-builder', { body })
@@ -77,8 +77,8 @@ const callDeepSeek = async (messages, { temperature = 0.6, maxTokens = 900, json
 // chat. Replace them with clean plain-ASCII equivalents.
 const clean = (s) =>
     String(s ?? '')
-        .replace(/\u2014/g, '-') // — em dash -> hyphen
-        .replace(/\u2013/g, '-') // – en dash -> hyphen
+        .replace(/\u2014/g, '-') // - em dash -> hyphen
+        .replace(/\u2013/g, '-') // - en dash -> hyphen
         .replace(/\u2018|\u2019/g, "'") // ' ' curly single quotes
         .replace(/\u201C|\u201D/g, '"') // " " curly double quotes
         .replace(/\u2026/g, '...') // … ellipsis -> dots
@@ -107,7 +107,7 @@ const improveAchievement = async (body) => {
             content:
                 `You are Nova, a premium CV consultant for PortNova (Port Said, Egypt). ` +
                 `Rewrite the user's raw achievement into ONE crisp, quantified, ATS-friendly bullet point in ${lang}. ` +
-                `Never invent numbers the user did not state — if a metric is missing, use the skills/actions they mention ` +
+                `Never invent numbers the user did not state - if a metric is missing, use the skills/actions they mention ` +
                 `and phrase it powerfully without fabricating data. Return ONLY the bullet point (no quotes, no intro). ` +
                 `Do not use em dashes or typographic punctuation; use plain ASCII only.`,
         },
@@ -190,7 +190,7 @@ const generateCV = async (body) => {
                 `}\n` +
                 `Rewrite every bullet to be quantified and compelling where the user gave enough detail; keep it ` +
                 `honest (do not invent numbers). Keep the candidate's header data (name, email, phone, location, ` +
-                `title, linkedin) EXACTLY as provided — they live outside this JSON. Return ONLY the JSON object, ` +
+                `title, linkedin) EXACTLY as provided - they live outside this JSON. Return ONLY the JSON object, ` +
                 `no markdown fences, no commentary.`,
         },
         { role: 'user', content: JSON.stringify(cvInput) },
@@ -241,7 +241,7 @@ const generateCV = async (body) => {
 serve(async (req) => {
     if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
 
-    // Lightweight health check — lets us verify the function is live and
+    // Lightweight health check - lets us verify the function is live and
     // reachable from anywhere (used by CI and the deploy check).
     if (req.method === 'GET') {
         return json({ success: true, service: 'cv-builder', deployed: true, hasKey: !!DEEPSEEK_API_KEY });

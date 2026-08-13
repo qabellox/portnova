@@ -23,7 +23,7 @@ const Login = () => {
         const { error: authError } = await login({ email, password });
 
         if (authError) {
-            const text = authError.message || 'Login failed';
+            const text = authError.message || (isArabic ? 'فشل تسجيل الدخول' : 'Login failed');
             if (text.toLowerCase().includes('email not confirmed')) {
                 setError(isArabic ? 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول.' : 'Please verify your email before signing in.');
             } else if (text.toLowerCase().includes('invalid login credentials')) {
@@ -43,7 +43,7 @@ const Login = () => {
             <aside className="auth-aside">
                 <div className="auth-aside__logo">
                     <div className="brand__logo-wrap" style={{ width: '4rem', height: '4rem' }}>
-                        <img className="brand__logo" src="/images/logo.png" alt="PortNova logo" />
+                        <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
                     </div>
                     <div>
                         <div className="brand__name">PortNova</div>

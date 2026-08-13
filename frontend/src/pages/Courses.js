@@ -75,7 +75,7 @@ const Courses = () => {
                         <label className="filter-label">{t('levelLabel')}</label>
                         <select className="select" value={level} onChange={(event) => setLevel(event.target.value)}>
                             {levels.map((lv) => (
-                                <option key={lv} value={lv}>{lv}</option>
+                                <option key={lv} value={lv}>{lv === 'All' ? t('filterAll') : lv}</option>
                             ))}
                         </select>
                     </div>

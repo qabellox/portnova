@@ -85,7 +85,7 @@ const CVService = () => {
         setMessage('');
 
         if (!user || !file) {
-            setMessage('Please choose a CV file first.');
+            setMessage(t('cvNeedFile'));
             return;
         }
 
@@ -112,11 +112,11 @@ const CVService = () => {
             if (insertError) throw insertError;
 
             setUploadProgress(100);
-            setMessage('CV uploaded successfully.');
+            setMessage(t('cvUploaded'));
             setFile(null);
             setNotes('');
         } catch (err) {
-            setMessage(err.message || 'Upload failed.');
+            setMessage(err.message || t('uploadFailed'));
         } finally {
             setIsUploading(false);
             setTimeout(() => setUploadProgress(0), 700);
@@ -163,20 +163,20 @@ const CVService = () => {
                     <BilingualLine
                         as="p"
                         className="hero__lead"
-                        ar="وكيل نوفا الذكي يبني سيرتك من أسئلة بسيطة، أو اختر مراجعة خبير بشري — كل ذلك في مكان واحد."
-                        en="Nova’s AI agent builds your CV from a few simple questions, or get a human expert review — all in one place."
+                        ar="وكيل نوفا الذكي يبني سيرتك من أسئلة بسيطة، أو اختر مراجعة خبير بشري - كل ذلك في مكان واحد."
+                        en="Nova’s AI agent builds your CV from a few simple questions, or get a human expert review - all in one place."
                     />
                     <div className="status-strip">
                         <Badge tone="success">{t('expertReview')}</Badge>
-                        <Badge tone="gold">✨ AI Agent</Badge>
+                        <Badge tone="gold">✨ {t('aiAgent')}</Badge>
                     </div>
                 </div>
             </section>
 
-            {/* AI CV Builder Agent — the primary experience */}
+            {/* AI CV Builder Agent - the primary experience */}
             <CVBuilder />
 
-            {/* Human expert review — the complementary service */}
+            {/* Human expert review - the complementary service */}
             <div className="cv-expert-divider">
                 <SectionHeading
                     kicker={t('expertServiceKicker')}
@@ -264,12 +264,12 @@ const CVService = () => {
                             <GlassCard>
                                 <div className="stat-card__label">{t('standard')}</div>
                                 <div className="stat-card__value">$10</div>
-                                <div className="stat-card__note">مراجعة سريعة مع تمريرة خبير واحدة.</div>
+                                <div className="stat-card__note">{t('standardNote')}</div>
                             </GlassCard>
                             <GlassCard>
                                 <div className="stat-card__label">{t('premium')}</div>
                                 <div className="stat-card__value">$24</div>
-                                <div className="stat-card__note">معالجة أسرع وتسليم نهائي منسّق.</div>
+                                <div className="stat-card__note">{t('premiumNote')}</div>
                             </GlassCard>
                         </div>
                     </div>
@@ -287,8 +287,8 @@ const CVService = () => {
                                 <div style={{ flex: 1 }}>
                                     <div className="card-head">
                                         <div>
-                                            <strong>Request #{request.id}</strong>
-                                            <div className="muted">{request.cv_url || 'لا يوجد ملف بعد'}</div>
+                                            <strong>{t('requestId')} #{request.id}</strong>
+                                            <div className="muted">{request.cv_url || t('noFileYet')}</div>
                                         </div>
                                         <Badge tone="blue">{request.status}</Badge>
                                     </div>
@@ -296,7 +296,7 @@ const CVService = () => {
                             </div>
                         ))
                     ) : (
-                        <div className="empty-state">لا توجد طلبات سيرة ذاتية بعد. ارفع واحدة لبدء المسار.</div>
+                        <div className="empty-state">{t('noRequests')}</div>
                     )}
                 </div>
             </GlassCard>
@@ -310,19 +310,19 @@ const CVService = () => {
                                 <GlassCard key={request.id} interactive>
                                     <div className="card-head">
                                         <div>
-                                            <div className="badge badge--gold">Request #{request.id}</div>
+                                            <div className="badge badge--gold">{t('requestId')} #{request.id}</div>
                                             <h3 className="card-title" style={{ marginTop: '0.75rem' }}>{t('awaitingReview')}</h3>
                                         </div>
                                         <Badge tone="blue">{request.status}</Badge>
                                     </div>
-                                    <p className="card-copy">{request.notes || 'لا توجد ملاحظات'}</p>
+                                    <p className="card-copy">{request.notes || t('noNotes')}</p>
                                     <PremiumButton variant="gold" onClick={() => claimRequest(request.id)}>
                                         {t('claim')}
                                     </PremiumButton>
                                 </GlassCard>
                             ))
                         ) : (
-                            <div className="empty-state">لا توجد طلبات معلقة حاليًا.</div>
+                            <div className="empty-state">{t('noPending')}</div>
                         )}
                     </div>
                 </GlassCard>

@@ -16,8 +16,8 @@ const STEPS = [
 const isProfileComplete = (meta = {}) => Boolean(meta.fullName && meta.phone && meta.location);
 
 /** Site-wide gate: requires sign-in AND the persisted credentials before any
- *  page is usable. This is the "persistent identity" wall — no AI calls, no
- *  extra APIs — every visitor fills their details once, then the whole
+ *  page is usable. This is the "persistent identity" wall - no AI calls, no
+ *  extra APIs - every visitor fills their details once, then the whole
  *  platform (jobs, courses, CV, dashboard) unlocks. */
 export const RequireProfile = ({ children }) => {
     const { user, loading } = useAuth();
@@ -62,7 +62,7 @@ const ProfileGate = ({ children }) => {
                     <SectionHeading
                         kicker={isArabic ? 'تسجيل الدخول' : 'Sign in'}
                         title={isArabic ? 'سجّل الدخول لمتابعة بناء سيرتك' : 'Sign in to keep building your CV'}
-                        subtitle={isArabic ? 'بياناتك الشخصية تبقى محفوظة وآمنة — سنستخدمها لتخصيص سيرتك الذكية.' : 'Your details stay saved and private — we use them to personalise your AI CV.'}
+                        subtitle={isArabic ? 'بياناتك الشخصية تبقى محفوظة وآمنة - سنستخدمها لتخصيص سيرتك الذكية.' : 'Your details stay saved and private - we use them to personalise your AI CV.'}
                     />
                     <div className="inline-actions">
                         <PremiumButton variant="gold" to="/login">{isArabic ? 'تسجيل الدخول' : 'Login'}</PremiumButton>
@@ -126,7 +126,7 @@ const ProfileForm = ({ existing = {}, children }) => {
             if (error) throw error;
             setForm((prev) => ({ ...prev, cvPath: path, cvName: file.name }));
         } catch (err) {
-            setError(err.message || 'Upload failed.');
+            setError(err.message || t('uploadFailed'));
         }
     };
 
@@ -147,7 +147,7 @@ const ProfileForm = ({ existing = {}, children }) => {
             if (error) throw error;
             setDone(true);
         } catch (err) {
-            setError(err.message || 'Could not save your details.');
+            setError(err.message || t('saveDetailsFailed'));
         } finally {
             setSaving(false);
         }
@@ -156,7 +156,7 @@ const ProfileForm = ({ existing = {}, children }) => {
     const skip = () => save();
 
     // When used as the site-wide gate (children passed), unlock the content as
-    // soon as the details are saved — no dead-end. When used for the CV-only
+    // soon as the details are saved - no dead-end. When used for the CV-only
     // gate (no children), show the friendly confirmation card.
     if (done) {
         if (children) return children;
@@ -166,8 +166,8 @@ const ProfileForm = ({ existing = {}, children }) => {
                     <div className="profile-gate__icon profile-gate__icon--success" aria-hidden="true">✓</div>
                     <SectionHeading
                         kicker={isArabic ? 'تم' : 'Done'}
-                        title={isArabic ? 'شكرًا! بياناتك محفوظة 🎉' : 'Thanks — your details are saved 🎉'}
-                        subtitle={isArabic ? 'تم تفعيل حسابك — يمكنك الآن تصفح المنصة كاملة.' : 'Your account is now active — you can browse the whole platform.'}
+                        title={isArabic ? 'شكرًا! بياناتك محفوظة 🎉' : 'Thanks - your details are saved 🎉'}
+                        subtitle={isArabic ? 'تم تفعيل حسابك - يمكنك الآن تصفح المنصة كاملة.' : 'Your account is now active - you can browse the whole platform.'}
                     />
                 </GlassCard>
             </div>
@@ -217,7 +217,7 @@ const ProfileForm = ({ existing = {}, children }) => {
                             <label className="field-label">{isArabic ? 'سيرتك الذاتية (اختياري)' : 'Your CV (optional)'}</label>
                             <button type="button" className="dropzone profile-gate__cv" onClick={() => fileInputRef.current?.click()}>
                                 <span className="icon-circle" aria-hidden="true">CV</span>
-                                <span>{form.cvName || (isArabic ? 'اضغط لرفع سيرة ذاتية — أو تابع بدونها' : 'Tap to upload a CV — or continue without one')}</span>
+                                <span>{form.cvName || (isArabic ? 'اضغط لرفع سيرة ذاتية - أو تابع بدونها' : 'Tap to upload a CV - or continue without one')}</span>
                             </button>
                             <input
                                 ref={fileInputRef}

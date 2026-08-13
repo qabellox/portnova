@@ -15,7 +15,7 @@ const OnboardingQuestions = ({ messages = [], input, setInput, onSend, typing = 
     }, [messages, typing]);
 
     // Keep the reply box flexible: it grows with the answer (especially for
-    // the "write 2–3 sentences" summary question) and shrinks back after send.
+    // the "write 2-3 sentences" summary question) and shrinks back after send.
     const autoResize = (el) => {
         if (!el) return;
         el.style.height = 'auto';

@@ -4,10 +4,10 @@ import { Environment, Lightformer } from '@react-three/drei';
 import * as THREE from 'three';
 
 /**
- * ThreeScene — cinematic coastal seascape for the PortNova hero.
+ * ThreeScene - cinematic coastal seascape for the PortNova hero.
  *
  * Real animated shader waves, warm golden sky, iris-style sun, moon, and a
- * fleet of real 3D ships that SAIL — each boat rides a continuous elliptical
+ * fleet of real 3D ships that SAIL - each boat rides a continuous elliptical
  * orbit (never pops, never reverses), floats on the exact wave surface, and
  * carries a pennant that flutters in the wind. Tuned for 60fps.
  */
@@ -54,7 +54,7 @@ const getCelestial = () => {
 
     const skyLight = getDayLight();
 
-    // Warmth: 0 at high noon, 1 at the horizon — drives the dawn/dusk glow
+    // Warmth: 0 at high noon, 1 at the horizon - drives the dawn/dusk glow
     const warmth = Math.pow(Math.max(0, 1 - sunAlt), 1.35);
     const isDusk = mins > NOON;
 
@@ -75,7 +75,7 @@ const getCelestial = () => {
     const sunDir = new THREE.Vector3(sunAz * 0.85, sunAlt * 1.15 + 0.02, -1.0).normalize();
 
     // Sun colour follows the real clock: white-gold at noon, yellow at dawn,
-    // deep orange at dusk — fully responsive, never static.
+    // deep orange at dusk - fully responsive, never static.
     const sunColor = new THREE.Color('#fff2cf')
         .lerp(isDusk ? new THREE.Color('#ff8a3d') : new THREE.Color('#ffd27a'), warmth);
 
@@ -205,7 +205,7 @@ const SkyDome = () => {
 
 /* ------------------------------------------------------------------ */
 /* Water: layered waves scaled to the boats so hulls float with real    */
-/* freeboard — the surface never exceeds the boat's draft.             */
+/* freeboard - the surface never exceeds the boat's draft.             */
 /* ------------------------------------------------------------------ */
 const Water = () => {
     const mat = useRef(null);
@@ -320,7 +320,7 @@ const Water = () => {
 };
 
 /* The sun and moon are drawn directly inside the SkyDome shader so there is
-   exactly one crisp disc in the sky — no billboards, no square glow edges. */
+   exactly one crisp disc in the sky - no billboards, no square glow edges. */
 
 
 
@@ -370,7 +370,7 @@ const SunLight = () => {
 /* night falls so they match the time-of-day atmosphere.               */
 /* ------------------------------------------------------------------ */
 /* Starfield: round, softly glowing stars rendered as true point sprites in
-   the scene — perfectly round (no polygon facets), with natural colours,
+   the scene - perfectly round (no polygon facets), with natural colours,
    varied sizes, and a gentle twinkle. They fade in as night falls. */
 const StarField = () => {
     const ref = useRef(null);
@@ -463,8 +463,8 @@ const StarField = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/* 3D moon: a smooth, clean sphere with a soft day/night terminator —   */
-/* no noisy craters — drifting through the sky with the real clock.    */
+/* 3D moon: a smooth, clean sphere with a soft day/night terminator -   */
+/* no noisy craters - drifting through the sky with the real clock.    */
 /* ------------------------------------------------------------------ */
 const Moon3D = () => {
     const groupRef = useRef(null);
@@ -521,7 +521,7 @@ const Moon3D = () => {
                             return fract((p.x + p.y) * p.z);
                         }
 
-                        // smooth 3D value noise — soft, large-scale features
+                        // smooth 3D value noise - soft, large-scale features
                         float vnoise(vec3 p) {
                             vec3 i = floor(p);
                             vec3 f = fract(p);
@@ -583,11 +583,11 @@ const Moon3D = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/* Boat geometry — smooth lofted hulls with round bilge + tumblehome.  */
+/* Boat geometry - smooth lofted hulls with round bilge + tumblehome.  */
 /* ------------------------------------------------------------------ */
 
 /* Build a smooth, lofted boat hull. Each station is a curved rib with a
-   round bilge and a gentle tumblehome — genuine boat curvature. Bow +X. */
+   round bilge and a gentle tumblehome - genuine boat curvature. Bow +X. */
 const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rocker = 0.06, sheerLift = 0.24, transom = 0.16, belly = 0.25 } = {}) => {
     const pos = [];
     const idx = [];
@@ -651,7 +651,7 @@ const buildHullGeometry = (length, beam, depth, { stations = 36, ribs = 14, rock
 };
 
 /* Billowing triangular sail with a red band baked into vertex colors
-   (no overlapping plane — kills the z-fighting flicker). */
+   (no overlapping plane - kills the z-fighting flicker). */
 const buildSailGeometry = (chord, height, belly, segments = 14) => {
     const pos = [];
     const idx = [];
@@ -763,7 +763,7 @@ const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.15 }) =
 
 const CargoShipMesh = () => (
     <group>
-        {/* lofted hull — closes its own deck, no overlapping boxes */}
+        {/* lofted hull - closes its own deck, no overlapping boxes */}
         <mesh geometry={cargoHullGeo} position={[0, 0, 0]}>
             <meshStandardMaterial color="#1a365d" metalness={0.6} roughness={0.38} />
         </mesh>
@@ -772,7 +772,7 @@ const CargoShipMesh = () => (
             <boxGeometry args={[0.95, 0.55, 0.7]} />
             <meshStandardMaterial color="#f8fafc" metalness={0.2} roughness={0.3} />
         </mesh>
-        {/* window band — clearly proud of the bridge face (no coplanar overlap) */}
+        {/* window band - clearly proud of the bridge face (no coplanar overlap) */}
         <mesh position={[1.05, 0.62, 0.43]}>
             <boxGeometry args={[0.85, 0.3, 0.04]} />
             <meshStandardMaterial color="#0c4a6e" metalness={0.2} roughness={0.4} />
@@ -822,7 +822,7 @@ const Sail = () => {
                 + 0.05 * u * Math.sin(x * 7 - t * 10 + y * 2.5);
         }
         attr.needsUpdate = true;
-        // Same 1-in-5 normal rebuild as the pennants — keeps the sail rippling
+        // Same 1-in-5 normal rebuild as the pennants - keeps the sail rippling
         // without the per-frame CPU cost of recomputing normals.
         if ((frameRef.current = (frameRef.current + 1) % 5) === 0) {
             mesh.geometry.computeVertexNormals();
@@ -843,7 +843,7 @@ const SailboatMesh = () => (
             <boxGeometry args={[0.9, 0.5, 0.06]} />
             <meshStandardMaterial color={WOOD_DARK} metalness={0.3} roughness={0.5} />
         </mesh>
-        {/* rounded wooden hull — closes its own deck, no overlapping boxes */}
+        {/* rounded wooden hull - closes its own deck, no overlapping boxes */}
         <mesh geometry={sailHullGeo} position={[0, 0, 0]}>
             <meshStandardMaterial color={WOOD} metalness={0.18} roughness={0.55} />
         </mesh>
@@ -869,7 +869,7 @@ const SailboatMesh = () => (
 const sailHullGeo = buildHullGeometry(2.6, 0.95, 0.5, { stations: 36, ribs: 14, rocker: 0.07, sheerLift: 0.26, transom: 0.2, belly: 0.25 });
 const cargoHullGeo = buildHullGeometry(3.3, 1.2, 0.55, { stations: 36, ribs: 14, rocker: 0.06, sheerLift: 0.32, transom: 0.16, belly: 0.3 });
 
-/* Exact match of the Water shader's surface — same amplitudes, same time.
+/* Exact match of the Water shader's surface - same amplitudes, same time.
    The boat's heave tracks this precisely, so it floats and never sinks. */
 const waveH = (x, z, t) => {
     let w = 0;
@@ -880,9 +880,9 @@ const waveH = (x, z, t) => {
     return w;
 };
 
-/* Sailing fleet. Each boat sails steadily FORWARD across the sea — straight
+/* Sailing fleet. Each boat sails steadily FORWARD across the sea - straight
    through the visible water, exiting one edge and seamlessly re-entering the
-   other fully off-screen (no pop, no reversal) — exactly like Clash Royale
+   other fully off-screen (no pop, no reversal) - exactly like Clash Royale
    boats. The travel span tracks the visible sea width for the current screen,
    so all boats stay on view on any device. Projects each boat's screen
    position so the DOM cards follow it. */
@@ -934,7 +934,7 @@ const Fleet = ({ fleet, positionsRef }) => {
 
             // The ship stays fully opaque: it sails across the screen border
             // like a vessel coming from the open sea, wraps around off-screen,
-            // and sails back in — no fading in/out at the edges.
+            // and sails back in - no fading in/out at the edges.
             pos[b.id] = { x: sx * 100, y: sy * 100, w: Math.max(wPct, 7), visible };
         });
     });
@@ -971,7 +971,7 @@ const SceneContents = () => (
 );
 
 /* Pause the whole WebGL render loop whenever the hero is scrolled out of view.
-   The scene only needs to animate while it is visible — keeping a 60fps GPU +
+   The scene only needs to animate while it is visible - keeping a 60fps GPU +
    CPU loop running for an off-screen canvas is what made scrolling the rest of
    the page feel heavy and glitchy. With frameloop="never" R3F keeps the last
    rendered frame, so scrolling back to the top resumes instantly. */

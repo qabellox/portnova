@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
 import { useLanguage } from '../../context/LanguageContext';
 import { LoaderButton } from '../PremiumUI';
 
-/** Builds a Word-compatible .doc from the CV data (pure HTML + mso styles —
+/** Builds a Word-compatible .doc from the CV data (pure HTML + mso styles -
  *  opens perfectly in Microsoft Word, handles Arabic RTL). */
 const buildWordDoc = (cv, isArabic) => {
     const { header = {}, summary = '', skills = [], softSkills = [], experience = [], education = [], certifications = [], languages = [], projects = [] } = cv || {};
@@ -33,24 +33,24 @@ const buildWordDoc = (cv, isArabic) => {
 
     if (experience.length) {
         const body = experience.map((j) =>
-            `<p style="margin:8px 0 2px;"><strong>${esc(j.role)}</strong> — ${esc(j.company)}<span style="color:#475569;"> ${j.dates ? '· ' + esc(j.dates) : ''}</span></p>` +
+            `<p style="margin:8px 0 2px;"><strong>${esc(j.role)}</strong> - ${esc(j.company)}<span style="color:#475569;"> ${j.dates ? '· ' + esc(j.dates) : ''}</span></p>` +
             (j.bullets && j.bullets.length ? `<ul style="margin:2px 0 6px 20px;">${j.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>` : '')
         ).join('');
         html += section(isArabic ? 'الخبرة العملية' : 'Work Experience', body);
     }
 
     if (education.length) {
-        const body = education.map((e) => `<p style="margin:6px 0;"><strong>${esc(e.degree)}</strong> — ${esc(e.institution)}<span style="color:#475569;"> ${e.years ? '· ' + esc(e.years) : ''}${e.gpa ? ' · GPA ' + esc(e.gpa) : ''}</span></p>`).join('');
+        const body = education.map((e) => `<p style="margin:6px 0;"><strong>${esc(e.degree)}</strong> - ${esc(e.institution)}<span style="color:#475569;"> ${e.years ? '· ' + esc(e.years) : ''}${e.gpa ? ' · GPA ' + esc(e.gpa) : ''}</span></p>`).join('');
         html += section(isArabic ? 'التعليم' : 'Education', body);
     }
 
     if (certifications.length) {
-        const body = certifications.map((c) => `<p style="margin:6px 0;"><strong>${esc(c.name)}</strong><span style="color:#475569;"> ${c.issuer ? '— ' + esc(c.issuer) : ''}${c.year ? ' · ' + esc(c.year) : ''}</span></p>`).join('');
+        const body = certifications.map((c) => `<p style="margin:6px 0;"><strong>${esc(c.name)}</strong><span style="color:#475569;"> ${c.issuer ? '- ' + esc(c.issuer) : ''}${c.year ? ' · ' + esc(c.year) : ''}</span></p>`).join('');
         html += section(isArabic ? 'الشهادات' : 'Certifications', body);
     }
 
     if (languages.length) {
-        html += section(isArabic ? 'اللغات' : 'Languages', `<p>${languages.map((l) => `${esc(l.name)} — ${esc(l.level)}`).join(' &nbsp;•&nbsp; ')}</p>`);
+        html += section(isArabic ? 'اللغات' : 'Languages', `<p>${languages.map((l) => `${esc(l.name)} - ${esc(l.level)}`).join(' &nbsp;•&nbsp; ')}</p>`);
     }
 
     if (projects.length) {

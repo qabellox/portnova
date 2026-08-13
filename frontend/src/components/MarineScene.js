@@ -15,7 +15,7 @@ import ThreeScene from './ThreeScene';
 
 // The fleet config is shared with ThreeScene: 3D layout + the card content.
 /* Every boat sails steadily FORWARD across the sea (dir=1 right, dir=-1
-   left), traversing the whole visible width and wrapping just off-screen —
+   left), traversing the whole visible width and wrapping just off-screen -
    no pop, no reversal, no circling. phase is a fraction of the travel cycle
    (0..1) that spreads the boats apart; margin is how far past the screen edge
    the boat travels before wrapping (hides the wrap). lift raises the hull
@@ -35,7 +35,7 @@ const ROTATE_MS = 10000;
 const JOB_TYPE_KEY = { full: 'jobTypeFull', part: 'jobTypePart', intern: 'jobTypeIntern', contract: 'jobTypeContract' };
 
 /* Ship index within its own kind (job-a=0, job-b=1; course-a=0, course-b=1,
-   course-c=2) — used to lay each ship onto a different slice of its list. */
+   course-c=2) - used to lay each ship onto a different slice of its list. */
 const FLEET_INDEX = {};
 {
     const count = {};
@@ -56,7 +56,7 @@ const MarineScene = ({ className = '' }) => {
         let rafId = 0;
         let paused = false;
         // Skip the per-frame DOM writes while the hero is scrolled out of view
-        // or the tab is hidden — the cards aren't visible then, and the layout
+        // or the tab is hidden - the cards aren't visible then, and the layout
         // churn was fighting the main thread during scrolling.
         const onVis = () => { paused = document.hidden; };
         document.addEventListener('visibilitychange', onVis);
@@ -75,7 +75,7 @@ const MarineScene = ({ className = '' }) => {
                 let xPct = p.x;
                 let yPct = p.y;
                 // Phones only: keep the info card fully inside the hero (the
-                // live wallpaper) so it never overlaps its borders — the card
+                // live wallpaper) so it never overlaps its borders - the card
                 // opens below the boat, so it is clamped in both axes. Desktop
                 // layout is left completely untouched.
                 if (window.innerWidth <= 720) {
@@ -115,7 +115,7 @@ const MarineScene = ({ className = '' }) => {
     // sorted by release time, most recent first). The ships are a rolling
     // time-slice over that list: every ROTATE_MS the window slides forward one
     // position, so every released job/course cycles through the ships in release
-    // order — a new release moves older items one ship back (never drops them),
+    // order - a new release moves older items one ship back (never drops them),
     // and when a fresh item arrives the rotation resets so the newest sails in
     // on the front ship immediately.
     const [content, setContent] = useState({ jobs: [], courses: [] });

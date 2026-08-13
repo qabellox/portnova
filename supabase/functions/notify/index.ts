@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------
-// PortNova — autonomous notification emails (via Resend, free tier)
+// PortNova - autonomous notification emails (via Resend, free tier)
 // ---------------------------------------------------------------------
 // A Supabase Edge Function triggered by Database Webhooks on
 // `public.applications`:
@@ -62,14 +62,14 @@ serve(async (req) => {
         if (to) {
             await sendEmail(
                 to,
-                `📬 New application: ${record.applicant_name || 'Someone'} — ${job.role}`,
+                `📬 New application: ${record.applicant_name || 'Someone'} - ${job.role}`,
                 `<div style="font-family:Arial,sans-serif;color:#0f172a">
           <p>A new application just arrived on <strong>PortNova</strong>.</p>
           <p><strong>Job:</strong> ${job.role} · ${job.company}<br/>
           <strong>Applicant:</strong> ${record.applicant_name}<br/>
           <strong>Email:</strong> ${record.email}<br/>
-          <strong>Phone:</strong> ${record.phone || '—'}<br/>
-          <strong>City:</strong> ${record.city || '—'}</p>
+          <strong>Phone:</strong> ${record.phone || '-'}<br/>
+          <strong>City:</strong> ${record.city || '-'}</p>
           <p>Log in to your <strong>Studio → Applicants</strong> to review and accept or reject.</p>
         </div>`,
             );
@@ -90,7 +90,7 @@ serve(async (req) => {
             if (status === 'accepted') {
                 await sendEmail(
                     record.email,
-                    `🎉 Application accepted — ${role}`,
+                    `🎉 Application accepted - ${role}`,
                     `<div style="font-family:Arial,sans-serif;color:#0f172a">
             <p>Great news! <strong>${company}</strong> <strong style="color:#16a34a">accepted</strong> your application for <strong>${role}</strong>.</p>
             <p>They will contact you at ${record.email}. Good luck! 🚀</p>
@@ -99,11 +99,11 @@ serve(async (req) => {
             } else {
                 await sendEmail(
                     record.email,
-                    `Update on your application — ${role}`,
+                    `Update on your application - ${role}`,
                     `<div style="font-family:Arial,sans-serif;color:#0f172a">
             <p>Thank you for applying for <strong>${role}</strong> at <strong>${company}</strong>.</p>
             <p>Unfortunately, they have <strong style="color:#dc2626">moved on with other candidates</strong> this time.</p>
-            <p>Don't give up — new opportunities are posted on PortNova regularly. Keep an eye on the jobs board!</p>
+            <p>Don't give up - new opportunities are posted on PortNova regularly. Keep an eye on the jobs board!</p>
           </div>`,
                 );
             }

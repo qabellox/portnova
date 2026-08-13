@@ -106,7 +106,7 @@ const Jobs = () => {
                         <label className="filter-label">{t('locationLabel')}</label>
                         <select className="select" value={location} onChange={(event) => setLocation(event.target.value)}>
                             {locations.map((loc) => (
-                                <option key={loc} value={loc}>{loc}</option>
+                                <option key={loc} value={loc}>{loc === 'All' ? t('filterAll') : loc}</option>
                             ))}
                         </select>
                     </div>
@@ -114,7 +114,7 @@ const Jobs = () => {
                         <label className="filter-label">{t('categoryLabel')}</label>
                         <select className="select" value={category} onChange={(event) => setCategory(event.target.value)}>
                             {categories.map((cat) => (
-                                <option key={cat} value={cat}>{cat}</option>
+                                <option key={cat} value={cat}>{cat === 'All' ? t('filterAll') : cat}</option>
                             ))}
                         </select>
                     </div>
@@ -126,7 +126,7 @@ const Jobs = () => {
                 </div>
             </GlassCard>
 
-            {/* CV upload is a seeker action — providers don't apply, so hide it */}
+            {/* CV upload is a seeker action - providers don't apply, so hide it */}
             {!isProvider ? (
                 <GlassCard className="cv-card">
                     <SectionHeading kicker={t('cvKicker')} title={t('cvRequiredTitle')} subtitle={t('cvRequiredSubtitle')} />

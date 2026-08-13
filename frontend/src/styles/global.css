@@ -197,7 +197,7 @@ img {
     animation-delay: -14s;
 }
 
-/* Irregular swell — the sea breathes and creases unevenly, not a metronome */
+/* Irregular swell - the sea breathes and creases unevenly, not a metronome */
 @keyframes waveSwirl {
     0% {
         transform: translateX(-3%) translateY(0) scaleY(1) rotate(0deg);
@@ -354,7 +354,7 @@ img {
     border-radius: 1.4rem;
     padding: 0.4rem;
     /* Soft luminous halo behind the mark so the dark navy parts of the logo
-       read clearly against the dark navbar — shape and colours untouched */
+       read clearly against the dark navbar - shape and colours untouched */
     background: radial-gradient(circle at 50% 42%, rgba(147, 215, 255, 0.55), rgba(20, 118, 168, 0.35) 58%, rgba(10, 37, 64, 0.6) 100%);
     border: 1px solid rgba(125, 211, 252, 0.45);
     box-shadow:
@@ -369,7 +369,7 @@ img {
     height: 100%;
     object-fit: contain;
     /* Lift the dark navy to a clearly visible blue + soft glow.
-       Only tone is adjusted — the shape and pixels stay exactly as they are. */
+       Only tone is adjusted - the shape and pixels stay exactly as they are. */
     filter: brightness(1.4) saturate(1.2) drop-shadow(0 0 10px rgba(147, 215, 255, 0.55));
 }
 
@@ -1262,7 +1262,7 @@ body[dir='rtl'] .user-menu__link:hover {
     z-index: 1;
 }
 
-/* Global click waves — fire on every click, anywhere */
+/* Global click waves - fire on every click, anywhere */
 .click-wave-layer {
     position: fixed;
     inset: 0;
@@ -1413,7 +1413,7 @@ body[dir='rtl'] .user-menu__link:hover {
     overflow: hidden;
 }
 
-/* CV card — required part of the profile, marine-consistent */
+/* CV card - required part of the profile, marine-consistent */
 .cv-card {
     margin-bottom: 1.25rem;
     padding: 1.2rem;
@@ -1913,7 +1913,7 @@ body[dir='rtl'] .user-menu__link:hover {
         border: 1px solid rgba(125, 211, 252, 0.3);
         background: rgba(255, 255, 255, 0.04);
         cursor: pointer;
-        /* Never let the flex layout crush the burger — the 3 dashes must
+        /* Never let the flex layout crush the burger - the 3 dashes must
            always stay visible beside the logo. */
         flex-shrink: 0;
         flex-basis: 2.9rem;

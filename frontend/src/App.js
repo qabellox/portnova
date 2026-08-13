@@ -182,6 +182,11 @@ function Shell() {
     const location = useLocation();
     const { isArabic } = useLanguage();
 
+    // Keep the browser tab in sync with the UI language.
+    useEffect(() => {
+        document.title = isArabic ? 'PortNova | بورسعيد' : 'PortNova | Port Said';
+    }, [isArabic]);
+
     return (
         <div className="app-shell" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
             <AnimatedBackdrop />

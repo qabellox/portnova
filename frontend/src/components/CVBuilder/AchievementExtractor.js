@@ -3,7 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { improveAchievement } from '../../services/cvBuilder';
 import { PremiumButton } from '../PremiumUI';
 
-/** Achievement Extractor — the moment the builder feels like a premium human
+/** Achievement Extractor - the moment the builder feels like a premium human
  *  consultant. The user types a raw achievement ("grew Instagram by 50%") and
  *  Nova rewrites it into a quantified, ATS-friendly bullet instantly. The user
  *  can accept the AI version, edit it, or keep their original. */
@@ -23,7 +23,7 @@ const AchievementExtractor = ({ role, onAccept, onDone }) => {
         const text = String(raw || '').trim();
         if (!text) return;
 
-        // A "done" word means the user is finishing this job — don't waste an
+        // A "done" word means the user is finishing this job - don't waste an
         // API call polishing it.
         if (isDoneWord) {
             if (onDone) onDone();
@@ -41,7 +41,7 @@ const AchievementExtractor = ({ role, onAccept, onDone }) => {
             setError(
                 isArabic
                     ? 'تعذّر وصول الذكاء الاصطناعي الآن، لكن يمكنك إضافة إنجازك مباشرة وسنحسّنه لاحقًا.'
-                    : 'The AI is unavailable right now — but you can still add your achievement as-is and we’ll polish it later.'
+                    : 'The AI is unavailable right now - but you can still add your achievement as-is and we’ll polish it later.'
             );
         } finally {
             setLoading(false);
@@ -62,8 +62,8 @@ const AchievementExtractor = ({ role, onAccept, onDone }) => {
                 rows={3}
                 placeholder={
                     isArabic
-                        ? 'اكتب إنجازك كما تتذكره… (مثال: زدت متابعات انستجرام 50٪ خلال 3 شهور) — أو اكتب "تم" لإنهاء هذه الوظيفة'
-                        : 'Type your achievement as you remember it… (e.g. "grew our client\'s Instagram following by 50% in 3 months") — or type "done" to finish this job'
+                        ? 'اكتب إنجازك كما تتذكره… (مثال: زدت متابعات انستجرام 50٪ خلال 3 شهور) - أو اكتب "تم" لإنهاء هذه الوظيفة'
+                        : 'Type your achievement as you remember it… (e.g. "grew our client\'s Instagram following by 50% in 3 months") - or type "done" to finish this job'
                 }
                 value={raw}
                 onChange={(event) => setRaw(event.target.value)}

@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { useLanguage } from '../context/LanguageContext';
 import { GlassCard, LoaderButton, PremiumButton, SectionHeading } from './PremiumUI';
-import './profile-gate.css';
+import '../styles/profile-gate.css';
 
 const STEPS = [
     { key: 'fullName' },

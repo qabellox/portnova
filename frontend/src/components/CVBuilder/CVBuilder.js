@@ -146,15 +146,20 @@ const CVBuilder = () => {
                 pushBot(say(q.askAr, q.askEn));
             }, 600);
         } else {
-            // Questions done → experience
+            // Questions done → experience (adapts to whether they're a student)
+            const isStudent = /طالب|student|متدرب|intern/i.test(data.title || '');
             setPhase('experience');
             setTyping(true);
             setTimeout(() => {
                 setTyping(false);
                 pushBot(
                     say(
-                        'رائع! 🎉 الآن عن الخبرة العملية.\nأخبرني عن وظيفة: الدور @ الشركة (التواريخ). مثال: "أخصائي تسويق @ نوفا لابز (2022–2024)".\nاكتب "انتهيت" إذا لم تكن لديك خبرة.',
-                        'Great! 🎉 Now work experience.\nTell me about a job: role @ company (dates). e.g. "Marketing Specialist @ Nova Labs (2022–2024)".\nType "done" if you have no experience.'
+                        isStudent
+                            ? 'رائع! 🎉 الآن عن أي تدريب أو عمل جزئي أو مشاريع.\nأخبرني عن وظيفة: الدور @ الشركة (التواريخ). مثال: "متدرب تطوير @ نوفا لابز (2024)".\nاكتب "انتهيت" إذا لم تكن لديك خبرة.'
+                            : 'رائع! 🎉 الآن عن الخبرة العملية.\nأخبرني عن وظيفة: الدور @ الشركة (التواريخ). مثال: "أخصائي تسويق @ نوفا لابز (2022–2024)".\nاكتب "انتهيت" إذا لم تكن لديك خبرة.',
+                        isStudent
+                            ? 'Great! 🎉 Now any internships, part-time work or projects.\nTell me about one: role @ company (dates). e.g. "Dev Intern @ Nova Labs (2024)".\nType "done" if you have none.'
+                            : 'Great! 🎉 Now work experience.\nTell me about a job: role @ company (dates). e.g. "Marketing Specialist @ Nova Labs (2022–2024)".\nType "done" if you have no experience.'
                     )
                 );
             }, 700);
@@ -172,6 +177,15 @@ const CVBuilder = () => {
                     setData(next);
                     askNextAchievement(job);
                 }}
+                onDone={() => {
+                    setPhase('experience');
+                    pushBot(
+                        say(
+                            'إنجازات رائعة! هل لديك وظيفة أخرى؟ أخبرني بها (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت".',
+                            'Great achievements! Any other job? Tell me (role @ company (dates)) or type "done".'
+                        )
+                    );
+                }}
             />
         );
     };
@@ -179,18 +193,26 @@ const CVBuilder = () => {
     /* ------------------------- main answer handler ------------------------- */
     const handleSend = (raw) => {
         pushUser(raw);
+        setInput(''); // clear the reply box so it's ready for the next answer
 
         /* phase: questions */
         if (phase === 'questions') {
             const q = FLOW[flowIndex];
             storeValue(q.key, raw);
 
-            // friendly acknowledgment for skills/summary to keep it premium
+            // Friendly, response-aware acknowledgments (no API call — instant).
             const ack = {
                 name: say(`تشريف يا ${raw.split(' ')[0]}!`, `Nice to meet you, ${raw.split(' ')[0]}!`),
+                title: /طالب|student|متدرب|intern/i.test(raw)
+                    ? say('رائع — سنركّز على تعليمك ومهاراتك ومسيرتك الدراسية. 🎓', 'Great — as a student we’ll emphasise your education, skills and coursework. 🎓')
+                    : say('ممتاز — سنبرز هذه الخبرة.', 'Great — we’ll highlight that experience.'),
                 summary: say('ملاحظة رائعة — سنعتمد عليها في سيرتك.', 'Noted — we’ll build on that.'),
                 technicalSkills: say('ممتاز، مهارات قوية. 👌', 'Nice, strong skills. 👌'),
                 softSkills: say('ممتاز — سنبرزها.', 'Great — we’ll highlight those.'),
+                education: say('تمام — سنوثّقها بدقة في قسم التعليم.', 'Perfect — we’ll document it precisely under education.'),
+                location: say('تمام، سنضع موقعك الحالي في ترويسة السيرة.', 'Got it — we’ll put your location in the CV header.'),
+                targetRole: say('واضح — سنصيغ ملخصك وسيرتك حول هذا الدور.', 'Clear — we’ll shape your summary and CV around that role.'),
+                targetIndustry: say('ممتاز — سنوائم لغة السيرة مع هذا القطاع.', 'Excellent — we’ll match the CV tone to that industry.'),
             }[q.key];
             if (ack) pushBot(ack);
 
@@ -260,6 +282,12 @@ const CVBuilder = () => {
     const beginSummary = async () => {
         setPhase('summary');
         setBusy(true);
+        pushBot(
+            say(
+                `فهمتك! ${data.name || ''}، ${data.title || 'باحث عن فرصة'} من ${data.location || 'بورسعيد'} — الهدف: ${data.targetRole || 'فرصة مناسبة'} في ${data.targetIndustry || 'مجالك'}. سأبني سيرتك حول هذه الصورة.`,
+                `Got it! ${data.name || ''} — a ${data.title || 'professional'} from ${data.location || 'Port Said'}, targeting ${data.targetRole || 'a fitting role'} in ${data.targetIndustry || 'your field'}. I’ll build your CV around that.`
+            )
+        );
         pushBot(say('أقوم الآن بكتابة ملخصك الاحترافي…', 'Writing your professional summary…'));
         try {
             const { summary } = await writeSummary(data, isArabic ? 'ar' : 'en');

@@ -8,6 +8,21 @@
     gap: 1.5rem;
 }
 
+.cv-expert-divider {
+    margin: 0.5rem 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px dashed rgba(125, 211, 252, 0.18);
+}
+
+.cv-achievement__fallback {
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.9rem;
+    background: rgba(251, 113, 133, 0.08);
+    border: 1px dashed rgba(251, 113, 133, 0.4);
+    display: grid;
+    gap: 0.5rem;
+}
+
 .cv-builder__chat-card {
     padding: 0;
     overflow: hidden;

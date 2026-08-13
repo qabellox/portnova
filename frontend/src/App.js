@@ -7,7 +7,6 @@ import Home from './pages/Home';
 import Jobs from './pages/Jobs';
 import Courses from './pages/Courses';
 import CVService from './pages/CVService';
-import CvBuilderPage from './pages/CvBuilderPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -34,8 +33,7 @@ const navItems = [
     { to: '/', ar: 'الرئيسية', en: 'Home', end: true },
     { to: '/jobs', ar: 'الوظائف', en: 'Jobs' },
     { to: '/courses', ar: 'الدورات', en: 'Courses' },
-    { to: '/cv-service', ar: 'خدمة السيرة الذاتية', en: 'CV Service' },
-    { to: '/cv-builder', ar: 'صانع السيرة الذكية', en: 'AI CV Builder' },
+    { to: '/cv-service', ar: 'السيرة الذاتية', en: 'CV' },
     { to: '/dashboard', ar: 'لوحة التحكم', en: 'Dashboard' },
     { to: '/about', ar: 'من نحن', en: 'About' },
 ];
@@ -205,7 +203,7 @@ function Shell() {
                     <Route path="/jobs" element={<div key={location.pathname}><Jobs /></div>} />
                     <Route path="/courses" element={<div key={location.pathname}><Courses /></div>} />
                     <Route path="/cv-service" element={<div key={location.pathname}><CVService /></div>} />
-                    <Route path="/cv-builder" element={<div key={location.pathname}><CvBuilderPage /></div>} />
+                    <Route path="/cv-builder" element={<Navigate to="/cv-service" replace />} />
                     <Route path="/login" element={<div key={location.pathname}><Login /></div>} />
                     <Route path="/register" element={<div key={location.pathname}><Register /></div>} />
                     <Route

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { Badge, BilingualLine, GlassCard, LoaderButton, PremiumButton, ProgressBar, SectionHeading, Timeline } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
+import CVBuilder from '../components/CVBuilder/CVBuilder';
 
 const statusStepKeys = [
     { key: 'pending', titleKey: 'cvStepPending', descKey: 'cvStepPendingDesc' },
@@ -152,40 +153,37 @@ const CVService = () => {
     return (
         <div className="page-shell page-shell__grid">
             <section className="hero hero--local">
-                <div className="hero__grid">
-                    <div>
-                        <div className="hero__kicker">{t('cvKicker')}</div>
-                        <h1 className="hero__title">
-                            {t('cvTitle')}
-                        </h1>
-                        <BilingualLine
-                            as="p"
-                            className="hero__lead"
-                            ar="ارفع سيرتك الذاتية وتابعها حتى التسليم."
-                            en="Upload your CV and track it until delivery."
-                        />
-                        <div className="status-strip">
-                            <Badge tone="success">{t('expertReview')}</Badge>
-                        </div>
-                        <div className="inline-actions" style={{ marginTop: '1rem' }}>
-                            <PremiumButton variant="gold" to="/cv-builder">
-                                ✨ {t('cvTryBuilder')}
-                            </PremiumButton>
-                        </div>
+                <div>
+                    <div className="hero__kicker">
+                        <span className="nautical-tile" aria-hidden="true">🧭</span> {t('cvKicker')}
                     </div>
-
-                    <GlassCard className="hero__orbital hero__orbital--primary">
-                        <div className="upload-meter__label">
-                            <span>{t('uploadProgress')}</span>
-                            <strong>{uploadProgress}%</strong>
-                        </div>
-                        <ProgressBar value={uploadProgress} />
-                        <div className="timeline-card" style={{ marginTop: '1rem', padding: '1rem' }}>
-                            <Timeline steps={statusSteps} currentIndex={currentStep >= 0 ? currentStep : 0} nowLabel={t('cvStepNow')} />
-                        </div>
-                    </GlassCard>
+                    <h1 className="hero__title">
+                        {t('cvTitle')}
+                    </h1>
+                    <BilingualLine
+                        as="p"
+                        className="hero__lead"
+                        ar="وكيل نوفا الذكي يبني سيرتك من أسئلة بسيطة، أو اختر مراجعة خبير بشري — كل ذلك في مكان واحد."
+                        en="Nova’s AI agent builds your CV from a few simple questions, or get a human expert review — all in one place."
+                    />
+                    <div className="status-strip">
+                        <Badge tone="success">{t('expertReview')}</Badge>
+                        <Badge tone="gold">✨ AI Agent</Badge>
+                    </div>
                 </div>
             </section>
+
+            {/* AI CV Builder Agent — the primary experience */}
+            <CVBuilder />
+
+            {/* Human expert review — the complementary service */}
+            <div className="cv-expert-divider">
+                <SectionHeading
+                    kicker={t('expertServiceKicker')}
+                    title={t('expertServiceTitle')}
+                    subtitle={t('expertServiceSubtitle')}
+                />
+            </div>
 
             <div className="split-grid">
                 <GlassCard className="auth-card">
@@ -243,6 +241,15 @@ const CVService = () => {
                             </div>
                         </div>
                     </form>
+                    {isUploading ? (
+                        <div style={{ marginTop: '1rem' }}>
+                            <div className="upload-meter__label">
+                                <span>{t('uploadProgress')}</span>
+                                <strong>{uploadProgress}%</strong>
+                            </div>
+                            <ProgressBar value={uploadProgress} />
+                        </div>
+                    ) : null}
                     {message ? <p className="muted" style={{ marginTop: '1rem' }}>{message}</p> : null}
                 </GlassCard>
 

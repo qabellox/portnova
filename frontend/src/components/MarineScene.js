@@ -49,11 +49,24 @@ const MarineScene = ({ className = '' }) => {
     const { t } = useLanguage();
     const positionsRef = useRef({});
     const vesselRefs = useRef({});
+    const rootRef = useRef(null);
 
     // Keep each DOM card glued to its 3D boat's projected screen position.
     useEffect(() => {
         let rafId = 0;
+        let paused = false;
+        // Skip the per-frame DOM writes while the hero is scrolled out of view
+        // or the tab is hidden — the cards aren't visible then, and the layout
+        // churn was fighting the main thread during scrolling.
+        const onVis = () => { paused = document.hidden; };
+        document.addEventListener('visibilitychange', onVis);
+        let io = null;
+        if (typeof IntersectionObserver !== 'undefined' && rootRef.current) {
+            io = new IntersectionObserver(([entry]) => { if (!document.hidden) paused = !entry.isIntersecting; }, { rootMargin: '80px' });
+            io.observe(rootRef.current);
+        }
         const loop = () => {
+            if (!paused) {
             const pos = positionsRef.current;
             Object.keys(vesselRefs.current).forEach((id) => {
                 const el = vesselRefs.current[id];
@@ -87,10 +100,15 @@ const MarineScene = ({ className = '' }) => {
                 el.style.opacity = p.visible ? '' : '0';
                 el.style.pointerEvents = p.visible ? 'auto' : 'none';
             });
+            }
             rafId = requestAnimationFrame(loop);
         };
         rafId = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(rafId);
+        return () => {
+            cancelAnimationFrame(rafId);
+            if (io) io.disconnect();
+            document.removeEventListener('visibilitychange', onVis);
+        };
     }, []);
 
     // Live content from the shared store, newest first (jobs/courses come back
@@ -160,7 +178,7 @@ const MarineScene = ({ className = '' }) => {
     ];
 
     return (
-        <div className={`marine-scene ${className}`.trim()}>
+        <div ref={rootRef} className={`marine-scene ${className}`.trim()}>
             {/* Cinematic Three.js seascape with the 3D boat fleet */}
             <ThreeScene fleet={FLEET} positionsRef={positionsRef} />
 

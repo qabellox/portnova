@@ -1,7 +1,6 @@
-import React, { memo, Suspense, useEffect, useMemo, useRef } from 'react';
+import React, { memo, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
 /**
@@ -721,6 +720,7 @@ const WOOD_DARK = '#5c4033';
    (anchored at the pole, free end waves). */
 const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.15 }) => {
     const meshRef = useRef(null);
+    const frameRef = useRef(0);
     const geo = useMemo(() => buildPennantGeometry(length, 0.62), [length]);
 
     useFrame((state) => {
@@ -736,7 +736,12 @@ const Banner = ({ color = '#1f9ac4', poleH = 2.0, topY = 1.7, length = 1.15 }) =
             arr[i + 2] = flutter * (Math.sin(x * 8 - t * 11) + 0.5 * Math.sin(x * 13 - t * 18)) * 0.09;
         }
         attr.needsUpdate = true;
-        mesh.geometry.computeVertexNormals();
+        // Rebuild lighting normals on a 1-in-5 cadence: the flutter is subtle,
+        // but computeVertexNormals() on every frame, on every pennant in the
+        // fleet, is a measurable main-thread cost.
+        if ((frameRef.current = (frameRef.current + 1) % 5) === 0) {
+            mesh.geometry.computeVertexNormals();
+        }
     });
 
     return (
@@ -800,6 +805,7 @@ const CargoShipMesh = () => (
 /* Sail that keeps billowing and gently rippling in the wind. */
 const Sail = () => {
     const meshRef = useRef(null);
+    const frameRef = useRef(0);
     const geo = useMemo(() => buildSailGeometry(1.8, 1.6, 0.34), []);
 
     useFrame((state) => {
@@ -816,7 +822,11 @@ const Sail = () => {
                 + 0.05 * u * Math.sin(x * 7 - t * 10 + y * 2.5);
         }
         attr.needsUpdate = true;
-        mesh.geometry.computeVertexNormals();
+        // Same 1-in-5 normal rebuild as the pennants — keeps the sail rippling
+        // without the per-frame CPU cost of recomputing normals.
+        if ((frameRef.current = (frameRef.current + 1) % 5) === 0) {
+            mesh.geometry.computeVertexNormals();
+        }
     });
 
     return (
@@ -960,34 +970,44 @@ const SceneContents = () => (
     </>
 );
 
-const PostFX = () => (
-    // Post-processing runs at half resolution: Bloom + Vignette are full-screen
-    // passes that dominate the GPU frame cost (they render the whole canvas a
-    // few times per frame). Half-res FX is visually near-identical but ~4x
-    // cheaper — the single biggest perf win for the scene, especially on an
-    // integrated/laptop GPU.
-    <EffectComposer resolutionScale={0.5}>
-        <Bloom intensity={0.32} luminanceThreshold={0.62} luminanceSmoothing={0.5} mipmapBlur radius={0.6} />
-        <Vignette eskil={false} offset={0.22} darkness={0.5} />
-    </EffectComposer>
-);
+/* Pause the whole WebGL render loop whenever the hero is scrolled out of view.
+   The scene only needs to animate while it is visible — keeping a 60fps GPU +
+   CPU loop running for an off-screen canvas is what made scrolling the rest of
+   the page feel heavy and glitchy. With frameloop="never" R3F keeps the last
+   rendered frame, so scrolling back to the top resumes instantly. */
+const useInView = (ref, margin = '80px') => {
+    const [inView, setInView] = useState(true);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+        const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { rootMargin: margin });
+        io.observe(el);
+        return () => io.disconnect();
+    }, [ref, margin]);
+    return inView;
+};
 
-const ThreeScene = ({ className = '', fleet = [], positionsRef = null }) => (
-    <div className={`three-scene ${className}`.trim()}>
-        <Canvas
-            dpr={[1, 1.5]}
-            camera={{ position: [0, 2.35, 7.2], fov: 46, near: 0.1, far: 600 }}
-            gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
-        >
-            <Suspense fallback={null}>
-                <MouseRig>
-                    <SceneContents />
-                </MouseRig>
-                {fleet.length ? <Fleet fleet={fleet} positionsRef={positionsRef} /> : null}
-                <PostFX />
-            </Suspense>
-        </Canvas>
-    </div>
-);
+const ThreeScene = ({ className = '', fleet = [], positionsRef = null }) => {
+    const wrapRef = useRef(null);
+    const inView = useInView(wrapRef);
+
+    return (
+        <div ref={wrapRef} className={`three-scene ${className}`.trim()}>
+            <Canvas
+                dpr={[1, 1.5]}
+                frameloop={inView ? 'always' : 'never'}
+                camera={{ position: [0, 2.35, 7.2], fov: 46, near: 0.1, far: 600 }}
+                gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+            >
+                <Suspense fallback={null}>
+                    <MouseRig>
+                        <SceneContents />
+                    </MouseRig>
+                    {fleet.length ? <Fleet fleet={fleet} positionsRef={positionsRef} /> : null}
+                </Suspense>
+            </Canvas>
+        </div>
+    );
+};
 
 export default memo(ThreeScene);

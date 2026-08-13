@@ -20,6 +20,12 @@
    z-index: 1;
    overflow: hidden;
    pointer-events: none;
+   /* Promote the WebGL canvas to its own GPU layer so the browser composites
+      it while scrolling instead of repainting it — this removes the white
+      flash / glitch that appeared on scroll, especially on high-DPI screens. */
+   transform: translateZ(0);
+   will-change: transform;
+   backface-visibility: hidden;
 }
 
 .three-scene canvas {
@@ -283,8 +289,14 @@
    box-shadow: 0 14px 28px rgba(212, 175, 55, 0.42);
 }
 
+/* Gentle CSS vignette — replaces the GPU Vignette post-processing pass that
+   used to run full-screen every frame (a major source of the scroll lag and
+   white flashes). Same cinematic framing, zero GPU cost. */
 .marine-overlay {
    pointer-events: none;
+   position: absolute;
+   inset: 0;
+   background: radial-gradient(ellipse at center, rgba(4, 14, 26, 0) 54%, rgba(4, 14, 26, 0.30) 100%);
 }
 
 /* ============================================================

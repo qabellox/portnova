@@ -1,0 +1,517 @@
+/* ============================================================
+   CV BUILDER AGENT — premium conversational CV experience
+   Consistent with the PortNova nautical theme (teal / gold / glass)
+   ============================================================ */
+
+.cv-builder {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.cv-builder__chat-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.cv-builder__head {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.1rem 1.3rem;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.14);
+    background: linear-gradient(120deg, rgba(12, 74, 110, 0.35), rgba(13, 148, 136, 0.12));
+}
+
+.cv-builder__avatar {
+    width: 3rem;
+    height: 3rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.5rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.35), rgba(212, 175, 55, 0.25));
+    border: 1px solid rgba(125, 211, 252, 0.35);
+    box-shadow: 0 8px 24px rgba(6, 16, 30, 0.45);
+    animation: floatCard 5s ease-in-out infinite;
+}
+
+.cv-builder__name {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.cv-builder__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+
+.cv-builder__pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.6);
+    animation: pulseRing 2s infinite;
+}
+
+.cv-builder__error {
+    margin: 0.9rem 1.3rem 0;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--danger);
+    background: rgba(251, 113, 133, 0.1);
+    border: 1px solid rgba(251, 113, 133, 0.3);
+}
+
+/* ------------------------------ progress ------------------------------ */
+.cv-progress {
+    padding: 0.9rem 1.3rem 0.3rem;
+}
+
+.cv-progress__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
+.cv-progress__value {
+    color: var(--sand-light);
+    font-variant-numeric: tabular-nums;
+}
+
+.cv-progress .progress {
+    height: 8px;
+    border-radius: 999px;
+    background: rgba(125, 211, 252, 0.12);
+    overflow: hidden;
+}
+
+.cv-progress .progress__bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--turquoise), var(--sandy));
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ------------------------------- chat ------------------------------- */
+.cv-chat {
+    display: flex;
+    flex-direction: column;
+}
+
+.cv-chat__scroll {
+    min-height: 340px;
+    max-height: 58vh;
+    overflow-y: auto;
+    padding: 1.2rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    scroll-behavior: smooth;
+}
+
+.cv-chat__row {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.55rem;
+    animation: chatIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cv-chat__row--user {
+    justify-content: flex-end;
+}
+
+.cv-chat__avatar {
+    flex: 0 0 auto;
+    width: 2.2rem;
+    height: 2.2rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.05rem;
+    border-radius: 0.8rem;
+    background: rgba(13, 148, 136, 0.2);
+    border: 1px solid rgba(125, 211, 252, 0.25);
+}
+
+.cv-chat__bubble {
+    max-width: min(78%, 30rem);
+    padding: 0.7rem 0.95rem;
+    border-radius: 1.05rem;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.cv-chat__bubble--bot {
+    color: var(--text);
+    background: linear-gradient(160deg, rgba(10, 40, 66, 0.9), rgba(8, 30, 50, 0.96));
+    border: 1px solid rgba(125, 211, 252, 0.25);
+    border-bottom-left-radius: 0.35rem;
+    box-shadow: 0 10px 26px rgba(3, 12, 26, 0.35);
+}
+
+.cv-chat__bubble--user {
+    color: #fff;
+    background: linear-gradient(135deg, var(--mediterranean-light), var(--turquoise));
+    border: 1px solid rgba(204, 251, 241, 0.35);
+    border-bottom-right-radius: 0.35rem;
+    box-shadow: 0 10px 26px rgba(13, 148, 136, 0.22);
+}
+
+.cv-chat__bubble--node {
+    max-width: 100%;
+    width: 100%;
+    border-bottom-left-radius: 1.05rem;
+}
+
+.cv-chat__inputbar {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.9rem 1.3rem 1.2rem;
+    border-top: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.cv-chat__input {
+    flex: 1;
+    border-radius: 999px;
+}
+
+.cv-chat__send {
+    flex: 0 0 auto;
+    width: 2.9rem;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+}
+
+/* Nova typing dots */
+.cv-typing {
+    display: inline-flex;
+    gap: 0.28rem;
+    align-items: center;
+    padding: 0.1rem 0;
+}
+
+.cv-typing i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--turquoise-light);
+    animation: typingDot 1.2s ease-in-out infinite;
+}
+
+.cv-typing i:nth-child(2) { animation-delay: 0.15s; }
+.cv-typing i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes typingDot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+    30% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes chatIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------- achievement box --------------------------- */
+.cv-achievement {
+    display: grid;
+    gap: 0.6rem;
+    width: 100%;
+}
+
+.cv-achievement__result {
+    padding: 0.9rem;
+    border-radius: 1rem;
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px dashed rgba(212, 175, 55, 0.45);
+    display: grid;
+    gap: 0.6rem;
+}
+
+.cv-achievement__label {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--sand-light);
+    letter-spacing: 0.02em;
+}
+
+/* ----------------------------- templates ----------------------------- */
+.cv-templates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.cv-template {
+    position: relative;
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    text-align: start;
+    padding: 1rem;
+    border-radius: 1.1rem;
+    cursor: pointer;
+    color: var(--text);
+    background: rgba(8, 26, 46, 0.6);
+    border: 1px solid rgba(125, 211, 252, 0.18);
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.cv-template:hover {
+    transform: translateY(-3px);
+    border-color: rgba(125, 211, 252, 0.45);
+    box-shadow: var(--shadow);
+}
+
+.cv-template--active {
+    border-color: var(--sandy);
+    box-shadow: 0 0 0 1px var(--sandy), 0 18px 44px rgba(212, 175, 55, 0.16);
+}
+
+.cv-template__body {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.cv-template__body strong {
+    font-size: 0.95rem;
+}
+
+.cv-template__body span {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.cv-template__check {
+    margin-inline-start: auto;
+    color: var(--sandy);
+    font-weight: 900;
+}
+
+/* tiny preview swatch */
+.cv-template__swatch {
+    flex: 0 0 auto;
+    width: 2.4rem;
+    height: 3.1rem;
+    border-radius: 0.45rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    background: #fff;
+}
+
+.cv-template__swatch-head {
+    height: 0.7rem;
+    border-radius: 2px;
+    background: linear-gradient(135deg, var(--mediterranean-light), var(--turquoise));
+}
+
+.cv-template--blue .cv-template__swatch-head { background: linear-gradient(135deg, #1d4ed8, #38bdf8); }
+.cv-template--gold .cv-template__swatch-head { background: linear-gradient(135deg, #a97f1f, var(--sandy)); }
+
+.cv-template__swatch-line {
+    height: 3px;
+    border-radius: 2px;
+    background: #e2e8f0;
+}
+
+.cv-template__swatch-line:nth-child(3) { width: 80%; }
+.cv-template__swatch-line:nth-child(4) { width: 60%; }
+
+/* ------------------------------ download ------------------------------ */
+.cv-download {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-bottom: 1.1rem;
+}
+
+.cv-preview-wrap {
+    padding: 1rem;
+    border-radius: 1.2rem;
+    background: linear-gradient(160deg, rgba(8, 26, 46, 0.75), rgba(12, 34, 58, 0.85));
+    border: 1px solid rgba(125, 211, 252, 0.16);
+    overflow: auto;
+    max-height: 80vh;
+}
+
+/* ============================ CV SHEET ============================
+   This is the A4-like document — also what the PDF captures. */
+.cv-sheet {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    background: #ffffff;
+    color: #1e293b;
+    border-radius: 6px;
+    box-shadow: 0 24px 70px rgba(3, 12, 26, 0.55);
+    font-family: 'Inter', 'Cairo', sans-serif;
+    padding: 2.4rem 2.6rem;
+    text-align: start;
+}
+
+.cv-header__name {
+    margin: 0;
+    font-size: 2rem;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+}
+
+.cv-header__title {
+    margin: 0.2rem 0 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.cv-header__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    margin-top: 0.6rem;
+    font-size: 0.8rem;
+    color: #475569;
+}
+
+.cv-section {
+    margin-top: 1.2rem;
+}
+
+.cv-section__title {
+    margin: 0 0 0.45rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid;
+}
+
+.cv-text {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.cv-text--small { font-size: 0.82rem; }
+
+.cv-list {
+    margin: 0.35rem 0 0;
+    padding-inline-start: 1.1rem;
+    display: grid;
+    gap: 0.25rem;
+}
+
+.cv-list li {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: #334155;
+}
+
+.cv-skills {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.cv-skills__group strong {
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+    color: #475569;
+}
+
+.cv-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.cv-tag {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    color: #fff;
+}
+
+.cv-entries {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.cv-entry__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    font-size: 0.92rem;
+}
+
+.cv-entry__head strong { font-size: 0.95rem; }
+
+.cv-entry__right {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: end;
+}
+
+.cv-langs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+    font-size: 0.9rem;
+}
+
+.cv-lang { color: #334155; }
+
+/* -------- template variants (accent the sheet) -------- */
+.cv-sheet--modern .cv-section__title {
+    color: #0d9488;
+    border-color: #0d9488;
+}
+
+.cv-sheet--modern .cv-tag { background: #0d9488; }
+.cv-sheet--modern .cv-header__name { color: #0f172a; }
+.cv-sheet--modern .cv-header__title { color: #0d9488; }
+
+.cv-sheet--professional .cv-section__title {
+    color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.cv-sheet--professional .cv-tag { background: #1d4ed8; }
+.cv-sheet--professional .cv-header__name { color: #0f172a; }
+.cv-sheet--professional .cv-header__title { color: #1d4ed8; }
+
+.cv-sheet--marine .cv-section__title {
+    color: #a97f1f;
+    border-color: #a97f1f;
+}
+
+.cv-sheet--marine .cv-tag { background: #a97f1f; }
+.cv-sheet--marine .cv-header__name { color: #0c4a6e; }
+.cv-sheet--marine .cv-header__title { color: #a97f1f; }
+
+/* ----------------------------- responsive ----------------------------- */
+@media (max-width: 720px) {
+    .cv-chat__scroll { max-height: 52vh; min-height: 280px; }
+    .cv-bubble { max-width: 88%; }
+    .cv-sheet { padding: 1.6rem 1.3rem; }
+    .cv-header__name { font-size: 1.5rem; }
+}

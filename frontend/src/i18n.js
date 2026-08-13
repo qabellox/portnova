@@ -198,6 +198,11 @@ export const messages = {
         requestsKicker: 'الطلبات',
         requestsTitle: 'طلباتك',
         requestsSubtitle: 'كل طلباتك في مكان واحد.',
+        // CV Builder Agent
+        cvBuilderKicker: 'صانع السيرة الذكية',
+        cvBuilderTitle: 'نبني سيرتك الذاتية معًا.',
+        backToCv: 'العودة إلى خدمة السيرة الذاتية',
+        cvTryBuilder: 'جرّب صانع السيرة الذكية',
         requestId: 'الطلب رقم',
         noRequests: 'لا توجد طلبات سيرة ذاتية بعد. ارفع واحدة لبدء المسار.',
         expertKicker: 'منظور الخبير',
@@ -508,6 +513,11 @@ export const messages = {
         requestsKicker: 'Requests',
         requestsTitle: 'Your requests',
         requestsSubtitle: 'All your requests in one place.',
+        // CV Builder Agent
+        cvBuilderKicker: 'AI CV Builder',
+        cvBuilderTitle: 'Let’s build your CV together.',
+        backToCv: 'Back to CV service',
+        cvTryBuilder: 'Try the AI CV Builder',
         requestId: 'Request',
         noRequests: 'No CV requests yet. Upload one to start.',
         expertKicker: 'Expert view',

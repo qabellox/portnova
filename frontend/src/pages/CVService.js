@@ -15,7 +15,6 @@ const CVService = () => {
     const { user } = useAuth();
     const { t } = useLanguage();
     const role = user?.user_metadata?.role || 'youth';
-    const [sessionToken, setSessionToken] = useState('');
     const [file, setFile] = useState(null);
     const [notes, setNotes] = useState('');
     const [requests, setRequests] = useState([]);
@@ -44,23 +43,6 @@ const CVService = () => {
     }, [requests]);
 
     useEffect(() => {
-        let mounted = true;
-
-        const loadToken = async () => {
-            const { data } = await supabase.auth.getSession();
-            if (mounted) {
-                setSessionToken(data.session?.access_token || '');
-            }
-        };
-
-        loadToken();
-
-        return () => {
-            mounted = false;
-        };
-    }, []);
-
-    useEffect(() => {
         if (!isUploading) {
             setUploadProgress(0);
             return undefined;
@@ -74,66 +56,84 @@ const CVService = () => {
     }, [isUploading]);
 
     const loadRequests = async () => {
-        const endpoint = role === 'expert' ? '/api/cv/pending' : '/api/cv/my-requests';
+        if (!user) return;
 
-        if (!sessionToken) return;
-
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}${endpoint}`, {
-            headers: {
-                Authorization: `Bearer ${sessionToken}`,
-            },
-        });
-
-        const payload = await response.json();
-
-        if (payload.success) {
-            if (role === 'expert') {
-                setPendingRequests(payload.data || []);
-            } else {
-                setRequests(payload.data || []);
-            }
+        if (role === 'expert') {
+            const { data } = await supabase
+                .from('cv_requests')
+                .select('*')
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false });
+            setPendingRequests(data || []);
+        } else {
+            const { data } = await supabase
+                .from('cv_requests')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+            setRequests(data || []);
         }
     };
 
     useEffect(() => {
         loadRequests();
-    }, [role, sessionToken]);
+    }, [role, user]);
 
     const handleUpload = async (event) => {
         event.preventDefault();
         setMessage('');
 
-        if (!sessionToken || !file) {
+        if (!user || !file) {
             setMessage('Please choose a CV file first.');
             return;
         }
 
         setIsUploading(true);
-        const formData = new FormData();
-        formData.append('cvFile', file);
-        formData.append('notes', notes);
+        try {
+            const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const fileName = `${user.id}/${Date.now()}_${safeName}.${ext}`;
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/cv/upload`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${sessionToken}`,
-            },
-            body: formData,
-        });
+            const { error: storageError } = await supabase.storage.from('cvs').upload(fileName, file, {
+                contentType: file.type,
+                upsert: false,
+            });
+            if (storageError) throw storageError;
 
-        const payload = await response.json();
-        setUploadProgress(100);
-        setMessage(payload.success ? 'CV uploaded successfully.' : payload.error || 'Upload failed.');
-        setIsUploading(false);
-        setTimeout(() => setUploadProgress(0), 700);
-        await loadRequests();
+            const { error: insertError } = await supabase.from('cv_requests').insert({
+                user_id: user.id,
+                status: 'pending',
+                notes: notes || null,
+                cv_path: fileName,
+                request_type: 'upload',
+                requester_name: user.user_metadata?.fullName || user.email || 'User',
+            });
+            if (insertError) throw insertError;
+
+            setUploadProgress(100);
+            setMessage('CV uploaded successfully.');
+            setFile(null);
+            setNotes('');
+        } catch (err) {
+            setMessage(err.message || 'Upload failed.');
+        } finally {
+            setIsUploading(false);
+            setTimeout(() => setUploadProgress(0), 700);
+            await loadRequests();
+        }
     };
 
     const claimRequest = async (cvId) => {
-        await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/cv/${cvId}/assign`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${sessionToken}` },
-        });
+        if (!user) return;
+        await supabase
+            .from('cv_requests')
+            .update({
+                status: 'assigned',
+                assigned_expert_id: user.id,
+                assigned_expert_name: user.user_metadata?.fullName || user.email || 'Expert',
+                assigned_at: new Date().toISOString(),
+            })
+            .eq('id', cvId);
 
         await loadRequests();
     };
@@ -166,6 +166,11 @@ const CVService = () => {
                         />
                         <div className="status-strip">
                             <Badge tone="success">{t('expertReview')}</Badge>
+                        </div>
+                        <div className="inline-actions" style={{ marginTop: '1rem' }}>
+                            <PremiumButton variant="gold" to="/cv-builder">
+                                ✨ {t('cvTryBuilder')}
+                            </PremiumButton>
                         </div>
                     </div>
 

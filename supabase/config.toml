@@ -7,3 +7,9 @@ project_id = "portnova"
 # The database webhook calls this function with our secret header, not a
 # Supabase JWT — so JWT verification is disabled for this function.
 verify_jwt = false
+
+[functions.cv-builder]
+# The CV Builder is invoked from the browser with the DeepSeek key staying
+# server-side. JWT verification is disabled so both anonymous and signed-in
+# visitors can use the conversational builder.
+verify_jwt = false

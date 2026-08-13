@@ -34,6 +34,16 @@ const DONE_WORDS = ['done', 'تم', 'لا', 'لا يوجد', 'none', 'n/a', 'na'
 const isDone = (v) => DONE_WORDS.includes(String(v || '').trim().toLowerCase());
 const SKIP_WORDS = ['skip', 'تخطي', 'تجاوز'];
 
+// Filler / non-answers that must NEVER land in the CV as real data, and must
+// never trigger a follow-up question. E.g. "a lot", "N/A", "idk", "some".
+const FILLER_WORDS = [
+    'a lot', 'lots', 'lots of', 'many', 'some', 'yes', 'yep', 'yeah', 'ya',
+    'no', 'n/a', 'na', 'none', 'nothing', 'idk', 'dunno', 'not sure', 'etc',
+    'whatever', 'fine', 'ok', 'okay', 'كثير', 'كثيرًا', 'نعم', 'لا', 'لا شيء',
+    'لا يوجد', 'مش عارف', 'مش متأكد', 'ما أدري', 'أي شيء',
+];
+const isFiller = (v) => FILLER_WORDS.includes(String(v || '').trim().toLowerCase());
+
 const cleanString = (v) => String(v || '').replace(/\s+/g, ' ').trim();
 
 const isArabicText = (v) => /[\u0600-\u06FF]/.test(v);
@@ -52,7 +62,7 @@ const splitList = (v) =>
         String(v || '')
             .split(/[,،;؛\n]+/)
             .map((s) => cleanString(s))
-            .filter(Boolean)
+            .filter((s) => s && !isFiller(s))
     )];
 
 const parseLanguages = (v) =>
@@ -179,29 +189,36 @@ const CVBuilder = () => {
     const storeValue = (key, raw, append = false) => {
         const next = { ...data };
         const v = cleanString(raw);
+        const isNonAnswer = isDone(raw) || isFiller(raw);
         const mergeList = (existing) => [...new Set([...(existing || []), ...splitList(raw)])];
         switch (key) {
             case 'technicalSkills': next.technicalSkills = append ? mergeList(data.technicalSkills) : splitList(raw); break;
             case 'softSkills': next.softSkills = append ? mergeList(data.softSkills) : splitList(raw); break;
             case 'certifications':
-                next.certifications = isDone(raw) ? [] : splitList(raw).map((name) => ({ name, issuer: '', year: '' }));
+                next.certifications = isNonAnswer ? [] : splitList(raw).map((name) => ({ name, issuer: '', year: '' }));
                 break;
-            case 'languages': next.languages = isDone(raw) ? [] : parseLanguages(raw); break;
-            case 'linkedin': next.linkedin = isDone(raw) ? '' : v; break;
-            case 'education': next.education = titleCase(v); break;
-            case 'fieldOfStudy': next.fieldOfStudy = titleCase(v); break;
-            case 'summary': next.summary = append && next.summary ? `${next.summary} ${v}` : v; break;
-            case 'name': next.name = titleCase(v); break;
-            case 'title': next.title = titleCase(v); break;
-            case 'location': next.location = titleCase(v); break;
-            default: next[key] = v;
+            case 'languages': next.languages = isNonAnswer ? [] : parseLanguages(raw); break;
+            case 'linkedin': next.linkedin = isNonAnswer ? '' : v; break;
+            case 'education': next.education = isNonAnswer ? '' : titleCase(v); break;
+            case 'fieldOfStudy': next.fieldOfStudy = isNonAnswer ? '' : titleCase(v); break;
+            case 'summary':
+                if (isNonAnswer) next.summary = next.summary || '';
+                else if (append) next.summary = next.summary ? `${next.summary} ${v}` : v;
+                else next.summary = v;
+                break;
+            case 'name': next.name = isNonAnswer ? '' : titleCase(v); break;
+            case 'title': next.title = isNonAnswer ? '' : titleCase(v); break;
+            case 'location': next.location = isNonAnswer ? '' : titleCase(v); break;
+            default: next[key] = isNonAnswer ? '' : v;
         }
         setData(next);
         return next;
     };
 
-    // Ask a gentle follow-up when an answer is too thin to build a strong CV.
+    // Ask a gentle follow-up when an answer is too thin to build a strong CV,
+    // but never when the user clearly gave a non-answer ("a lot", "N/A"...).
     const needsClarify = (key, raw) => {
+        if (isDone(raw) || isFiller(raw)) return false;
         if (key === 'summary') return cleanString(raw).length < 24;
         if (key === 'technicalSkills' || key === 'softSkills') return splitList(raw).length < 2;
         return false;
@@ -282,17 +299,31 @@ const CVBuilder = () => {
         if (phase === 'questions') {
             const q = FLOW[flowIndex];
 
-            // A follow-up answer was expected (thin summary / too-few skills):
-            // merge it in and move on.
+            // A follow-up answer was expected (thin summary / too-few skills).
+            // If the user declines or gives a non-answer, keep what we have and
+            // move on - never merge "N/A" or "a lot" into the CV.
             if (clarify) {
-                storeValue(clarify, raw, true);
-                setClarify(null);
-                pushBot(say('شكرًا - أصبحت المعلومات أكثر دقة الآن. 👍', 'Thanks - that sharpens it. 👍'));
+                if (isDone(raw) || isFiller(raw)) {
+                    setClarify(null);
+                    pushBot(say('لا مشكلة، نكمل بما لدينا. 👍', 'No problem - we’ll go with what we have. 👍'));
+                } else {
+                    storeValue(clarify, raw, true);
+                    setClarify(null);
+                    pushBot(say('شكرًا - أصبحت المعلومات أكثر دقة الآن. 👍', 'Thanks - that sharpens it. 👍'));
+                }
                 nextQuestion();
                 return;
             }
 
             storeValue(q.key, raw);
+
+            // A non-answer ("a lot", "N/A", "idk"...) is never stored or used
+            // to interrogate the user - acknowledge gently and keep moving.
+            if (isFiller(raw)) {
+                pushBot(say('لا مشكلة - يمكنك إضافتها لاحقًا إن أردت. 👍', 'No problem - you can add it later if you like. 👍'));
+                nextQuestion();
+                return;
+            }
 
             // Friendly, response-aware acknowledgments (no API call - instant).
             // They reference the user's actual answer so it feels understood.

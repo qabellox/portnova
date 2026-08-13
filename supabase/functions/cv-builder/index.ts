@@ -71,6 +71,31 @@ const callDeepSeek = async (messages, { temperature = 0.6, maxTokens = 900, json
     return (data?.choices?.[0]?.message?.content ?? '').trim();
 };
 
+/* ------------------- Output sanitization (Rule 1) ------------------- */
+// The AI sometimes emits typographic quirks (em/en dashes, curly quotes,
+// ellipsis). PortNova's style rule: never let those leak into the CV or
+// chat. Replace them with clean plain-ASCII equivalents.
+const clean = (s) =>
+    String(s ?? '')
+        .replace(/\u2014/g, '-') // — em dash -> hyphen
+        .replace(/\u2013/g, '-') // – en dash -> hyphen
+        .replace(/\u2018|\u2019/g, "'") // ' ' curly single quotes
+        .replace(/\u201C|\u201D/g, '"') // " " curly double quotes
+        .replace(/\u2026/g, '...') // … ellipsis -> dots
+        .trim();
+
+// Recursively sanitize every string inside the generated CV JSON.
+const cleanDeep = (v) => {
+    if (typeof v === 'string') return clean(v);
+    if (Array.isArray(v)) return v.map(cleanDeep);
+    if (v && typeof v === 'object') {
+        const out = {};
+        for (const k of Object.keys(v)) out[k] = cleanDeep(v[k]);
+        return out;
+    }
+    return v;
+};
+
 /* ---------------- Action 1: polish an achievement ---------------- */
 const improveAchievement = async (body) => {
     const { text, role, language = 'en' } = body;
@@ -83,12 +108,13 @@ const improveAchievement = async (body) => {
                 `You are Nova, a premium CV consultant for PortNova (Port Said, Egypt). ` +
                 `Rewrite the user's raw achievement into ONE crisp, quantified, ATS-friendly bullet point in ${lang}. ` +
                 `Never invent numbers the user did not state — if a metric is missing, use the skills/actions they mention ` +
-                `and phrase it powerfully without fabricating data. Return ONLY the bullet point (no quotes, no intro).`,
+                `and phrase it powerfully without fabricating data. Return ONLY the bullet point (no quotes, no intro). ` +
+                `Do not use em dashes or typographic punctuation; use plain ASCII only.`,
         },
         { role: 'user', content: text + (role ? `\n(role context: ${role})` : '') },
     ];
     const improved = await callDeepSeek(messages, { temperature: 0.4, maxTokens: 220 });
-    return { improved };
+    return { improved: clean(improved) };
 };
 
 /* ------------------- Action 2: write a summary ------------------- */
@@ -110,12 +136,12 @@ const writeSummary = async (body) => {
                 `You are Nova, a premium CV consultant for PortNova (Port Said, Egypt). ` +
                 `Write a compelling 2-3 sentence professional summary in ${lang} for the candidate described. ` +
                 `Tailor it to their goal, highlight their strongest skills and experience, sound confident and human. ` +
-                `Return ONLY the summary text.`,
+                `Return ONLY the summary text. Do not use em dashes or typographic punctuation; use plain ASCII only.`,
         },
         { role: 'user', content: profile || 'A motivated young professional from Port Said seeking to grow.' },
     ];
     const summary = await callDeepSeek(messages, { temperature: 0.7, maxTokens: 300 });
-    return { summary };
+    return { summary: clean(summary) };
 };
 
 /* ------------------- Action 3: full CV generation ------------------- */
@@ -188,6 +214,7 @@ const generateCV = async (body) => {
     }
 
     const ensureArray = (v) => (Array.isArray(v) ? v : []);
+    const p = cleanDeep(parsed); // Rule 1: strip em dashes / curly punctuation
     return {
         header: {
             name: data.name || '',
@@ -197,14 +224,14 @@ const generateCV = async (body) => {
             linkedin: data.linkedin || '',
             title: data.title || '',
         },
-        summary: typeof parsed.summary === 'string' ? parsed.summary : (data.summary || ''),
-        skills: ensureArray(parsed.skills),
-        softSkills: ensureArray(parsed.softSkills),
-        experience: ensureArray(parsed.experience),
-        education: ensureArray(parsed.education),
-        certifications: ensureArray(parsed.certifications),
-        languages: ensureArray(parsed.languages),
-        projects: ensureArray(parsed.projects),
+        summary: typeof p.summary === 'string' ? p.summary : (data.summary || ''),
+        skills: ensureArray(p.skills),
+        softSkills: ensureArray(p.softSkills),
+        experience: ensureArray(p.experience),
+        education: ensureArray(p.education),
+        certifications: ensureArray(p.certifications),
+        languages: ensureArray(p.languages),
+        projects: ensureArray(p.projects),
         template,
         generatedAt: new Date().toISOString(),
     };

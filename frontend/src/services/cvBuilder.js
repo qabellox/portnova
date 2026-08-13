@@ -6,6 +6,29 @@
 // ---------------------------------------------------------------------
 import { supabase } from './supabase';
 
+/** PortNova style rule #1: never show AI typographic quirks (em/en dashes,
+ *  curly quotes, ellipsis) to the user. Clean at the client as well, so even
+ *  a stale Edge Function response stays clean. */
+const clean = (s) =>
+    String(s ?? '')
+        .replace(/\u2014/g, '-')
+        .replace(/\u2013/g, '-')
+        .replace(/\u2018|\u2019/g, "'")
+        .replace(/\u201C|\u201D/g, '"')
+        .replace(/\u2026/g, '...')
+        .trim();
+
+const cleanDeep = (v) => {
+    if (typeof v === 'string') return clean(v);
+    if (Array.isArray(v)) return v.map(cleanDeep);
+    if (v && typeof v === 'object') {
+        const out = {};
+        for (const k of Object.keys(v)) out[k] = cleanDeep(v[k]);
+        return out;
+    }
+    return v;
+};
+
 const invoke = async (action, payload) => {
     const { data, error } = await supabase.functions.invoke('cv-builder', {
         body: { action, ...payload },
@@ -17,7 +40,7 @@ const invoke = async (action, payload) => {
     if (!data?.success) {
         throw new Error(data?.error || 'AI service returned an error.');
     }
-    return data.data;
+    return cleanDeep(data.data);
 };
 
 /** Rewrite a raw achievement into a quantified, ATS-friendly bullet. */

@@ -2057,8 +2057,8 @@ body[dir='rtl'] .select {
 }
 
 body[dir='rtl'] .user-menu__panel {
-    right: auto;
-    left: 0;
+    right: 0;
+    left: auto;
 }
 
 body[dir='rtl'] .timeline__item:not(:last-child)::after {

@@ -71,6 +71,18 @@
     to { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 
+/* anti-bot honeypot - invisible to humans, traps bots */
+.waitlist-honeypot {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+}
+
 /* multi-level referral ladder */
 .waitlist-levels {
     display: grid;

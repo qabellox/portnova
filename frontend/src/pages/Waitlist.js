@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { getWaitlistStatus, joinWaitlist, referralLink, REFERRAL_LEVELS, progressForCount, sessionsForCount } from '../services/waitlist';
+import { getClientIp, getWaitlistStatus, joinWaitlist, referralLink, REFERRAL_LEVELS, progressForCount, sessionsForCount } from '../services/waitlist';
 import { GlassCard, LanguageToggle, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import '../styles/waitlist.css';
 
@@ -47,6 +47,15 @@ const Waitlist = () => {
     const [status, setStatus] = useState(null);
     const [joined, setJoined] = useState(null); // set after a successful join (shows the thank-you screen)
     const [checking, setChecking] = useState(false);
+    const [clientIp, setClientIp] = useState(null); // for per-IP rate limiting
+    const [honeypot, setHoneypot] = useState('');      // anti-bot trap (hidden field)
+
+    // Detect the client IP once, best-effort (used for per-IP rate limiting).
+    useEffect(() => {
+        let mounted = true;
+        getClientIp().then((ip) => { if (mounted) setClientIp(ip); });
+        return () => { mounted = false; };
+    }, []);
 
     const [form, setForm] = useState({
         fullName: '',
@@ -83,6 +92,13 @@ const Waitlist = () => {
 
     const submit = async (event) => {
         event.preventDefault();
+        // Anti-bot honeypot: real users never see/fill this hidden field. If it
+        // has content, it is a bot - pretend to succeed so the bot stops, but
+        // do NOT register anything.
+        if (honeypot) {
+            setJoined({ referral_code: '00000000', already: true });
+            return;
+        }
         setSubmitting(true);
         setError('');
         try {
@@ -98,12 +114,18 @@ const Waitlist = () => {
                 educationLevel: form.educationLevel,
                 // If the user picked "Other", store their written answer instead.
                 howHeard: form.howHeard === 'Other' ? form.howHeardOther.trim() : form.howHeard,
+                ip: clientIp, // per-IP rate limiting
             });
             if (!res?.ok) {
                 if (res?.error === 'rate_limited') {
                     throw new Error(isArabic
                         ? 'محاولات كثيرة جدًا. انتظر قليلًا ثم أعد المحاولة.'
                         : 'Too many attempts. Please wait a moment and try again.');
+                }
+                if (res?.error === 'ip_limited') {
+                    throw new Error(isArabic
+                        ? 'محاولات كثيرة جدًا من هذا الجهاز. حاول لاحقًا.'
+                        : 'Too many sign-ups from this device. Please try again later.');
                 }
                 throw new Error(res?.message || res?.error || 'Could not join');
             }
@@ -281,6 +303,18 @@ const Waitlist = () => {
                         : `Your details stay safe - we'll tell you first at launch. Share your code and climb: ${REFERRAL_LEVELS.map((l) => `${l.threshold} sign-ups`).join(' / ')} earns more free AI CV sessions.`}
                 />
                 <form onSubmit={submit} className="waitlist-form">
+                    {/* Anti-bot honeypot: hidden from humans, bots auto-fill it */}
+                    <div className="waitlist-honeypot" aria-hidden="true">
+                        <label htmlFor="waitlist-company">{isArabic ? 'موقع الشركة' : 'Company website'}</label>
+                        <input
+                            id="waitlist-company"
+                            type="text"
+                            tabIndex="-1"
+                            autoComplete="off"
+                            value={honeypot}
+                            onChange={(e) => setHoneypot(e.target.value)}
+                        />
+                    </div>
                     <div className="field-group">
                         <label className="field-label">{isArabic ? 'الاسم الكامل' : 'Full name'}</label>
                         <input className="field" value={form.fullName} onChange={set('fullName')} required placeholder={isArabic ? 'مثال: أحمد إبراهيم' : 'e.g. Ahmed Ibrahim'} />

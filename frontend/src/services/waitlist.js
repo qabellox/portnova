@@ -12,10 +12,12 @@ export {
 
 /** Join the PortNova launch waitlist. Server-side (security definer): generates
  *  the member's referral code, credits the inviter, and unlocks a free CV
- *  session for the inviter once they reach REFERRALS_NEEDED referrals. */
+ *  session for the inviter once they reach REFERRALS_NEEDED referrals.
+ *  Passes the client IP so the server can rate-limit per IP too (blocks one
+ *  machine flooding with many emails). */
 export const joinWaitlist = async ({
     userId, fullName, email, phone, city, rolePref, referralCode,
-    ageRange, currentStatus, educationLevel, interestField, employmentPref, howHeard,
+    ageRange, currentStatus, educationLevel, interestField, employmentPref, howHeard, ip,
 }) => {
     const { data, error } = await supabase.rpc('join_waitlist', {
         p_user_id: userId,
@@ -31,9 +33,26 @@ export const joinWaitlist = async ({
         p_interest_field: interestField || null,
         p_employment_pref: employmentPref || null,
         p_how_heard: howHeard || null,
+        p_ip: ip || null,
     });
     if (error) throw error;
     return data;
+};
+
+/** Best-effort client IP lookup for per-IP rate limiting. Free, no key.
+ *  Falls back to null if the lookup fails (rate limit still works per-email). */
+export const getClientIp = async () => {
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4000);
+        const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+        clearTimeout(timer);
+        if (!res.ok) return null;
+        const data = await res.json();
+        return typeof data.ip === 'string' && data.ip ? data.ip : null;
+    } catch {
+        return null;
+    }
 };
 
 /** Fetch a member's current waitlist status (code, referral count, free CV). */

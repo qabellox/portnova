@@ -1,0 +1,34 @@
+import { supabase } from './supabase';
+
+/** Join the PortNova launch waitlist. Server-side (security definer): generates
+ *  the member's referral code, credits the inviter, and unlocks a free CV
+ *  session for the inviter once they reach 3 referrals. */
+export const joinWaitlist = async ({ userId, fullName, email, phone, city, rolePref, referralCode }) => {
+    const { data, error } = await supabase.rpc('join_waitlist', {
+        p_user_id: userId,
+        p_full_name: fullName,
+        p_email: email,
+        p_phone: phone || null,
+        p_city: city || null,
+        p_role_pref: rolePref || null,
+        p_referral_code: referralCode || null,
+    });
+    if (error) throw error;
+    return data;
+};
+
+/** Fetch a member's current waitlist status (code, referral count, free CV). */
+export const getWaitlistStatus = async (email) => {
+    const { data, error } = await supabase.rpc('get_waitlist_status', { p_email: email });
+    if (error) throw error;
+    return data;
+};
+
+/** Build the shareable referral link for a member's code. */
+export const referralLink = (code) => {
+    if (typeof window === 'undefined') return '';
+    return `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(code)}`;
+};
+
+/** How many friends are needed before the inviter earns a free CV session. */
+export const REFERRALS_NEEDED = 3;

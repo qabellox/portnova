@@ -8,6 +8,7 @@ import Jobs from './pages/Jobs';
 import Courses from './pages/Courses';
 import CVService from './pages/CVService';
 import { RequireProfile } from './components/ProfileGate';
+import WaitlistGate from './components/WaitlistGate';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -194,9 +195,10 @@ function Shell() {
                 PremiumUI import and uncomment the line below. */}
             {/* <AnimatedBackdrop /> */}
             <ClickWaves />
-            <ShellNav />
-            <main className="app-main">
-                <Routes>
+            <WaitlistGate>
+                <ShellNav />
+                <main className="app-main">
+                    <Routes>
                     <Route path="/" element={<RequireProfile><div key={location.pathname}><Home /></div></RequireProfile>} />
                     <Route path="/jobs" element={<RequireProfile><div key={location.pathname}><Jobs /></div></RequireProfile>} />
                     <Route path="/courses" element={<RequireProfile><div key={location.pathname}><Courses /></div></RequireProfile>} />
@@ -236,7 +238,8 @@ function Shell() {
                         }
                     />
                 </Routes>
-            </main>
+                </main>
+            </WaitlistGate>
         </div>
     );
 }

@@ -56,9 +56,8 @@ const Waitlist = () => {
         rolePref: 'jobs',
         currentStatus: '',
         educationLevel: '',
-        interestField: '',
-        employmentPref: '',
         howHeard: '',
+        howHeardOther: '', // forced text when the user picks "Other"
     });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
@@ -97,9 +96,8 @@ const Waitlist = () => {
                 referralCode: lockedVoucher, // locked - from the link only
                 currentStatus: form.currentStatus,
                 educationLevel: form.educationLevel,
-                interestField: form.interestField,
-                employmentPref: form.employmentPref,
-                howHeard: form.howHeard,
+                // If the user picked "Other", store their written answer instead.
+                howHeard: form.howHeard === 'Other' ? form.howHeardOther.trim() : form.howHeard,
             });
             if (!res?.ok) throw new Error(res?.error || 'Could not join');
             // Remember this email so a returning visitor sees their code again.
@@ -328,27 +326,6 @@ const Waitlist = () => {
                             </select>
                         </div>
                         <div className="field-group">
-                            <label className="field-label">{isArabic ? 'المجال المهني' : 'Field of interest'}</label>
-                            <select className="select" value={form.interestField} onChange={set('interestField')}>
-                                <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
-                                <option value="tech">{isArabic ? 'تقنية' : 'Technology'}</option>
-                                <option value="business">{isArabic ? 'أعمال' : 'Business'}</option>
-                                <option value="design">{isArabic ? 'تصميم' : 'Design'}</option>
-                                <option value="maritime">{isArabic ? 'بحري' : 'Maritime'}</option>
-                                <option value="other">{isArabic ? 'أخرى' : 'Other'}</option>
-                            </select>
-                        </div>
-                        <div className="field-group">
-                            <label className="field-label">{isArabic ? 'تفضيل العمل' : 'Work preference'}</label>
-                            <select className="select" value={form.employmentPref} onChange={set('employmentPref')}>
-                                <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
-                                <option value="full">{isArabic ? 'دوام كامل' : 'Full-time'}</option>
-                                <option value="part">{isArabic ? 'دوام جزئي' : 'Part-time'}</option>
-                                <option value="intern">{isArabic ? 'تدريب' : 'Internship'}</option>
-                                <option value="remote">{isArabic ? 'عن بُعد' : 'Remote'}</option>
-                            </select>
-                        </div>
-                        <div className="field-group">
                             <label className="field-label">{isArabic ? 'كيف سمعت عنا؟' : 'How did you hear about us?'}</label>
                             <select className="select" value={form.howHeard} onChange={set('howHeard')}>
                                 <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
@@ -360,6 +337,12 @@ const Waitlist = () => {
                             </select>
                         </div>
                     </div>
+                    {form.howHeard === 'Other' ? (
+                        <div className="field-group">
+                            <label className="field-label">{isArabic ? 'اكتب إجابتك' : 'Write your answer'} *</label>
+                            <input className="field" value={form.howHeardOther} onChange={set('howHeardOther')} required placeholder={isArabic ? 'مثال: قناة يوتيوب' : 'e.g. a YouTube channel'} />
+                        </div>
+                    ) : null}
                     {lockedVoucher ? (
                         <div className="field-group">
                             <label className="field-label">{isArabic ? 'رمز الدعوة (مقفول)' : 'Invite code (locked)'}</label>

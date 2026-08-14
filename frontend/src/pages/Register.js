@@ -10,8 +10,8 @@ const L = (ar, en) => ({ ar, en });
 const OPTS = {
     gender: [L('ذكر', 'Male'), L('أنثى', 'Female'), L('أخرى', 'Other'), L('أفضل عدم الإفصاح', 'Prefer not to say')],
     nationality: [L('مصري', 'Egyptian'), L('سعودي', 'Saudi'), L('كويتي', 'Kuwaiti'), L('إماراتي', 'Emirati'), L('أردني', 'Jordanian'), L('سوري', 'Syrian'), L('فلسطيني', 'Palestinian'), L('سوداني', 'Sudanese'), L('يمني', 'Yemeni'), L('ليبي', 'Libyan'), L('تونسي', 'Tunisian'), L('جزائري', 'Algerian'), L('مغربي', 'Moroccan'), L('عراقي', 'Iraqi'), L('لبناني', 'Lebanese'), L('أخرى', 'Other')],
-    city: [L('بورسعيد', 'Port Said'), L('القاهرة', 'Cairo'), L('الإسكندرية', 'Alexandria'), L('الجيزة', 'Giza'), L('الإسماعيلية', 'Ismailia'), L('السويس', 'Suez'), L('دمياط', 'Damietta'), L('المنصورة', 'Mansoura'), L('طنطا', 'Tanta'), L('الزقازيق', 'Zagazig'), L('أخرى', 'Other')],
-    governorate: [L('بورسعيد', 'Port Said'), L('القاهرة', 'Cairo'), L('الجيزة', 'Giza'), L('الإسكندرية', 'Alexandria'), L('الدقهلية', 'Dakahlia'), L('الشرقية', 'Sharqia'), L('الغربية', 'Gharbia'), L('المنوفية', 'Monufia'), L('البحيرة', 'Beheira'), L('كفر الشيخ', 'Kafr El Sheikh'), L('دمياط', 'Damietta'), L('الإسماعيلية', 'Ismailia'), L('السويس', 'Suez'), L('بني سويف', 'Beni Suef'), L('الفيوم', 'Faiyum'), L('المنيا', 'Minya'), L('أسيوط', 'Assiut'), L('سوهاج', 'Sohag'), L('قنا', 'Qena'), L('الأقصر', 'Luxor'), L('أسوان', 'Aswan'), L('البحر الأحمر', 'Red Sea'), L('مطروح', 'Matruh'), L('شمال سيناء', 'North Sinai'), L('جنوب سيناء', 'South Sinai'), L('الوادي الجديد', 'New Valley')],
+    // All 27 Egyptian governorates - the ONLY location question asked.
+    governorate: [L('بورسعيد', 'Port Said'), L('القاهرة', 'Cairo'), L('الجيزة', 'Giza'), L('الإسكندرية', 'Alexandria'), L('الدقهلية', 'Dakahlia'), L('البحر الأحمر', 'Red Sea'), L('البحيرة', 'Beheira'), L('الفيوم', 'Faiyum'), L('الغربية', 'Gharbia'), L('الإسماعيلية', 'Ismailia'), L('المنوفية', 'Monufia'), L('المنيا', 'Minya'), L('القليوبية', 'Qalyubia'), L('الوادي الجديد', 'New Valley'), L('السويس', 'Suez'), L('أسوان', 'Aswan'), L('أسيوط', 'Assiut'), L('بني سويف', 'Beni Suef'), L('دمياط', 'Damietta'), L('الشرقية', 'Sharqia'), L('جنوب سيناء', 'South Sinai'), L('كفر الشيخ', 'Kafr El Sheikh'), L('مطروح', 'Matruh'), L('الأقصر', 'Luxor'), L('قنا', 'Qena'), L('شمال سيناء', 'North Sinai'), L('سوهاج', 'Sohag')],
     education: [L('ثانوية عامة', 'High School'), L('دبلوم', 'Diploma'), L('بكالوريوس', 'Bachelor'), L('ماجستير', 'Master'), L('دكتوراه', 'PhD')],
     fieldOfStudy: [L('علوم حاسب / تكنولوجيا', 'Computer Science / IT'), L('هندسة', 'Engineering'), L('إدارة أعمال', 'Business Administration'), L('محاسبة ومالية', 'Accounting & Finance'), L('تسويق', 'Marketing'), L('تصميم', 'Design'), L('تمريض / طب', 'Nursing / Medicine'), L('تربية / تعليم', 'Education'), L('قانون', 'Law'), L('بحري / لوجستيات', 'Marine / Logistics'), L('أخرى', 'Other')],
     employment: [L('طالب', 'Student'), L('موظف', 'Employed'), L('باحث عن عمل', 'Unemployed'), L('عمل حر', 'Self-Employed'), L('أخرى', 'Other')],
@@ -46,10 +46,10 @@ const Register = () => {
 
     const [step, setStep] = useState(0);
     const [form, setForm] = useState({
-        fullName: '', email: '', phone: '', password: '', dob: '',
-        gender: '', nationality: 'Egyptian', city: 'Port Said', governorate: 'Port Said',
-        educationLevel: '', fieldOfStudy: '', skills: '', employmentStatus: '', currentJobTitle: '', yearsExperience: '', certifications: '',
-        desiredRole: '', desiredIndustry: '', preferredLocation: '', salaryRange: '', willingToRelocate: '', linkedin: '', howHeard: '', referralCode: refParam || '',
+        fullName: '', email: '', phone: '', password: '',
+        gender: '', nationality: 'Egyptian', governorate: 'Port Said',
+        educationLevel: '', fieldOfStudy: '', skills: '', employmentStatus: '', currentJobTitle: '', yearsExperience: '',
+        desiredIndustry: '', preferredLocation: '', linkedin: '', howHeard: '', referralCode: refParam || '',
     });
     const [consents, setConsents] = useState({ privacy: false, analytics: false, marketing: false });
     const [error, setError] = useState('');
@@ -62,19 +62,10 @@ const Register = () => {
     /* ------------------------- validation ------------------------- */
     const isEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
     const isEgyptPhone = (v) => /^01[0125][0-9]{8}$/.test(String(v || '').replace(/[^0-9]/g, ''));
-    const age16 = (dob) => {
-        const d = new Date(dob);
-        if (Number.isNaN(d.getTime())) return false;
-        const now = new Date();
-        let age = now.getFullYear() - d.getFullYear();
-        const m = now.getMonth() - d.getMonth();
-        if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1;
-        return age >= 16;
-    };
 
     const stepValid = (() => {
         if (step === 0) {
-            return form.fullName.trim().length >= 2 && isEmail(form.email) && isEgyptPhone(form.phone) && form.password.length >= 6 && age16(form.dob) && form.gender && form.governorate;
+            return form.fullName.trim().length >= 2 && isEmail(form.email) && isEgyptPhone(form.phone) && form.password.length >= 6 && form.gender && form.governorate;
         }
         if (step === 1) {
             if (!form.educationLevel || !form.fieldOfStudy || !form.skills.trim() || !form.employmentStatus) return false;
@@ -82,7 +73,7 @@ const Register = () => {
             return true;
         }
         if (step === 2) {
-            return form.desiredRole.trim() && form.desiredIndustry && form.preferredLocation && form.salaryRange && form.willingToRelocate && form.howHeard;
+            return form.desiredIndustry && form.preferredLocation && form.howHeard;
         }
         if (step === 3) {
             return consents.privacy && consents.analytics;
@@ -100,7 +91,6 @@ const Register = () => {
             if (!isEmail(form.email)) m.push(isArabic ? 'البريد الإلكتروني' : 'Email');
             if (!isEgyptPhone(form.phone)) m.push(isArabic ? 'رقم الهاتف (01xxxxxxxxx)' : 'Phone (01xxxxxxxxx)');
             if (form.password.length < 6) m.push(isArabic ? 'كلمة المرور (6 أحرف على الأقل)' : 'Password (min 6 characters)');
-            if (!age16(form.dob)) m.push(isArabic ? 'تاريخ الميلاد (16 سنة فأكثر)' : 'Date of birth (16 or older)');
             if (!form.gender) m.push(isArabic ? 'الجنس' : 'Gender');
         }
         if (step === 1) {
@@ -111,11 +101,8 @@ const Register = () => {
             if (form.employmentStatus === 'Employed' && (!form.currentJobTitle.trim() || !form.yearsExperience)) m.push(isArabic ? 'المسمى الوظيفي وسنوات الخبرة' : 'Job title & years of experience');
         }
         if (step === 2) {
-            if (!form.desiredRole.trim()) m.push(isArabic ? 'الوظيفة المطلوبة' : 'Desired role');
             if (!form.desiredIndustry) m.push(isArabic ? 'القطاع' : 'Industry');
             if (!form.preferredLocation) m.push(isArabic ? 'موقع العمل' : 'Work location');
-            if (!form.salaryRange) m.push(isArabic ? 'الراتب' : 'Salary');
-            if (!form.willingToRelocate) m.push(isArabic ? 'الاستعداد للانتقال' : 'Relocation');
             if (!form.howHeard) m.push(isArabic ? 'كيف عرفت عنا' : 'How you heard');
         }
         if (step === 3) {
@@ -145,10 +132,8 @@ const Register = () => {
         const profile = {
             fullName: form.fullName.trim(),
             phone: form.phone.trim(),
-            dob: form.dob,
             gender: OPT_VAL(OPTS.gender, form.gender),
             nationality: OPT_VAL(OPTS.nationality, form.nationality),
-            city: OPT_VAL(OPTS.city, form.city),
             governorate: OPT_VAL(OPTS.governorate, form.governorate),
             educationLevel: OPT_VAL(OPTS.education, form.educationLevel),
             fieldOfStudy: form.fieldOfStudy,
@@ -156,12 +141,8 @@ const Register = () => {
             currentJobTitle: form.currentJobTitle.trim(),
             yearsExperience: OPT_VAL(OPTS.years, form.yearsExperience),
             skills: form.skills.split(',').map((s) => s.trim()).filter(Boolean),
-            certifications: form.certifications.trim(),
-            desiredRole: form.desiredRole.trim(),
             desiredIndustry: OPT_VAL(OPTS.industry, form.desiredIndustry),
             preferredLocation: OPT_VAL(OPTS.workLoc, form.preferredLocation),
-            expectedSalaryRange: OPT_VAL(OPTS.salary, form.salaryRange),
-            willingToRelocate: form.willingToRelocate === 'Yes',
             linkedinUrl: form.linkedin.trim(),
             howHeard: OPT_VAL(OPTS.heard, form.howHeard),
             referralCode: form.referralCode.trim(),
@@ -225,25 +206,15 @@ const Register = () => {
                 <input className="field" type="password" value={form.password} onChange={set('password')} placeholder="••••••••" />
             </label>
             <div className="field-row">
-                <label className="field-label">{isArabic ? 'تاريخ الميلاد' : 'Date of birth'} *
-                    <input className="field" type="date" value={form.dob} onChange={set('dob')} />
-                </label>
                 <label className="field-label">{isArabic ? 'الجنس' : 'Gender'} *
                     <select className="field" value={form.gender} onChange={setSel('gender')}>
                         <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
                         {renderOptions(OPTS.gender)}
                     </select>
                 </label>
-            </div>
-            <div className="field-row">
                 <label className="field-label">{isArabic ? 'الجنسية' : 'Nationality'} *
                     <select className="field" value={form.nationality} onChange={setSel('nationality')}>
                         {renderOptions(OPTS.nationality)}
-                    </select>
-                </label>
-                <label className="field-label">{isArabic ? 'المدينة الحالية' : 'Current city'} *
-                    <select className="field" value={form.city} onChange={setSel('city')}>
-                        {renderOptions(OPTS.city)}
                     </select>
                 </label>
             </div>
@@ -295,57 +266,36 @@ const Register = () => {
                     </select>
                 </label>
             ) : null}
-            <label className="field-label">{isArabic ? 'الشهادات (اختياري)' : 'Certifications (optional)'}
-                <input className="field" value={form.certifications} onChange={set('certifications')} placeholder={isArabic ? 'مثال: شهادة جوجل للتسويق الرقمي' : 'e.g. Google Digital Marketing'} />
-            </label>
         </div>
     );
 
     const step2 = (
         <div className="signup-step">
             <div className="field-row">
-                <label className="field-label">{isArabic ? 'الوظيفة المطلوبة' : 'Desired job role'} *
-                    <input className="field" value={form.desiredRole} onChange={set('desiredRole')} placeholder={isArabic ? 'مثال: مطور واجهات أمامية' : 'e.g. Frontend Developer'} />
-                </label>
                 <label className="field-label">{isArabic ? 'القطاع المطلوب' : 'Desired industry'} *
                     <select className="field" value={form.desiredIndustry} onChange={setSel('desiredIndustry')}>
                         <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
                         {renderOptions(OPTS.industry)}
                     </select>
                 </label>
-            </div>
-            <div className="field-row">
                 <label className="field-label">{isArabic ? 'موقع العمل المفضل' : 'Preferred work location'} *
                     <select className="field" value={form.preferredLocation} onChange={setSel('preferredLocation')}>
                         <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
                         {renderOptions(OPTS.workLoc)}
                     </select>
                 </label>
-                <label className="field-label">{isArabic ? 'الراتب المتوقع' : 'Expected salary (EGP)'} *
-                    <select className="field" value={form.salaryRange} onChange={setSel('salaryRange')}>
-                        <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
-                        {renderOptions(OPTS.salary)}
-                    </select>
-                </label>
             </div>
             <div className="field-row">
-                <label className="field-label">{isArabic ? 'الاستعداد للانتقال؟' : 'Willing to relocate?'} *
-                    <select className="field" value={form.willingToRelocate} onChange={setSel('willingToRelocate')}>
-                        <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
-                        <option value="Yes">{isArabic ? 'نعم' : 'Yes'}</option>
-                        <option value="No">{isArabic ? 'لا' : 'No'}</option>
-                    </select>
-                </label>
                 <label className="field-label">{isArabic ? 'كيف عرفت عنا؟' : 'How did you hear about us?'} *
                     <select className="field" value={form.howHeard} onChange={setSel('howHeard')}>
                         <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
                         {renderOptions(OPTS.heard)}
                     </select>
                 </label>
+                <label className="field-label">{isArabic ? 'رابط لينكدإن (اختياري)' : 'LinkedIn URL (optional)'}
+                    <input className="field" value={form.linkedin} onChange={set('linkedin')} placeholder="https://linkedin.com/in/..." />
+                </label>
             </div>
-            <label className="field-label">{isArabic ? 'رابط لينكدإن (اختياري)' : 'LinkedIn URL (optional)'}
-                <input className="field" value={form.linkedin} onChange={set('linkedin')} placeholder="https://linkedin.com/in/..." />
-            </label>
             <label className="field-label">{isArabic ? 'رمز الإحالة (اختياري)' : 'Referral code (optional)'}
                 <input className="field" value={form.referralCode} onChange={set('referralCode')} placeholder={isArabic ? 'PORTNOVA-10' : 'PORTNOVA-10'} />
             </label>
@@ -358,11 +308,9 @@ const Register = () => {
                 <div className="signup-review__row"><span>{isArabic ? 'الاسم' : 'Name'}</span><strong>{form.fullName}</strong></div>
                 <div className="signup-review__row"><span>{isArabic ? 'البريد' : 'Email'}</span><strong>{form.email}</strong></div>
                 <div className="signup-review__row"><span>{isArabic ? 'الهاتف' : 'Phone'}</span><strong>{form.phone}</strong></div>
-                <div className="signup-review__row"><span>{isArabic ? 'المدينة' : 'City'}</span><strong>{isArabic ? OPTS.city.find((o) => o.en === form.city)?.ar || form.city : form.city}</strong></div>
                 <div className="signup-review__row"><span>{isArabic ? 'المحافظة' : 'Governorate'}</span><strong>{isArabic ? OPTS.governorate.find((o) => o.en === form.governorate)?.ar || form.governorate : form.governorate}</strong></div>
                 <div className="signup-review__row"><span>{isArabic ? 'التعليم' : 'Education'}</span><strong>{isArabic ? OPTS.education.find((o) => o.en === form.educationLevel)?.ar || form.educationLevel : form.educationLevel}</strong></div>
                 <div className="signup-review__row"><span>{isArabic ? 'المهارات' : 'Skills'}</span><strong>{form.skills}</strong></div>
-                <div className="signup-review__row"><span>{isArabic ? 'الوظيفة المطلوبة' : 'Desired role'}</span><strong>{form.desiredRole}</strong></div>
                 <div className="signup-review__row"><span>{isArabic ? 'القطاع' : 'Industry'}</span><strong>{isArabic ? OPTS.industry.find((o) => o.en === form.desiredIndustry)?.ar || form.desiredIndustry : form.desiredIndustry}</strong></div>
             </div>
 

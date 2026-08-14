@@ -57,6 +57,29 @@
     margin-bottom: 1rem;
 }
 
+/* culminating success - shown right after "Confirm my place" works */
+.waitlist-celebrate {
+    font-size: 3.4rem;
+    line-height: 1;
+    text-align: center;
+    margin: 0.2rem 0 0.8rem;
+    animation: celebratePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes celebratePop {
+    from { opacity: 0; transform: scale(0.4) rotate(-12deg); }
+    to { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* locked voucher - read-only, cannot be chosen or edited */
+.waitlist-form input[readonly] {
+    opacity: 0.85;
+    cursor: not-allowed;
+    color: var(--text);
+    background: rgba(125, 211, 252, 0.06);
+    border-style: dashed;
+}
+
 .waitlist-title {
     font-size: clamp(2.2rem, 5vw, 3.6rem);
     line-height: 1.1;

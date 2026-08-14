@@ -1,45 +1,57 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { getWaitlistStatus, joinWaitlist, referralLink, REFERRALS_NEEDED } from '../services/waitlist';
-import { BilingualLine, GlassCard, LanguageToggle, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
+import { GlassCard, LanguageToggle, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import '../styles/waitlist.css';
 
+// All 27 Egyptian governorates (AR / EN) - the ONLY location question asked.
+const GOVERNORATES = [
+    ['القاهرة', 'Cairo'], ['الجيزة', 'Giza'], ['الإسكندرية', 'Alexandria'],
+    ['الدقهلية', 'Dakahlia'], ['البحر الأحمر', 'Red Sea'], ['البحيرة', 'Beheira'],
+    ['الفيوم', 'Faiyum'], ['الغربية', 'Gharbia'], ['الإسماعيلية', 'Ismailia'],
+    ['المنوفية', 'Monufia'], ['المنيا', 'Minya'], ['القليوبية', 'Qalyubia'],
+    ['الوادي الجديد', 'New Valley'], ['السويس', 'Suez'], ['أسوان', 'Aswan'],
+    ['أسيوط', 'Asyut'], ['بني سويف', 'Beni Suef'], ['بورسعيد', 'Port Said'],
+    ['دمياط', 'Damietta'], ['الشرقية', 'Sharqia'], ['جنوب سيناء', 'South Sinai'],
+    ['كفر الشيخ', 'Kafr El Sheikh'], ['مطروح', 'Matrouh'], ['الأقصر', 'Luxor'],
+    ['قنا', 'Qena'], ['شمال سيناء', 'North Sinai'], ['سوهاج', 'Sohag'],
+];
+
 /** PortNova launch teaser - the first page everyone sees (except admins).
- *  Collects the data we need pre-launch, gives each member a referral code,
- *  and rewards REFERRALS_NEEDED referrals with a FREE CV session at launch. */
-const Waitlist = ({ user }) => {
+ *  This is a WAITLIST ONLY - no account, no password. It collects the data
+ *  we need pre-launch, gives each member a referral code, and rewards
+ *  REFERRALS_NEEDED referrals with a FREE CV session at launch. */
+const Waitlist = () => {
     const { isArabic } = useLanguage();
     const [params] = useSearchParams();
     const refParam = params.get('ref') || '';
 
-    // Persist any incoming referral code so it survives the journey from this
-    // landing page -> register -> login -> join form (the inviter must get
-    // credited even when the code only arrived in the original URL).
+    // The voucher is LOCKED: it comes ONLY from the shared link and can never
+    // be chosen or edited, so there is no bias or monopoly over who uses a code.
     useEffect(() => {
         if (refParam && typeof sessionStorage !== 'undefined') {
             sessionStorage.setItem('portnova_ref', refParam);
         }
     }, [refParam]);
 
-    const meta = user?.user_metadata || {};
-    const email = user?.email || '';
     const savedRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('portnova_ref') || '' : '';
+    const lockedVoucher = refParam || savedRef;
 
-    // Joined status (members who already secured their place see their code)
+    // Remember the email of anyone who already joined (no account exists, so
+    // this is how we recognise a returning member and show their code again).
+    const joinedEmail = typeof localStorage !== 'undefined' ? localStorage.getItem('portnova_joined_email') || '' : '';
+
     const [status, setStatus] = useState(null);
-    const [checking, setChecking] = useState(!!user);
+    const [joined, setJoined] = useState(null); // set after a successful join (shows the thank-you screen)
+    const [checking, setChecking] = useState(false);
 
-    // Join form
     const [form, setForm] = useState({
-        fullName: meta.fullName || '',
-        phone: meta.phone || '',
-        city: meta.location || '',
+        fullName: '',
+        email: '',
+        phone: '',
+        governorate: '',
         rolePref: 'jobs',
-        referralCode: refParam || savedRef || meta.referralCode || '',
-        // Premium fields (optional) - help us match you at launch
-        ageRange: '',
         currentStatus: '',
         educationLevel: '',
         interestField: '',
@@ -51,15 +63,22 @@ const Waitlist = ({ user }) => {
 
     const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
 
+    // If this device already joined (or a signed-in user is on the list), load
+    // their status so returning members see their code instead of the form.
+    const loadedRef = useRef(false);
     useEffect(() => {
-        if (!user || !email) return;
+        if (loadedRef.current || joined || status) return;
+        const checkEmail = joinedEmail;
+        if (!checkEmail) return;
+        loadedRef.current = true;
         let mounted = true;
-        getWaitlistStatus(email)
+        setChecking(true);
+        getWaitlistStatus(checkEmail)
             .then((res) => { if (mounted) setStatus(res); })
             .catch(() => { if (mounted) setStatus({ on_list: false }); })
             .finally(() => { if (mounted) setChecking(false); });
         return () => { mounted = false; };
-    }, [user, email]);
+    }, [joinedEmail, joined, status]);
 
     const submit = async (event) => {
         event.preventDefault();
@@ -67,14 +86,13 @@ const Waitlist = ({ user }) => {
         setError('');
         try {
             const res = await joinWaitlist({
-                userId: user?.id,
+                userId: null, // no account - this is just a waitlist
                 fullName: form.fullName.trim(),
-                email,
+                email: form.email.trim(),
                 phone: form.phone.trim(),
-                city: form.city.trim(),
+                city: form.governorate,
                 rolePref: form.rolePref,
-                referralCode: form.referralCode.trim(),
-                ageRange: form.ageRange,
+                referralCode: lockedVoucher, // locked - from the link only
                 currentStatus: form.currentStatus,
                 educationLevel: form.educationLevel,
                 interestField: form.interestField,
@@ -82,9 +100,11 @@ const Waitlist = ({ user }) => {
                 howHeard: form.howHeard,
             });
             if (!res?.ok) throw new Error(res?.error || 'Could not join');
-            // Consumed the referral code - clear it so it doesn't leak to a
-            // different user on a shared device.
+            // Remember this email so a returning visitor sees their code again.
+            if (typeof localStorage !== 'undefined') localStorage.setItem('portnova_joined_email', form.email.trim().toLowerCase());
+            // Consumed the voucher - clear it so it doesn't leak to another person.
             if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('portnova_ref');
+            setJoined(res);
             setStatus(res);
         } catch (err) {
             setError(err.message || (isArabic ? 'تعذّر الانضمام. حاول مرة أخرى.' : 'Could not join. Please try again.'));
@@ -93,13 +113,15 @@ const Waitlist = ({ user }) => {
         }
     };
 
+    const myCode = joined?.referral_code || status?.referral_code || '';
+
     const shareText = isArabic
-        ? `انضم إلى قائمة انتظار PortNova معي واحصل على جلسة سيرة ذاتية مجانية عند إحالة ${REFERRALS_NEEDED} أصدقاء! 🚢 ${referralLink(status?.referral_code || '')}`
-        : `Join me on the PortNova waitlist - refer ${REFERRALS_NEEDED} friends and get a FREE CV session! 🚢 ${referralLink(status?.referral_code || '')}`;
+        ? `انضم إلى قائمة انتظار PortNova معي واحصل على جلسة سيرة ذاتية مجانية عند إحالة ${REFERRALS_NEEDED} أصدقاء! 🚢 ${referralLink(myCode)}`
+        : `Join me on the PortNova waitlist - refer ${REFERRALS_NEEDED} friends and get a FREE CV session! 🚢 ${referralLink(myCode)}`;
 
     const copyLink = async () => {
         try {
-            await navigator.clipboard.writeText(referralLink(status?.referral_code || ''));
+            await navigator.clipboard.writeText(referralLink(myCode));
         } catch {
             // clipboard unavailable - ignore
         }
@@ -107,31 +129,53 @@ const Waitlist = ({ user }) => {
 
     const whatsappLink = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
-    /* ------------------------- not signed in ------------------------- */
-    if (!user) {
+    /* ------------------------- still loading status ------------------------- */
+    if (checking) {
         return (
-            <div className="page-shell waitlist-page">
+            <div className="page-shell page-shell--narrow waitlist-page">
                 <header className="waitlist-brand">
                     <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
                     <span className="brand__name">PortNova</span>
                     <LanguageToggle className="waitlist-lang" />
                 </header>
-                <main className="waitlist-hero">
-                    <div className="waitlist-badge">{isArabic ? 'قريبًا 🚀' : 'Coming Soon 🚀'}</div>
-                    <h1 className="waitlist-title gradient-text">
-                        {isArabic ? 'احجز مكانك في بورسعيد القادمة' : 'Secure your place in the new Port Said'}
-                    </h1>
-                    <BilingualLine
-                        as="p"
-                        className="waitlist-lead"
-                        ar={`منصة PortNova تجمع شباب بورسعيد بالوظائف والدورات وخدمة السيرة الذاتية. انضم للقائمة الآن لتكون أول من يدخل عند الإطلاق - وأحِل ${REFERRALS_NEEDED} أصدقاء لتحصل على أول جلسة سيرة ذاتية مجانًا.`}
-                        en={`PortNova connects Port Said's youth with jobs, courses and CV support. Join the list now to be first in at launch - refer ${REFERRALS_NEEDED} friends and get your first CV session free.`}
+                <GlassCard className="waitlist-card">
+                    <div className="empty-state">{isArabic ? 'جارٍ التحقق…' : 'Checking…'}</div>
+                </GlassCard>
+            </div>
+        );
+    }
+
+    /* ------------ just joined: culminating thank-you confirmation ----------- */
+    if (joined) {
+        return (
+            <div className="page-shell page-shell--narrow waitlist-page">
+                <header className="waitlist-brand">
+                    <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
+                    <span className="brand__name">PortNova</span>
+                    <LanguageToggle className="waitlist-lang" />
+                </header>
+                <GlassCard className="waitlist-card">
+                    <div className="waitlist-celebrate">🎉</div>
+                    <SectionHeading
+                        kicker={isArabic ? 'تم بنجاح ✅' : 'Success ✅'}
+                        title={isArabic ? 'شكرًا لك! تم تأكيد مكانك' : 'Thank you! Your place is confirmed'}
+                        subtitle={isArabic
+                            ? `لقد استلمنا بياناتك بنجاح وتم تسجيلك في قائمة الانتظار. سنخبرك أولًا عند الإطلاق. شارك رمزك وأحِل ${REFERRALS_NEEDED} أصدقاء لتفعيل أول جلسة سيرة ذاتية مجانية.`
+                            : `We have successfully received your details and added you to the waitlist. We will reach out first at launch. Share your code and refer ${REFERRALS_NEEDED} friends to unlock your first free CV session.`}
                     />
-                    <div className="inline-actions waitlist-cta">
-                        <PremiumButton to={`/register${refParam ? `?ref=${encodeURIComponent(refParam)}` : ''}`} variant="gold">{isArabic ? 'أنشئ حسابًا واحجز مكانك' : 'Create account & secure your place'}</PremiumButton>
-                        <PremiumButton to={`/login${refParam ? `?ref=${encodeURIComponent(refParam)}` : ''}`} variant="ghost">{isArabic ? 'تسجيل الدخول' : 'Login'}</PremiumButton>
+                    <div className="waitlist-code">
+                        <span className="waitlist-code__label">{isArabic ? 'رمزك الخاص' : 'Your referral code'}</span>
+                        <strong className="waitlist-code__value">{joined.referral_code}</strong>
                     </div>
-                </main>
+                    <div className="waitlist-reward waitlist-reward--on">🎉 {isArabic ? 'شكرًا لانضمامك إلينا! بياناتك بأمان وسنكون معك عند الإطلاق.' : 'Thanks for joining us! Your details are safe and we will be with you at launch.'}</div>
+                    <div className="waitlist-share">
+                        <div className="field waitlist-share__link">{referralLink(joined.referral_code)}</div>
+                        <div className="inline-actions">
+                            <PremiumButton variant="primary" onClick={copyLink}>{isArabic ? 'نسخ الرابط' : 'Copy link'}</PremiumButton>
+                            <a className="premium-button premium-button--success" href={whatsappLink} target="_blank" rel="noreferrer">WhatsApp</a>
+                        </div>
+                    </div>
+                </GlassCard>
             </div>
         );
     }
@@ -202,15 +246,20 @@ const Waitlist = ({ user }) => {
                     </div>
                     <div className="field-group">
                         <label className="field-label">{isArabic ? 'البريد الإلكتروني' : 'Email'}</label>
-                        <input className="field" value={email} disabled />
+                        <input className="field" type="email" value={form.email} onChange={set('email')} required placeholder="you@example.com" />
                     </div>
                     <div className="field-group">
                         <label className="field-label">{isArabic ? 'رقم الهاتف' : 'Phone'}</label>
                         <input className="field" value={form.phone} onChange={set('phone')} inputMode="tel" placeholder="01xxxxxxxxx" />
                     </div>
                     <div className="field-group">
-                        <label className="field-label">{isArabic ? 'المدينة' : 'City'}</label>
-                        <input className="field" value={form.city} onChange={set('city')} placeholder={isArabic ? 'بورسعيد' : 'Port Said'} />
+                        <label className="field-label">{isArabic ? 'المحافظة' : 'Governorate'}</label>
+                        <select className="select" value={form.governorate} onChange={set('governorate')} required>
+                            <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
+                            {GOVERNORATES.map(([ar, en]) => (
+                                <option key={en} value={en}>{isArabic ? ar : en}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="field-group">
                         <label className="field-label">{isArabic ? 'أكثر ما يهمك؟' : 'What interests you most?'}</label>
@@ -222,15 +271,6 @@ const Waitlist = ({ user }) => {
                         </select>
                     </div>
                     <div className="waitlist-grid">
-                        <div className="field-group">
-                            <label className="field-label">{isArabic ? 'الفئة العمرية' : 'Age range'}</label>
-                            <select className="select" value={form.ageRange} onChange={set('ageRange')}>
-                                <option value="">{isArabic ? 'اختر…' : 'Select…'}</option>
-                                <option value="18-24">18-24</option>
-                                <option value="25-30">25-30</option>
-                                <option value="31+">31+</option>
-                            </select>
-                        </div>
                         <div className="field-group">
                             <label className="field-label">{isArabic ? 'حالتك الحالية' : 'Current status'}</label>
                             <select className="select" value={form.currentStatus} onChange={set('currentStatus')}>
@@ -284,13 +324,12 @@ const Waitlist = ({ user }) => {
                             </select>
                         </div>
                     </div>
-                    {refParam ? (
-                        <div className="waitlist-ref-hint">🔗 {isArabic ? `دُعيت بواسطة الرمز ${refParam}` : `Invited via code ${refParam}`}</div>
+                    {lockedVoucher ? (
+                        <div className="field-group">
+                            <label className="field-label">{isArabic ? 'رمز الدعوة (مقفول)' : 'Invite code (locked)'}</label>
+                            <input className="field" value={lockedVoucher} readOnly aria-readonly="true" placeholder="XXXXXXX" />
+                        </div>
                     ) : null}
-                    <div className="field-group">
-                        <label className="field-label">{isArabic ? 'رمز إحالة (اختياري)' : 'Referral code (optional)'}</label>
-                        <input className="field" value={form.referralCode} onChange={set('referralCode')} placeholder="XXXXXXX" />
-                    </div>
                     {error ? <p className="muted waitlist-error">{error}</p> : null}
                     <LoaderButton variant="gold" loading={submitting} type="submit" className="waitlist-submit">
                         {submitting ? (isArabic ? 'جارٍ الحجز…' : 'Securing…') : (isArabic ? 'أكّد مكاني 🚢' : 'Secure my place 🚢')}

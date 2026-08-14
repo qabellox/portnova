@@ -40,8 +40,8 @@ const WaitlistGate = ({ children }) => {
         return children; // owner/admin → the real website
     }
 
-    // Everyone else → the waitlist teaser.
-    return <Waitlist user={user || null} />;
+    // Everyone else → the waitlist teaser (account-free - just a waitlist).
+    return <Waitlist />;
 };
 
 export default WaitlistGate;

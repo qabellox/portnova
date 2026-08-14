@@ -99,7 +99,14 @@ const Waitlist = () => {
                 // If the user picked "Other", store their written answer instead.
                 howHeard: form.howHeard === 'Other' ? form.howHeardOther.trim() : form.howHeard,
             });
-            if (!res?.ok) throw new Error(res?.error || 'Could not join');
+            if (!res?.ok) {
+                if (res?.error === 'rate_limited') {
+                    throw new Error(isArabic
+                        ? 'محاولات كثيرة جدًا. انتظر قليلًا ثم أعد المحاولة.'
+                        : 'Too many attempts. Please wait a moment and try again.');
+                }
+                throw new Error(res?.message || res?.error || 'Could not join');
+            }
             // Remember this email so a returning visitor sees their code again.
             if (typeof localStorage !== 'undefined') localStorage.setItem('portnova_joined_email', form.email.trim().toLowerCase());
             // Consumed the voucher - clear it so it doesn't leak to another person.

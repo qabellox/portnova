@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
@@ -34,18 +34,27 @@ const Register = () => {
     const { register } = useAuth();
     const { isArabic } = useLanguage();
     const navigate = useNavigate();
+    const [params] = useSearchParams();
 
-    const [role, setRole] = useState('seeker');
+    // Carry an incoming referral code (?ref=CODE) all the way through
+    // registration so the inviter gets credited when the new member later
+    // joins the waitlist. The join form reads the same storage key.
+    const refParam = params.get('ref') || '';
+    if (refParam && typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem('portnova_ref', refParam);
+    }
+
     const [step, setStep] = useState(0);
     const [form, setForm] = useState({
         fullName: '', email: '', phone: '', password: '', dob: '',
         gender: '', nationality: 'Egyptian', city: 'Port Said', governorate: 'Port Said',
         educationLevel: '', fieldOfStudy: '', skills: '', employmentStatus: '', currentJobTitle: '', yearsExperience: '', certifications: '',
-        desiredRole: '', desiredIndustry: '', preferredLocation: '', salaryRange: '', willingToRelocate: '', linkedin: '', howHeard: '', referralCode: '',
+        desiredRole: '', desiredIndustry: '', preferredLocation: '', salaryRange: '', willingToRelocate: '', linkedin: '', howHeard: '', referralCode: refParam || '',
     });
     const [consents, setConsents] = useState({ privacy: false, analytics: false, marketing: false });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [triedNext, setTriedNext] = useState(false);
 
     const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
     const setSel = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
@@ -81,10 +90,56 @@ const Register = () => {
         return true;
     })();
 
-    const next = () => { if (stepValid && step < STEPS.length - 1) setStep((s) => s + 1); };
+    // Bilingual list of the fields the current step is still missing, so the
+    // Next button can tell the user exactly what to fix instead of doing
+    // nothing (previously it was disabled with zero feedback - felt broken).
+    const missingFields = (() => {
+        const m = [];
+        if (step === 0) {
+            if (form.fullName.trim().length < 2) m.push(isArabic ? 'الاسم الكامل' : 'Full name');
+            if (!isEmail(form.email)) m.push(isArabic ? 'البريد الإلكتروني' : 'Email');
+            if (!isEgyptPhone(form.phone)) m.push(isArabic ? 'رقم الهاتف (01xxxxxxxxx)' : 'Phone (01xxxxxxxxx)');
+            if (form.password.length < 6) m.push(isArabic ? 'كلمة المرور (6 أحرف على الأقل)' : 'Password (min 6 characters)');
+            if (!age16(form.dob)) m.push(isArabic ? 'تاريخ الميلاد (16 سنة فأكثر)' : 'Date of birth (16 or older)');
+            if (!form.gender) m.push(isArabic ? 'الجنس' : 'Gender');
+        }
+        if (step === 1) {
+            if (!form.educationLevel) m.push(isArabic ? 'المستوى التعليمي' : 'Education');
+            if (!form.fieldOfStudy) m.push(isArabic ? 'مجال الدراسة' : 'Field of study');
+            if (!form.skills.trim()) m.push(isArabic ? 'المهارات' : 'Skills');
+            if (!form.employmentStatus) m.push(isArabic ? 'الحالة الوظيفية' : 'Employment status');
+            if (form.employmentStatus === 'Employed' && (!form.currentJobTitle.trim() || !form.yearsExperience)) m.push(isArabic ? 'المسمى الوظيفي وسنوات الخبرة' : 'Job title & years of experience');
+        }
+        if (step === 2) {
+            if (!form.desiredRole.trim()) m.push(isArabic ? 'الوظيفة المطلوبة' : 'Desired role');
+            if (!form.desiredIndustry) m.push(isArabic ? 'القطاع' : 'Industry');
+            if (!form.preferredLocation) m.push(isArabic ? 'موقع العمل' : 'Work location');
+            if (!form.salaryRange) m.push(isArabic ? 'الراتب' : 'Salary');
+            if (!form.willingToRelocate) m.push(isArabic ? 'الاستعداد للانتقال' : 'Relocation');
+            if (!form.howHeard) m.push(isArabic ? 'كيف عرفت عنا' : 'How you heard');
+        }
+        if (step === 3) {
+            if (!consents.privacy) m.push(isArabic ? 'الموافقة على الخصوصية' : 'Privacy consent');
+            if (!consents.analytics) m.push(isArabic ? 'الموافقة على التحليلات' : 'Analytics consent');
+        }
+        return m;
+    })();
+
+    const next = () => {
+        if (stepValid && step < STEPS.length - 1) {
+            setTriedNext(false);
+            setStep((s) => s + 1);
+        } else if (!stepValid) {
+            setTriedNext(true); // tell the user what's missing instead of staying silent
+        }
+    };
     const back = () => { if (step > 0) setStep((s) => s - 1); };
 
     const handleSubmit = async () => {
+        if (!stepValid) {
+            setTriedNext(true); // never silently swallow a click - show what's missing
+            return;
+        }
         setLoading(true);
         setError('');
         const profile = {
@@ -118,7 +173,7 @@ const Register = () => {
             email: form.email,
             password: form.password,
             fullName: form.fullName.trim(),
-            role,
+            role: 'seeker',
             profile,
         });
 
@@ -146,25 +201,6 @@ const Register = () => {
                     : 'Account created. Check your email, click the confirmation link, then sign in.',
             },
         });
-    };
-
-    const handleProviderSubmit = async () => {
-        setLoading(true);
-        setError('');
-        const { data, error: authError } = await register({
-            email: form.email,
-            password: form.password,
-            fullName: form.fullName.trim(),
-            role: 'provider',
-            companyName: form.fullName.trim(),
-        });
-        if (authError) { setError(authError.message || (isArabic ? 'تعذّر إنشاء الحساب.' : 'Registration failed')); setLoading(false); return; }
-        if (data?.session) { navigate('/dashboard'); return; }
-        if (data?.user && data.user.identities && data.user.identities.length === 0) {
-            setError(isArabic ? 'هذا البريد مسجّل بالفعل. استخدمه لتسجيل الدخول مباشرة.' : 'This email is already registered. Use it to sign in instead.');
-            setLoading(false); return;
-        }
-        navigate('/login', { state: { message: isArabic ? 'تم إنشاء الحساب. راجع بريدك الإلكتروني، ثم سجّل الدخول.' : 'Account created. Check your email, then sign in.' } });
     };
 
     const renderOptions = (list) =>
@@ -377,31 +413,17 @@ const Register = () => {
             <GlassCard className="auth-card">
                 <Badge tone="gold">{isArabic ? 'إنشاء حساب' : 'Create account'}</Badge>
                 <SectionHeading
-                    title={role === 'provider' ? (isArabic ? 'حساب مقدّم' : 'Provider account') : STEPS[step].title[isArabic ? 'ar' : 'en']}
+                    title={STEPS[step].title[isArabic ? 'ar' : 'en']}
                     subtitle={
-                        role === 'provider'
-                            ? isArabic ? 'استخدم اسم شركتك والبريد وكلمة المرور للبدء.' : 'Use your company name, email, and password to get started.'
-                            : isArabic
-                                ? 'املأ بياناتك خطوة بخطوة - نحتاجها لتخصيص تجربتك ومساعدتك في العثور على فرصك.'
-                                : 'Fill in your details step by step - we use them to personalise your experience and match you with opportunities.'
+                        isArabic
+                            ? 'املأ بياناتك خطوة بخطوة - نحتاجها لتخصيص تجربتك ومساعدتك في العثور على فرصك.'
+                            : 'Fill in your details step by step - we use them to personalise your experience and match you with opportunities.'
                     }
                 />
                 {error ? <p className="muted" style={{ color: '#fecaca' }}>{error}</p> : null}
 
-                {role === 'provider' ? (
-                    <form onSubmit={(e) => { e.preventDefault(); handleProviderSubmit(); }}>
-                        <div className="field-group">
-                            <input className="field" type="text" placeholder={isArabic ? 'اسم الشركة' : 'Company name'} value={form.fullName} onChange={set('fullName')} required />
-                            <input className="field" type="email" placeholder={isArabic ? 'البريد الإلكتروني' : 'Email'} value={form.email} onChange={set('email')} required />
-                            <input className="field" type="password" placeholder={isArabic ? 'كلمة المرور' : 'Password'} value={form.password} onChange={set('password')} required />
-                            <PremiumButton type="submit" variant="primary" disabled={loading}>
-                                {loading ? (isArabic ? 'جارٍ الإنشاء...' : 'Creating...') : isArabic ? 'إنشاء الحساب' : 'Create account'}
-                            </PremiumButton>
-                        </div>
-                    </form>
-                ) : (
-                    <>
-                        <div className="signup-progress" aria-hidden="true">
+                <>
+                    <div className="signup-progress" aria-hidden="true">
                             {STEPS.map((s, i) => (
                                 <span key={s.key} className={`signup-progress__dot ${i <= step ? 'signup-progress__dot--on' : ''}`} />
                             ))}
@@ -411,39 +433,25 @@ const Register = () => {
                             {stepContent}
                         </div>
 
+                        {triedNext && !stepValid ? (
+                            <p className="signup-inline-error">
+                                {isArabic ? 'أكمل الحقول المطلوبة:' : 'Please complete the required fields:'} {missingFields.join('، ')}
+                            </p>
+                        ) : null}
+
                         <div className="signup-actions">
                             {step > 0 ? (
                                 <PremiumButton variant="ghost" onClick={back}>{isArabic ? 'رجوع' : 'Back'}</PremiumButton>
                             ) : null}
                             {step < STEPS.length - 1 ? (
-                                <PremiumButton variant="gold" disabled={!stepValid} onClick={next}>{isArabic ? 'التالي' : 'Next'}</PremiumButton>
+                                <PremiumButton variant="gold" onClick={next}>{isArabic ? 'التالي' : 'Next'}</PremiumButton>
                             ) : (
-                                <PremiumButton variant="gold" disabled={!stepValid || loading} onClick={handleSubmit}>
+                                <PremiumButton variant="gold" disabled={loading} onClick={handleSubmit}>
                                     {loading ? (isArabic ? 'جارٍ إنشاء الحساب...' : 'Creating account...') : isArabic ? 'إنشاء الحساب ✓' : 'Create account ✓'}
                                 </PremiumButton>
                             )}
                         </div>
                     </>
-                )}
-
-                <div className="role-picker signup-role" role="radiogroup" aria-label={isArabic ? 'نوع الحساب' : 'Account type'}>
-                    <label className={`role-option ${role === 'seeker' ? 'role-option--active' : ''}`}>
-                        <input type="radio" name="role" value="seeker" checked={role === 'seeker'} onChange={(event) => { setRole(event.target.value); setStep(0); }} />
-                        <span className="role-option__mark">🎓</span>
-                        <span className="role-option__text">
-                            <strong>{isArabic ? 'باحث' : 'Seeker'}</strong>
-                            <small>{isArabic ? 'أبحث عن وظائف ودورات وسيرة ذاتية.' : 'I look for jobs, courses, and CV support.'}</small>
-                        </span>
-                    </label>
-                    <label className={`role-option ${role === 'provider' ? 'role-option--active' : ''}`}>
-                        <input type="radio" name="role" value="provider" checked={role === 'provider'} onChange={(event) => setRole(event.target.value)} />
-                        <span className="role-option__mark">🏢</span>
-                        <span className="role-option__text">
-                            <strong>{isArabic ? 'مقدّم' : 'Provider'}</strong>
-                            <small>{isArabic ? 'أنشر الوظائف والدورات.' : 'I post jobs and courses.'}</small>
-                        </span>
-                    </label>
-                </div>
 
                 <p className="muted" style={{ marginTop: '1rem' }}>
                     {isArabic ? 'لديك حساب بالفعل؟' : 'Already have an account?'} <Link to="/login">{isArabic ? 'تسجيل الدخول' : 'Login'}</Link>

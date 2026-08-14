@@ -58,6 +58,19 @@
     margin-top: 1.2rem;
 }
 
+/* inline validation feedback - shown when Next/Create is clicked with
+   missing required fields so the wizard never silently ignores a click */
+.signup-inline-error {
+    margin: 0.9rem 0 0;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.8rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: #fecaca;
+    background: rgba(248, 113, 113, 0.12);
+    border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
 /* role picker pinned under the form */
 .signup-role {
     margin-top: 1.2rem;

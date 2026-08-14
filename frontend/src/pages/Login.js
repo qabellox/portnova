@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Badge, BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
@@ -9,11 +9,21 @@ const Login = () => {
     const { isArabic } = useLanguage();
     const navigate = useNavigate();
     const location = useLocation();
+    const [params] = useSearchParams();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [message] = useState(location.state?.message || '');
     const [loading, setLoading] = useState(false);
+
+    // Carry an incoming referral code (e.g. someone opened /login?ref=CODE)
+    // through to the waitlist join form after sign-in.
+    useEffect(() => {
+        const ref = params.get('ref');
+        if (ref && typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('portnova_ref', ref);
+        }
+    }, [params]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();

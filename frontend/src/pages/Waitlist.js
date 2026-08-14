@@ -14,8 +14,18 @@ const Waitlist = ({ user }) => {
     const [params] = useSearchParams();
     const refParam = params.get('ref') || '';
 
+    // Persist any incoming referral code so it survives the journey from this
+    // landing page -> register -> login -> join form (the inviter must get
+    // credited even when the code only arrived in the original URL).
+    useEffect(() => {
+        if (refParam && typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('portnova_ref', refParam);
+        }
+    }, [refParam]);
+
     const meta = user?.user_metadata || {};
     const email = user?.email || '';
+    const savedRef = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('portnova_ref') || '' : '';
 
     // Joined status (members who already secured their place see their code)
     const [status, setStatus] = useState(null);
@@ -27,7 +37,7 @@ const Waitlist = ({ user }) => {
         phone: meta.phone || '',
         city: meta.location || '',
         rolePref: 'jobs',
-        referralCode: refParam,
+        referralCode: refParam || savedRef || meta.referralCode || '',
         // Premium fields (optional) - help us match you at launch
         ageRange: '',
         currentStatus: '',
@@ -72,6 +82,9 @@ const Waitlist = ({ user }) => {
                 howHeard: form.howHeard,
             });
             if (!res?.ok) throw new Error(res?.error || 'Could not join');
+            // Consumed the referral code - clear it so it doesn't leak to a
+            // different user on a shared device.
+            if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('portnova_ref');
             setStatus(res);
         } catch (err) {
             setError(err.message || (isArabic ? 'تعذّر الانضمام. حاول مرة أخرى.' : 'Could not join. Please try again.'));
@@ -115,8 +128,8 @@ const Waitlist = ({ user }) => {
                         en={`PortNova connects Port Said's youth with jobs, courses and CV support. Join the list now to be first in at launch - refer ${REFERRALS_NEEDED} friends and get your first CV session free.`}
                     />
                     <div className="inline-actions waitlist-cta">
-                        <PremiumButton to="/register" variant="gold">{isArabic ? 'أنشئ حسابًا واحجز مكانك' : 'Create account & secure your place'}</PremiumButton>
-                        <PremiumButton to="/login" variant="ghost">{isArabic ? 'تسجيل الدخول' : 'Login'}</PremiumButton>
+                        <PremiumButton to={`/register${refParam ? `?ref=${encodeURIComponent(refParam)}` : ''}`} variant="gold">{isArabic ? 'أنشئ حسابًا واحجز مكانك' : 'Create account & secure your place'}</PremiumButton>
+                        <PremiumButton to={`/login${refParam ? `?ref=${encodeURIComponent(refParam)}` : ''}`} variant="ghost">{isArabic ? 'تسجيل الدخول' : 'Login'}</PremiumButton>
                     </div>
                 </main>
             </div>

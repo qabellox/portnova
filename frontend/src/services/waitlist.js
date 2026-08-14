@@ -33,10 +33,12 @@ export const getWaitlistStatus = async (email) => {
     return data;
 };
 
-/** Build the shareable referral link for a member's code. */
+/** Build the shareable referral link for a member's code. Always points at
+ *  the site root so the invitee lands on the waitlist landing page with the
+ *  code in the URL (?ref=CODE) no matter where the sharer is. */
 export const referralLink = (code) => {
     if (typeof window === 'undefined') return '';
-    return `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(code)}`;
+    return `${window.location.origin}/?ref=${encodeURIComponent(code || '')}`;
 };
 
 /** How many friends are needed before the inviter earns a free CV session. */

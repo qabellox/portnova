@@ -71,6 +71,59 @@
     to { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 
+/* multi-level referral ladder */
+.waitlist-levels {
+    display: grid;
+    gap: 0.55rem;
+    margin: 1rem 0;
+}
+
+.waitlist-level {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.9rem;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(125, 211, 252, 0.14);
+    opacity: 0.72;
+}
+
+.waitlist-level--on {
+    opacity: 1;
+    background: rgba(20, 184, 166, 0.1);
+    border-color: rgba(20, 184, 166, 0.45);
+}
+
+.waitlist-level--active {
+    border-color: rgba(212, 175, 55, 0.6);
+    background: rgba(212, 175, 55, 0.08);
+}
+
+.waitlist-level__badge {
+    flex: 0 0 auto;
+    font-weight: 800;
+    color: var(--sand-light);
+    background: rgba(212, 175, 55, 0.12);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.72rem;
+}
+
+.waitlist-level__goal {
+    flex: 1 1 auto;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.waitlist-level__reward {
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+
 /* locked voucher - read-only, cannot be chosen or edited */
 .waitlist-form input[readonly] {
     opacity: 0.85;

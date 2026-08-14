@@ -1,4 +1,14 @@
 import { supabase } from './supabase';
+// Multi-level referral ladder - re-export so existing imports keep working.
+export {
+    REFERRAL_LEVELS,
+    REFERRALS_NEEDED,
+    isMaxed,
+    levelForCount,
+    nextLevelFor,
+    progressForCount,
+    sessionsForCount,
+} from './waitlistLevels';
 
 /** Join the PortNova launch waitlist. Server-side (security definer): generates
  *  the member's referral code, credits the inviter, and unlocks a free CV
@@ -40,6 +50,3 @@ export const referralLink = (code) => {
     if (typeof window === 'undefined') return '';
     return `${window.location.origin}/?ref=${encodeURIComponent(code || '')}`;
 };
-
-/** How many friends are needed before the inviter earns a free CV session. */
-export const REFERRALS_NEEDED = 20;

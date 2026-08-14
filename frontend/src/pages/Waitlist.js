@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { getWaitlistStatus, joinWaitlist, referralLink, REFERRALS_NEEDED } from '../services/waitlist';
+import { getWaitlistStatus, joinWaitlist, referralLink, REFERRAL_LEVELS, progressForCount, sessionsForCount } from '../services/waitlist';
 import { GlassCard, LanguageToggle, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import '../styles/waitlist.css';
 
@@ -20,8 +20,10 @@ const GOVERNORATES = [
 
 /** PortNova launch teaser - the first page everyone sees (except admins).
  *  This is a WAITLIST ONLY - no account, no password. It collects the data
- *  we need pre-launch, gives each member a referral code, and rewards
- *  REFERRALS_NEEDED referrals with a FREE CV session at launch. */
+ *  we need pre-launch, gives each member a referral code, and runs a
+ *  MULTI-LEVEL referral ladder: 30 sign-ups unlock Level 2, chase 50 more
+ *  (80) then the last milestone (100) - each level earns more free AI CV
+ *  sessions. Only real registrations count, never mere link opens. */
 const Waitlist = () => {
     const { isArabic } = useLanguage();
     const [params] = useSearchParams();
@@ -114,10 +116,12 @@ const Waitlist = () => {
     };
 
     const myCode = joined?.referral_code || status?.referral_code || '';
+    const myCount = joined?.referral_count ?? status?.referral_count ?? 0;
+    const ladder = progressForCount(myCount);
 
     const shareText = isArabic
-        ? `انضم إلى قائمة انتظار PortNova معي واحصل على جلسة سيرة ذاتية مجانية عند إحالة ${REFERRALS_NEEDED} أصدقاء! 🚢 ${referralLink(myCode)}`
-        : `Join me on the PortNova waitlist - refer ${REFERRALS_NEEDED} friends and get a FREE CV session! 🚢 ${referralLink(myCode)}`;
+        ? `انضم إلى قائمة انتظار PortNova معي - كل إحالة حقيقية تقربنا من المزيد من جلسات السيرة الذاتية المجانية بالذكاء الاصطناعي! 🚢 ${referralLink(myCode)}`
+        : `Join me on the PortNova waitlist - every real sign-up unlocks more FREE AI CV sessions as the ladder climbs! 🚢 ${referralLink(myCode)}`;
 
     const copyLink = async () => {
         try {
@@ -160,12 +164,21 @@ const Waitlist = () => {
                         kicker={isArabic ? 'تم بنجاح ✅' : 'Success ✅'}
                         title={isArabic ? 'شكرًا لك! تم تأكيد مكانك' : 'Thank you! Your place is confirmed'}
                         subtitle={isArabic
-                            ? `لقد استلمنا بياناتك بنجاح وتم تسجيلك في قائمة الانتظار. سنخبرك أولًا عند الإطلاق. شارك رمزك وأحِل ${REFERRALS_NEEDED} أصدقاء لتفعيل أول جلسة سيرة ذاتية مجانية.`
-                            : `We have successfully received your details and added you to the waitlist. We will reach out first at launch. Share your code and refer ${REFERRALS_NEEDED} friends to unlock your first free CV session.`}
+                            ? `لقد استلمنا بياناتك بنجاح وتم تسجيلك في قائمة الانتظار. سنخبرك أولًا عند الإطلاق. شارك رمزك - كل ${REFERRAL_LEVELS.map((l) => l.threshold).join(' / ')} تسجيلًا حقيقيًا يرفع مستواك ويمنحك المزيد من جلسات السيرة الذاتية المجانية بالذكاء الاصطناعي.`
+                            : `We have successfully received your details and added you to the waitlist. We will reach out first at launch. Share your code - every ${REFERRAL_LEVELS.map((l) => l.threshold).join(' / ')} real sign-ups climbs your level and earns more free AI CV sessions.`}
                     />
                     <div className="waitlist-code">
                         <span className="waitlist-code__label">{isArabic ? 'رمزك الخاص' : 'Your referral code'}</span>
                         <strong className="waitlist-code__value">{joined.referral_code}</strong>
+                    </div>
+                    <div className="waitlist-levels" aria-label={isArabic ? 'مستويات الإحالة' : 'Referral levels'}>
+                        {REFERRAL_LEVELS.map((l) => (
+                            <div key={l.level} className={`waitlist-level ${l.threshold === 30 ? 'waitlist-level--on' : ''}`}>
+                                <span className="waitlist-level__badge">{isArabic ? `مستوى ${l.level}` : `Level ${l.level}`}</span>
+                                <span className="waitlist-level__goal">{l.threshold} {isArabic ? 'تسجيل' : 'sign-ups'}</span>
+                                <span className="waitlist-level__reward">🎓 {l.sessions} {isArabic ? 'جلسة سيرة ذاتية مجانية' : 'free AI CV session'}{l.sessions > 1 ? 's' : ''}</span>
+                            </div>
+                        ))}
                     </div>
                     <div className="waitlist-reward waitlist-reward--on">🎉 {isArabic ? 'شكرًا لانضمامك إلينا! بياناتك بأمان وسنكون معك عند الإطلاق.' : 'Thanks for joining us! Your details are safe and we will be with you at launch.'}</div>
                     <div className="waitlist-share">
@@ -193,7 +206,9 @@ const Waitlist = () => {
                     <SectionHeading
                         kicker={isArabic ? 'أنت على القائمة ✅' : "You're on the list ✅"}
                         title={isArabic ? 'تم تأمين مكانك!' : 'Your place is secured!'}
-                        subtitle={isArabic ? `شارك رابطك الخاص وأحِل ${REFERRALS_NEEDED} أصدقاء لتفعيل جلسة السيرة الذاتية المجانية عند الإطلاق.` : `Share your link and get ${REFERRALS_NEEDED} friends to join to unlock your free CV session at launch.`}
+                        subtitle={isArabic
+                            ? `شارك رابطك الخاص - كل تسجيل حقيقي يرفع مستواك نحو ${REFERRAL_LEVELS.map((l) => l.threshold).join(' / ')} ويمنحك المزيد من جلسات السيرة الذاتية المجانية بالذكاء الاصطناعي.`
+                            : `Share your link - every real sign-up climbs you toward ${REFERRAL_LEVELS.map((l) => l.threshold).join(' / ')} and earns more free AI CV sessions.`}
                     />
                     <div className="waitlist-code">
                         <span className="waitlist-code__label">{isArabic ? 'رمزك الخاص' : 'Your referral code'}</span>
@@ -202,16 +217,35 @@ const Waitlist = () => {
                     <div className="waitlist-progress">
                         <div className="waitlist-progress__row">
                             <span>{isArabic ? 'أصدقاؤك' : 'Friends joined'}</span>
-                            <strong>{status.referral_count} / {REFERRALS_NEEDED}</strong>
+                            <strong>{status.referral_count} / {ladder.threshold}</strong>
                         </div>
                         <div className="progress">
-                            <div className="progress__bar" style={{ width: `${Math.min(100, (status.referral_count / REFERRALS_NEEDED) * 100)}%` }} />
+                            <div className="progress__bar" style={{ width: `${Math.min(100, ladder.progress)}%` }} />
                         </div>
                     </div>
-                    {status.cv_session_free ? (
-                        <div className="waitlist-reward waitlist-reward--on">🎉 {isArabic ? 'مبروك! جلسة السيرة الذاتية المجانية مفعّلة لك عند الإطلاق.' : 'Congratulations! Your free CV session is unlocked for launch.'}</div>
+                    <div className="waitlist-levels" aria-label={isArabic ? 'مستويات الإحالة' : 'Referral levels'}>
+                        {REFERRAL_LEVELS.map((l) => {
+                            const reached = status.referral_count >= l.threshold;
+                            const active = ladder.next && l.threshold === ladder.next.threshold;
+                            return (
+                                <div key={l.level} className={`waitlist-level ${reached ? 'waitlist-level--on' : ''} ${active ? 'waitlist-level--active' : ''}`}>
+                                    <span className="waitlist-level__badge">{isArabic ? `مستوى ${l.level}` : `Level ${l.level}`}</span>
+                                    <span className="waitlist-level__goal">{l.threshold} {isArabic ? 'تسجيل' : 'sign-ups'}</span>
+                                    <span className="waitlist-level__reward">🎓 {l.sessions} {isArabic ? 'جلسة مجانية' : 'free CV session'}{l.sessions > 1 ? 's' : ''}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {sessionsForCount(status.referral_count) > 0 ? (
+                        <div className="waitlist-reward waitlist-reward--on">🎉 {isArabic
+                            ? `مبروك! لديك الآن ${sessionsForCount(status.referral_count)} جلسات سيرة ذاتية مجانية بالذكاء الاصطناعي عند الإطلاق.`
+                            : `Congratulations! You now have ${sessionsForCount(status.referral_count)} free AI CV session${sessionsForCount(status.referral_count) > 1 ? 's' : ''} unlocked for launch.`}
+                        </div>
                     ) : (
-                        <div className="waitlist-reward">{isArabic ? `أحِل ${REFERRALS_NEEDED} أصدقاء لتفعيل جلسة السيرة الذاتية المجانية.` : `Refer ${REFERRALS_NEEDED} friends to unlock the free CV session.`}</div>
+                        <div className="waitlist-reward">{isArabic
+                            ? `أحِل ${ladder.threshold} أصدقاء لتفعيل أول جلسة سيرة ذاتية مجانية بالذكاء الاصطناعي.`
+                            : `Refer ${ladder.threshold} friends to unlock your first free AI CV session.`}
+                        </div>
                     )}
                     <div className="waitlist-share">
                         <div className="field waitlist-share__link">{referralLink(status.referral_code)}</div>
@@ -237,7 +271,9 @@ const Waitlist = () => {
                 <SectionHeading
                     kicker={isArabic ? 'قائمة الانتظار' : 'The waitlist'}
                     title={isArabic ? 'أكمل بياناتك لتأمين مكانك' : 'Complete your details to secure your place'}
-                    subtitle={isArabic ? `بياناتك تبقى محفوظة وآمنة - سنخبرك أولًا عند الإطلاق، وأحِل ${REFERRALS_NEEDED} أصدقاء لتحصل على أول جلسة سيرة ذاتية مجانًا.` : `Your details stay safe - we'll tell you first at launch, and refer ${REFERRALS_NEEDED} friends for a free first CV session.`}
+                    subtitle={isArabic
+                        ? `بياناتك تبقى محفوظة وآمنة - سنخبرك أولًا عند الإطلاق. شارك رمزك وارتقِ بمستواك: ${REFERRAL_LEVELS.map((l) => `${l.threshold} تسجيل`).join(' / ')} يمنحك المزيد من جلسات السيرة الذاتية المجانية بالذكاء الاصطناعي.`
+                        : `Your details stay safe - we'll tell you first at launch. Share your code and climb: ${REFERRAL_LEVELS.map((l) => `${l.threshold} sign-ups`).join(' / ')} earns more free AI CV sessions.`}
                 />
                 <form onSubmit={submit} className="waitlist-form">
                     <div className="field-group">

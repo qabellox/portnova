@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import Waitlist from '../pages/Waitlist';
+import WaitlistErrorBoundary from './WaitlistErrorBoundary';
 
 // Owner/admin escape hatch: the site owner must ALWAYS reach the real app.
 // Keep this in sync with the owner account email (or set role: 'admin' on the
@@ -40,8 +41,13 @@ const WaitlistGate = ({ children }) => {
         return children; // owner/admin → the real website
     }
 
-    // Everyone else → the waitlist teaser (account-free - just a waitlist).
-    return <Waitlist />;
+    // Everyone else → the waitlist teaser (account-free - just a waitlist),
+    // wrapped in a crash shield so mass traffic never sees a blank page.
+    return (
+        <WaitlistErrorBoundary>
+            <Waitlist />
+        </WaitlistErrorBoundary>
+    );
 };
 
 export default WaitlistGate;

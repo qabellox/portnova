@@ -2,8 +2,11 @@ import { supabase } from './supabase';
 
 /** Join the PortNova launch waitlist. Server-side (security definer): generates
  *  the member's referral code, credits the inviter, and unlocks a free CV
- *  session for the inviter once they reach 3 referrals. */
-export const joinWaitlist = async ({ userId, fullName, email, phone, city, rolePref, referralCode }) => {
+ *  session for the inviter once they reach REFERRALS_NEEDED referrals. */
+export const joinWaitlist = async ({
+    userId, fullName, email, phone, city, rolePref, referralCode,
+    ageRange, currentStatus, educationLevel, interestField, employmentPref, howHeard,
+}) => {
     const { data, error } = await supabase.rpc('join_waitlist', {
         p_user_id: userId,
         p_full_name: fullName,
@@ -12,6 +15,12 @@ export const joinWaitlist = async ({ userId, fullName, email, phone, city, roleP
         p_city: city || null,
         p_role_pref: rolePref || null,
         p_referral_code: referralCode || null,
+        p_age_range: ageRange || null,
+        p_current_status: currentStatus || null,
+        p_education_level: educationLevel || null,
+        p_interest_field: interestField || null,
+        p_employment_pref: employmentPref || null,
+        p_how_heard: howHeard || null,
     });
     if (error) throw error;
     return data;
@@ -31,4 +40,4 @@ export const referralLink = (code) => {
 };
 
 /** How many friends are needed before the inviter earns a free CV session. */
-export const REFERRALS_NEEDED = 3;
+export const REFERRALS_NEEDED = 20;

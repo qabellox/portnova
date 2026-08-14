@@ -16,6 +16,13 @@
     align-items: center;
     gap: 0.7rem;
     margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 30rem;
+}
+
+.waitlist-lang {
+    margin-inline-start: auto;
+    white-space: nowrap;
 }
 
 .waitlist-brand .brand__logo {
@@ -82,6 +89,32 @@
 .waitlist-form {
     display: grid;
     gap: 1rem;
+}
+
+/* premium optional fields - 2-up on desktop, stacked on small screens */
+.waitlist-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.waitlist-grid .field-group {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.waitlist-note {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--muted);
+    text-align: center;
+    margin: 0.2rem 0 0;
+}
+
+@media (max-width: 520px) {
+    .waitlist-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .waitlist-submit {

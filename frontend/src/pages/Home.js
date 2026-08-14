@@ -1,5 +1,6 @@
 import React from 'react';
 import MarineScene from '../components/MarineScene';
+import VideoBackground from '../components/VideoBackground';
 import { BilingualLine, GlassCard, PremiumButton, SectionHeading, StatCounter } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -46,38 +47,40 @@ const Home = () => {
                 </section>
             ) : null}
 
-            {/* Content lives below the sea, fully clear of it */}
-            <section className="section-block marine-welcome">
-                <div className="hero__kicker">
-                    <span className="nautical-tile" aria-hidden="true">🧭</span>
-                    {t('homeKicker')}
-                </div>
-                <h1 className="hero__title">
-                    <span className="gradient-text">PortNova</span>: {t('homeTitle')}
-                </h1>
-                <BilingualLine
-                    as="p"
-                    className="hero__lead"
-                    ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
-                    en="Between the sea, the market and the corniche, your gateway to jobs, courses and CV support in Port Said."
-                />
-                <div className="marine-welcome__row">
-                    <div className="hero__actions">
-                        <PremiumButton to="/register" variant="gold">
-                            {t('homeStart')}
-                        </PremiumButton>
-                        <PremiumButton to="/login" variant="ghost">
-                            {t('homeSignIn')}
-                        </PremiumButton>
+            {/* Full-screen premium video background hero */}
+            <VideoBackground>
+                <div className="hero-content">
+                    <div className="hero__kicker">
+                        <span className="nautical-tile" aria-hidden="true">🧭</span>
+                        {t('homeKicker')}
                     </div>
-                    <div className="stats-grid stats-grid--inline">
-                        <StatCounter label={t('statYouth')} value={1200} suffix="+" />
-                        <StatCounter label={t('statJobs')} value={320} suffix="+" />
-                        <StatCounter label={t('statCourses')} value={86} suffix="+" />
-                        <StatCounter label={t('statCvs')} value={540} suffix="+" />
+                    <h1 className="hero__title">
+                        <span className="gradient-text">PortNova</span>: {t('homeTitle')}
+                    </h1>
+                    <BilingualLine
+                        as="p"
+                        className="hero__lead"
+                        ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
+                        en="Between the sea, the market and the corniche, your gateway to jobs, courses and CV support in Port Said."
+                    />
+                    <div className="marine-welcome__row">
+                        <div className="hero__actions">
+                            <PremiumButton to="/register" variant="gold">
+                                {t('homeStart')}
+                            </PremiumButton>
+                            <PremiumButton to="/login" variant="ghost">
+                                {t('homeSignIn')}
+                            </PremiumButton>
+                        </div>
+                        <div className="stats-grid stats-grid--inline">
+                            <StatCounter label={t('statYouth')} value={1200} suffix="+" />
+                            <StatCounter label={t('statJobs')} value={320} suffix="+" />
+                            <StatCounter label={t('statCourses')} value={86} suffix="+" />
+                            <StatCounter label={t('statCvs')} value={540} suffix="+" />
+                        </div>
                     </div>
                 </div>
-            </section>
+            </VideoBackground>
 
             <section className="section-block">
                 <SectionHeading

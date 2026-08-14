@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, NavLink, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { AnimatedBackdrop, ClickWaves, LanguageToggle, PremiumButton } from './components/PremiumUI';
+import { ClickWaves, LanguageToggle, PremiumButton } from './components/PremiumUI';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Home from './pages/Home';
 import Jobs from './pages/Jobs';
@@ -189,7 +189,10 @@ function Shell() {
 
     return (
         <div className="app-shell" style={{ direction: isArabic ? 'rtl' : 'ltr' }}>
-            <AnimatedBackdrop />
+            {/* Old animated bubble/wave wallpaper - removed, the video hero on the
+                home page replaced it. To restore, re-add AnimatedBackdrop to the
+                PremiumUI import and uncomment the line below. */}
+            {/* <AnimatedBackdrop /> */}
             <ClickWaves />
             <ShellNav />
             <main className="app-main">

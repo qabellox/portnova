@@ -47,7 +47,7 @@ const Home = () => {
                 </section>
             ) : null}
 
-            {/* Full-screen premium video background hero */}
+            {/* Full-screen premium video background hero - text only, top-left */}
             <VideoBackground>
                 <div className="hero-content">
                     <div className="hero__kicker">
@@ -63,24 +63,28 @@ const Home = () => {
                         ar="بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
                         en="your gateway to jobs, courses and CV support in Port Said."
                     />
-                    <div className="marine-welcome__row">
-                        <div className="hero__actions">
-                            <PremiumButton to="/register" variant="gold">
-                                {t('homeStart')}
-                            </PremiumButton>
-                            <PremiumButton to="/login" variant="ghost">
-                                {t('homeSignIn')}
-                            </PremiumButton>
-                        </div>
-                        <div className="stats-grid stats-grid--inline">
-                            <StatCounter label={t('statYouth')} value={1200} suffix="+" />
-                            <StatCounter label={t('statJobs')} value={320} suffix="+" />
-                            <StatCounter label={t('statCourses')} value={86} suffix="+" />
-                            <StatCounter label={t('statCvs')} value={540} suffix="+" />
-                        </div>
-                    </div>
                 </div>
             </VideoBackground>
+
+            {/* Widgets + buttons sit below the video, not on it */}
+            <section className="section-block marine-welcome">
+                <div className="marine-welcome__row">
+                    <div className="hero__actions">
+                        <PremiumButton to="/register" variant="gold">
+                            {t('homeStart')}
+                        </PremiumButton>
+                        <PremiumButton to="/login" variant="ghost">
+                            {t('homeSignIn')}
+                        </PremiumButton>
+                    </div>
+                    <div className="stats-grid stats-grid--inline">
+                        <StatCounter label={t('statYouth')} value={1200} suffix="+" />
+                        <StatCounter label={t('statJobs')} value={320} suffix="+" />
+                        <StatCounter label={t('statCourses')} value={86} suffix="+" />
+                        <StatCounter label={t('statCvs')} value={540} suffix="+" />
+                    </div>
+                </div>
+            </section>
 
             <section className="section-block">
                 <SectionHeading

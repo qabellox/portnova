@@ -111,20 +111,6 @@
     margin-inline: 0;
 }
 
-.hero-content .marine-welcome__row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.6rem;
-}
-
-.hero-content .hero__actions {
-    justify-content: flex-start;
-}
-
-.hero-content .stats-grid--inline {
-    justify-content: flex-start;
-}
-
 /* CTA buttons (used if callers use plain buttons instead of PremiumButton) */
 .cta-buttons {
     display: flex;

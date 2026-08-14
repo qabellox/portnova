@@ -19,11 +19,20 @@
     min-height: 100%;
     width: auto;
     height: auto;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(1.18);
     object-fit: cover;
-    /* Shift the crop so any in-video center text is pushed out of view */
-    object-position: center 30%;
+    /* Zoom + shift the crop so any in-video watermark/text is pushed out of
+       view without cutting the ship out of frame. */
+    object-position: center 28%;
     z-index: 0;
+    /* Smooth entrance instead of popping in */
+    opacity: 0;
+    animation: videoFade 1.8s ease-out 0.15s forwards;
+}
+
+@keyframes videoFade {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(1.26); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
 }
 
 /* Never show native controls, overlays, or captions */
@@ -44,11 +53,12 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* Content sits toward the top so it never hides the ship in the middle */
+    justify-content: flex-start;
     align-items: center;
     color: #fff;
     text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
-    padding: 20px;
+    padding: 11vh 20px 20px;
 }
 
 /* Dark vignette + top/bottom shading: hides any remaining in-video text and
@@ -58,8 +68,8 @@
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse at center, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.62) 100%),
-        linear-gradient(180deg, rgba(2, 10, 20, 0.6) 0%, rgba(2, 10, 20, 0.15) 45%, rgba(2, 10, 20, 0.6) 100%);
+        radial-gradient(ellipse at center, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.68) 100%),
+        linear-gradient(180deg, rgba(2, 10, 20, 0.7) 0%, rgba(2, 10, 20, 0.12) 42%, rgba(2, 10, 20, 0.7) 100%);
     z-index: -1;
 }
 
@@ -70,6 +80,24 @@
     text-align: center;
     width: 90%;
     max-width: 820px;
+}
+
+/* Gentle staggered fade+rise for each hero element - feels like a smooth
+   transition instead of content popping out of nowhere. */
+.hero-content > * {
+    opacity: 0;
+    animation: contentRise 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.hero-content > *:nth-child(1) { animation-delay: 0.35s; }
+.hero-content > *:nth-child(2) { animation-delay: 0.5s; }
+.hero-content > *:nth-child(3) { animation-delay: 0.65s; }
+.hero-content > *:nth-child(4) { animation-delay: 0.8s; }
+.hero-content > *:nth-child(5) { animation-delay: 0.95s; }
+
+@keyframes contentRise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .hero-content .hero__title {

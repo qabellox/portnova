@@ -163,8 +163,8 @@ const CVService = () => {
                     <BilingualLine
                         as="p"
                         className="hero__lead"
-                        ar="وكيل نوفا الذكي يبني سيرتك من أسئلة بسيطة، أو اختر مراجعة خبير بشري - كل ذلك في مكان واحد."
-                        en="Nova’s AI agent builds your CV from a few simple questions, or get a human expert review - all in one place."
+                        ar="سيرتك الذاتية تُصاغ وتُنقّح بعناية احترافية وبأسلوب أنيق ومتقن."
+                        en="Your CV is tailored and curated professionally and in a pristine manner."
                     />
                     <div className="status-strip">
                         <Badge tone="success">{t('expertReview')}</Badge>

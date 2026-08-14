@@ -35,7 +35,7 @@ const TrustFooter = () => {
                 <img className="waitlist-trust__logo" src="/images/beshabaha-logo.webp" alt={isArabic ? 'اتحاد بشبابها' : 'Beshbaha Youth Union'} />
                 <div className="waitlist-trust__meta">
                     <strong>{isArabic ? 'اتحاد بشبابها' : 'Beshbaha Youth Union'}</strong>
-                    <span>{isArabic ? 'مؤسسة شبابية مصرية معتمدة' : 'Accredited Egyptian youth organisation'}</span>
+                    <span>{isArabic ? 'هيئة شبابية مصرية معتمدة' : 'Accredited Egyptian youth organisation'}</span>
                 </div>
             </div>
             <p className="waitlist-trust__line">
@@ -330,8 +330,8 @@ const Waitlist = () => {
                     kicker={isArabic ? 'قائمة الانتظار' : 'The waitlist'}
                     title={isArabic ? 'أكمل بياناتك لتأمين مكانك' : 'Complete your details to secure your place'}
                     subtitle={isArabic
-                        ? `بياناتك تبقى محفوظة وآمنة - سنخبرك أولًا عند الإطلاق. شارك رمزك وارتقِ بمستواك: ${REFERRAL_LEVELS.map((l) => `${l.threshold} تسجيل`).join(' / ')} يمنحك المزيد من جلسات السيرة الذاتية المجانية بالذكاء الاصطناعي.`
-                        : `Your details stay safe - we'll tell you first at launch. Share your code and climb: ${REFERRAL_LEVELS.map((l) => `${l.threshold} sign-ups`).join(' / ')} earns more free AI CV sessions.`}
+                        ? 'ستبقى بياناتك محفوظة وآمنة، وسنخبرك أولًا عند الإطلاق. كلما انضمّ عدد أكبر من الأشخاص معًا، تمكّنت من بناء المزيد مجانًا، وستُكتب سيرتك الذاتية بأسلوب احترافي متقن.'
+                        : 'Your details stay safe and we will reach out first at launch. The more people register together, the more you can build for free, and your CV will be written in a pristine professional manner.'}
                 />
                 <form onSubmit={submit} className="waitlist-form">
                     {/* Anti-bot honeypot: hidden from humans, bots auto-fill it */}

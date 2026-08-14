@@ -3,6 +3,12 @@ import MarineScene from '../components/MarineScene';
 import { BilingualLine, GlassCard, PremiumButton, SectionHeading, StatCounter } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
+// ⚓ Marine scene master switch.
+// Set to `true` to bring the live 3D boats/ships back (one line, nothing else
+// to change). Set to `false` to keep them hidden - the hero section is not
+// rendered at all, so it takes up zero space. All the scene code stays intact.
+const SHOW_MARINE_SCENE = false;
+
 const featureCards = [
     {
         icon: '⚓',
@@ -33,10 +39,12 @@ const Home = () => {
     return (
         <div className="page-shell page-shell__grid">
             {/* Full-height marine visual: nothing overlays the sea */}
-            <section className="hero hero--local hero--marine hero--marine-scene">
-                <MarineScene />
-                <div className="marine-overlay" aria-hidden="true" />
-            </section>
+            {SHOW_MARINE_SCENE ? (
+                <section className="hero hero--local hero--marine hero--marine-scene">
+                    <MarineScene />
+                    <div className="marine-overlay" aria-hidden="true" />
+                </section>
+            ) : null}
 
             {/* Content lives below the sea, fully clear of it */}
             <section className="section-block marine-welcome">

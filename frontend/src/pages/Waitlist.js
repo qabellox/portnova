@@ -24,6 +24,34 @@ const GOVERNORATES = [
  *  MULTI-LEVEL referral ladder: 30 sign-ups unlock Level 2, chase 50 more
  *  (80) then the last milestone (100) - each level earns more free AI CV
  *  sessions. Only real registrations count, never mere link opens. */
+/** Trust / credibility footer shown on every waitlist state. Displays the
+ *  funding youth union (اتحاد بشبابها) with the standard compliance jargon
+ *  that websites use to look authentic and government-credited. */
+const TrustFooter = () => {
+    const { isArabic } = useLanguage();
+    return (
+        <footer className="waitlist-trust">
+            <div className="waitlist-trust__union">
+                <img className="waitlist-trust__logo" src="/images/beshabaha-logo.webp" alt={isArabic ? 'اتحاد بشبابها' : 'Beshbaha Youth Union'} />
+                <div className="waitlist-trust__meta">
+                    <strong>{isArabic ? 'اتحاد بشبابها' : 'Beshbaha Youth Union'}</strong>
+                    <span>{isArabic ? 'مؤسسة شبابية مصرية معتمدة' : 'Accredited Egyptian youth organisation'}</span>
+                </div>
+            </div>
+            <p className="waitlist-trust__line">
+                {isArabic
+                    ? 'بمبادرة من اتحاد بشبابها - دعم شباب مصر وتمكينه في إطار رؤية الجمهورية الجديدة.'
+                    : 'An initiative of Beshbaha Youth Union - supporting and empowering Egyptian youth within the new republic vision.'}
+            </p>
+            <p className="waitlist-trust__fine">
+                {isArabic
+                    ? '© 2026 PortNova - جميع الحقوق محفوظة. سياسة الخصوصية · الشروط والأحكام · اتصل بنا'
+                    : '© 2026 PortNova - All rights reserved. Privacy Policy · Terms of Service · Contact'}
+            </p>
+        </footer>
+    );
+};
+
 const Waitlist = () => {
     const { isArabic } = useLanguage();
     const [params] = useSearchParams();
@@ -172,6 +200,7 @@ const Waitlist = () => {
                 <GlassCard className="waitlist-card">
                     <div className="empty-state">{isArabic ? 'جارٍ التحقق…' : 'Checking…'}</div>
                 </GlassCard>
+                <TrustFooter />
             </div>
         );
     }
@@ -216,6 +245,7 @@ const Waitlist = () => {
                         </div>
                     </div>
                 </GlassCard>
+                <TrustFooter />
             </div>
         );
     }
@@ -282,6 +312,7 @@ const Waitlist = () => {
                         </div>
                     </div>
                 </GlassCard>
+                <TrustFooter />
             </div>
         );
     }
@@ -401,6 +432,7 @@ const Waitlist = () => {
                     </p>
                 </form>
             </GlassCard>
+            <TrustFooter />
         </div>
     );
 };

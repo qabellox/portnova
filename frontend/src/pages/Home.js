@@ -60,8 +60,8 @@ const Home = () => {
                     <BilingualLine
                         as="p"
                         className="hero__lead"
-                        ar="بين البحر والسوق والكورنيش، بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
-                        en="Between the sea, the market and the corniche, your gateway to jobs, courses and CV support in Port Said."
+                        ar="بوابتك للوظائف والدورات وخدمة السيرة الذاتية في بورسعيد."
+                        en="your gateway to jobs, courses and CV support in Port Said."
                     />
                     <div className="marine-welcome__row">
                         <div className="hero__actions">

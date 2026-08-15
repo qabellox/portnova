@@ -105,15 +105,14 @@ const improveAchievement = async (body) => {
         {
             role: 'system',
             content:
-                `You are Nova, a senior CV consultant for PortNova (Port Said, Egypt). ` +
-                `The user just told you a raw work achievement. Rewrite it into ONE outstanding, ` +
-                `quantified, ATS-friendly bullet point in ${lang}. ` +
+                `You are Nova, a friendly CV helper for PortNova (Port Said, Egypt). ` +
+                `The user told you something they did at work. Rewrite it into ONE clear, strong line for a CV in ${lang}. ` +
                 `Rules: 1) start with a strong action verb (led, built, grew, reduced, launched...); ` +
-                `2) silently fix grammar, spelling, punctuation and casing errors in the original; ` +
-                `3) be specific and results-driven; 4) ONLY use numbers or percentages the user ` +
-                `actually mentioned - never invent metrics; if no metric was given, convey impact ` +
-                `through verbs and scope instead; 5) keep it a single tight line (under ~28 words). ` +
-                `Return ONLY the polished bullet with no quotes, bullets, or intro. Plain ASCII punctuation only.`,
+                `2) fix any grammar, spelling, punctuation or casing errors in the original; ` +
+                `3) be specific and show results; 4) ONLY use numbers or percentages the user ` +
+                `actually mentioned - never invent metrics; if no metric was given, just describe the impact with verbs; ` +
+                `5) keep it one tight line (under ~28 words). ` +
+                `Plain language, no corporate buzzwords. Return ONLY the polished line with no quotes, bullets, or intro. Plain ASCII punctuation only.`,
         },
         { role: 'user', content: text + (role ? `\n(role context: ${role})` : '') },
     ];
@@ -137,13 +136,14 @@ const analyzeCV = async (body) => {
         {
             role: 'system',
             content:
-                `You are Nova, a senior CV consultant for PortNova (Port Said, Egypt). ` +
+                `You are Nova, a friendly CV helper for PortNova (Port Said, Egypt). ` +
                 `The user uploaded their existing CV and the raw extracted text is below. ` +
-                `Your job: extract everything you can, then tell us only what is MISSING or WEAK. ` +
-                `The user did the work already - NEVER ask them to repeat what is in the CV. ` +
+                `Extract everything you can from it, then tell us ONLY what is missing or weak. ` +
+                `The user already did the work - NEVER ask them to repeat what is in the CV. ` +
+                `Talk like a normal person, not a consultant. Short, clear sentences. No jargon. ` +
                 `Return STRICT JSON (no markdown fences) with EXACTLY this shape:\n` +
                 `{\n` +
-                `  "summary": "2-3 sentence friendly analysis: what you found (name, role, years of experience, key skills, education) and a warm tone",\n` +
+                `  "summary": "a friendly 1-2 sentence note about what you found, e.g. \\"I read your CV. I can see you're a Marketing Specialist with about 3 years of experience.\\" - reference their actual role and experience from the CV",\n` +
                 `  "extracted": {\n` +
                 `    "name": "string",\n` +
                 `    "email": "string",\n` +
@@ -160,16 +160,16 @@ const analyzeCV = async (body) => {
                 `  },\n` +
                 `  "gaps": [{"key":"string","question":"string"}]\n` +
                 `}\n` +
-                `For "gaps", only include sections that are genuinely missing, empty, or too weak to build a strong CV. ` +
-                `Rules for gaps (ask ONLY about missing/weak items, in ${lang}):\n` +
-                `- if there is NO professional summary (or it is a single line): gap "summary" -> "I noticed your CV doesn't have a professional summary. Let me draft one for you - what's your career goal and what makes you unique?"\n` +
-                `- if experience is missing or has no achievements/bullets: gap "achievements" -> "I see you mentioned [role]. Can you tell me about your biggest achievement there, and ideally the measurable impact?"\n` +
-                `- if fewer than 3 technical skills: gap "technicalSkills" -> "What technical skills do you actually use in your role?"\n` +
-                `- if education is missing: gap "education" -> "I see the education section is missing. Can you add your degree and institution?"\n` +
-                `- if targetRole/targetIndustry is missing: gap "targetRole" -> "What role are you targeting in your next move, and in which industry?"\n` +
-                `- never invent facts; only use what is in the CV. Keep every array (use [] when empty).\n` +
-                `- fill "extracted" with ONLY data actually found in the CV (empty string / [] when absent).\n` +
-                `Keep "summary" friendly and specific, referencing what is actually in the CV. Plain ASCII punctuation only.`,
+                `For "gaps": list at most 3 items, ONLY sections that are genuinely missing or too thin to use. ` +
+                `ONE question per gap, short and plain, in ${lang}:\n` +
+                `- no professional summary or it is a single line: gap "summary" -> "I don't see a short intro about you. What do you do, and what are you most proud of?"\n` +
+                `- experience has no achievements: gap "achievements" -> "You mentioned you were a [role]. What's one thing you accomplished there you're proud of?"\n` +
+                `- fewer than 3 technical skills: gap "technicalSkills" -> "What skills do you use most in your job?"\n` +
+                `- education missing: gap "education" -> "I didn't see your education. What did you study, and where?"\n` +
+                `- no target role/industry: gap "targetRole" -> "What kind of job are you looking for next?"\n` +
+                `Never invent facts; only use what is in the CV. Keep every array (use [] when empty). ` +
+                `Fill "extracted" with ONLY data actually found (empty string / [] when absent). ` +
+                `Plain ASCII punctuation only.`,
         },
         { role: 'user', content: cvText.slice(0, 12000) + (existing && Object.keys(existing).length ? `\n\n(already known from profile: ${JSON.stringify(existing)})` : '') },
     ];
@@ -210,12 +210,11 @@ const analyzeCV = async (body) => {
         {
             role: 'system',
             content:
-                `You are Nova, a senior CV consultant for PortNova (Port Said, Egypt). ` +
-                `Write a persuasive, polished professional summary in ${lang} for the candidate described. ` +
-                `It must read like a senior consultant wrote it: correct grammar and punctuation, ` +
-                `confident yet human tone, tailored to their target role and industry, and weaving ` +
-                `in their strongest skills and experience. 2-3 sentences max. Do NOT invent facts ` +
-                `or numbers they did not state. Return ONLY the summary text. Plain ASCII punctuation only.`,
+                `You are Nova, a friendly CV helper for PortNova (Port Said, Egypt). ` +
+                `Write a short, warm professional summary in ${lang} for the candidate described below. ` +
+                `It should sound like a real person wrote it: correct grammar, confident but human, ` +
+                `and matched to the job they want. 2-3 sentences max. Do NOT invent facts or numbers ` +
+                `they did not state. Plain language, no corporate buzzwords. Return ONLY the summary text. Plain ASCII punctuation only.`,
         },
         { role: 'user', content: profile || 'A motivated young professional from Port Said seeking to grow.' },
     ];
@@ -254,8 +253,8 @@ const generateCV = async (body) => {
         {
             role: 'system',
             content:
-                `You are Nova, a senior CV consultant for PortNova (Port Said, Egypt). ` +
-                `The candidate's raw answers are below. Produce a polished, professional CV as STRICT JSON ` +
+                `You are Nova, a friendly CV helper for PortNova (Port Said, Egypt). ` +
+                `The candidate's answers are below. Produce a clean, professional CV as STRICT JSON ` +
                 `in ${lang}. The JSON must match EXACTLY this shape (keep every key, use arrays even when empty):\n` +
                 `{\n` +
                 `  "summary": "string",\n` +
@@ -267,16 +266,16 @@ const generateCV = async (body) => {
                 `  "languages": [{"name":"string","level":"string"}],\n` +
                 `  "projects": [{"name":"string","description":"string"}]\n` +
                 `}\n` +
-                `Work like a senior CV editor before you write anything:\n` +
-                `1) PROOFREAD every string - fix spelling, grammar, punctuation, spacing and inconsistent casing.\n` +
-                `2) RESOLVE CONTRADICTIONS - if the answers conflict (e.g. "student" but years of experience, ` +
-                `or a role that does not match the company), pick the honest, most sensible reading and reword.\n` +
-                `3) EXPAND terse or messy bullets into compelling, quantified, action-led sentences using ONLY ` +
-                `the details provided - never invent numbers, dates, employers or credentials.\n` +
-                `4) DEDUPE and tidy the skills lists; drop empty or junk entries.\n` +
-                `5) Write the summary so it is tailored to the target role and industry, confident and human.\n` +
-                `Keep the candidate's header data (name, email, phone, location, title, linkedin) EXACTLY as ` +
-                `provided - they live outside this JSON. Return ONLY the JSON object, no markdown fences, no commentary.`,
+                `Clean up the candidate's raw answers before writing:\n` +
+                `1) fix spelling, grammar, punctuation, spacing and inconsistent casing.\n` +
+                `2) if answers conflict (e.g. "student" but years of experience), pick the honest, most sensible reading.\n` +
+                `3) turn short or messy notes into clear, specific lines using ONLY the details provided - ` +
+                `never invent numbers, dates, employers or credentials.\n` +
+                `4) remove duplicates and junk from the skills lists.\n` +
+                `5) write the summary in plain language, matched to the job they want.\n` +
+                `Keep the header data (name, email, phone, location, title, linkedin) EXACTLY as ` +
+                `provided - it lives outside this JSON. Return ONLY the JSON object, no markdown fences, no commentary. ` +
+                `Plain language throughout - no corporate buzzwords.`,
         },
         { role: 'user', content: JSON.stringify(cvInput) },
     ];

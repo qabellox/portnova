@@ -15,10 +15,20 @@ const STEPS = [
 
 const isProfileComplete = (meta = {}) => Boolean(meta.fullName && meta.phone && meta.location);
 
+// Owner/admin escape hatch (same list as WaitlistGate): admins skip the
+// profile wall entirely and always reach the real app.
+const ADMIN_EMAILS = ['adonandoq@gmail.com', 'adonandoqabello@gmail.com'];
+
+const isAdmin = (user) => {
+    if (!user) return false;
+    const meta = user.user_metadata || {};
+    return meta.role === 'admin' || ADMIN_EMAILS.includes(String(user.email || '').trim().toLowerCase());
+};
+
 /** Site-wide gate: requires sign-in AND the persisted credentials before any
  *  page is usable. This is the "persistent identity" wall - no AI calls, no
  *  extra APIs - every visitor fills their details once, then the whole
- *  platform (jobs, courses, CV, dashboard) unlocks. */
+ *  platform (jobs, courses, CV, dashboard) unlocks. Admins bypass it. */
 export const RequireProfile = ({ children }) => {
     const { user, loading } = useAuth();
     const { isArabic } = useLanguage();
@@ -35,7 +45,7 @@ export const RequireProfile = ({ children }) => {
         return <Navigate to="/login" replace />;
     }
 
-    if (!isProfileComplete(user.user_metadata || {})) {
+    if (!isProfileComplete(user.user_metadata || {}) && !isAdmin(user)) {
         return <ProfileForm existing={user.user_metadata || {}} children={children} />;
     }
 

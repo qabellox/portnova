@@ -8,7 +8,7 @@ import WaitlistErrorBoundary from './WaitlistErrorBoundary';
 // Owner/admin escape hatch: the site owner must ALWAYS reach the real app.
 // Keep this in sync with the owner account email (or set role: 'admin' on the
 // account in Supabase - both work).
-const ADMIN_EMAILS = ['adonandoq@gmail.com'];
+const ADMIN_EMAILS = ['adonandoq@gmail.com', 'adonandoqabello@gmail.com'];
 
 /** Launch teaser gate. Non-admins see the beautiful waitlist page instead of
  *  the website; admins (role === 'admin' or in ADMIN_EMAILS) go straight

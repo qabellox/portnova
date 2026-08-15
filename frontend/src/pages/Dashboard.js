@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { APP_STAGES, getMyApplications, openCv, stageLabelKey, stageTone } from '../services/applications';
 import ProviderStudio from '../components/ProviderStudio';
+import AvatarEditor from '../components/AvatarEditor';
 import { Badge, GlassCard, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -19,6 +20,11 @@ const roleInfo = {
     provider: { key: 'roleProviderName', tag: 'roleProviderTag', icon: '🏢' },
 };
 
+// Legacy avatars were saved as huge base64 data URLs in user_metadata, which
+// Supabase truncates in the auth JWT (pixelated + lost on refresh). Any avatar
+// that is not an http(s) URL is treated as missing so users re-upload cleanly.
+const isUsableAvatar = (url) => typeof url === 'string' && url.startsWith('http');
+
 const Dashboard = () => {
     const { user, role, isProvider } = useAuth();
     const { isArabic, t } = useLanguage();
@@ -32,7 +38,8 @@ const Dashboard = () => {
     const [headline, setHeadline] = useState(meta.headline || '');
     const [location, setLocation] = useState(meta.location || '');
     const [bio, setBio] = useState(meta.bio || '');
-    const [avatar, setAvatar] = useState(meta.avatarUrl || '');
+    const [avatar, setAvatar] = useState(isUsableAvatar(meta.avatarUrl) ? meta.avatarUrl : '');
+    const [editingFile, setEditingFile] = useState(null);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -50,25 +57,42 @@ const Dashboard = () => {
         };
     }, [isProvider]);
 
-    const onPickImage = async (event) => {
+    // Open the LinkedIn-style editor with the chosen file.
+    const onPickImage = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
-        // Upload to Supabase Storage (public avatars bucket) so the photo keeps
-        // full quality and PERSISTS - storing base64 in user_metadata truncates
-        // in the auth JWT (pixelated + lost on refresh).
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const ext = (safeName.split('.').pop() || 'jpg').toLowerCase();
-        const path = `${user.id}/avatar_${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-            .from('avatars')
-            .upload(path, file, { contentType: file.type || 'image/jpeg', upsert: true });
-        if (upErr) {
-            setError(upErr.message || (isArabic ? 'فشل رفع الصورة.' : 'Failed to upload photo.'));
-            return;
-        }
-        const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
-        setAvatar(pub.publicUrl || '');
+        setError('');
+        setEditingFile(file);
         if (fileRef.current) fileRef.current.value = '';
+    };
+
+    // Editor finished -> new avatar URL -> persist immediately (no extra Save).
+    const onAvatarSaved = async (url) => {
+        setAvatar(url);
+        setEditingFile(null);
+        const { error: updateError } = await supabase.auth.updateUser({
+            data: { avatarUrl: url },
+        });
+        if (updateError) {
+            setError(updateError.message || (isArabic ? 'فشل حفظ الصورة.' : 'Failed to save photo.'));
+        } else {
+            setMessage(t('dashSaved'));
+        }
+    };
+
+    // Remove the avatar (and clear it from metadata).
+    const onRemoveAvatar = async () => {
+        setAvatar('');
+        setMessage('');
+        setError('');
+        const { error: updateError } = await supabase.auth.updateUser({
+            data: { avatarUrl: '' },
+        });
+        if (updateError) {
+            setError(updateError.message || (isArabic ? 'فشل إزالة الصورة.' : 'Failed to remove photo.'));
+        } else {
+            setMessage(t('dashSaved'));
+        }
     };
 
     const handleSave = async (event) => {
@@ -129,7 +153,7 @@ const Dashboard = () => {
                                 {t('dashUploadAvatar')}
                             </PremiumButton>
                             {avatar ? (
-                                <PremiumButton variant="ghost" onClick={() => setAvatar('')}>
+                                <PremiumButton variant="ghost" onClick={onRemoveAvatar}>
                                     {t('dashRemove')}
                                 </PremiumButton>
                             ) : null}
@@ -140,6 +164,15 @@ const Dashboard = () => {
                     </GlassCard>
                 </div>
             </section>
+
+            {editingFile ? (
+                <AvatarEditor
+                    file={editingFile}
+                    userId={user.id}
+                    onClose={() => setEditingFile(null)}
+                    onSaved={onAvatarSaved}
+                />
+            ) : null}
 
             <GlassCard>
                 <SectionHeading

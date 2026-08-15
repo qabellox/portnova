@@ -1,0 +1,145 @@
+/* ============================================================
+   AVATAR EDITOR - LinkedIn-style crop / rotate / adjust modal
+   ============================================================ */
+.avatar-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(2, 8, 20, 0.78);
+    backdrop-filter: blur(6px);
+}
+
+.avatar-editor__card {
+    width: min(26rem, 94vw);
+    max-height: 92vh;
+    overflow: auto;
+    background: #0b1526;
+    border: 1px solid rgba(125, 211, 252, 0.22);
+    border-radius: 1.25rem;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+    padding: 1.1rem;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.avatar-editor__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.avatar-editor__head strong {
+    color: #e2e8f0;
+    font-size: 1.05rem;
+}
+
+.avatar-editor__x {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.avatar-editor__x:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.avatar-editor__stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 1rem;
+    background: #060c18;
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+}
+
+.avatar-editor__stage:active {
+    cursor: grabbing;
+}
+
+.avatar-editor__img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
+    transform-origin: center center;
+    margin: 0;
+    will-change: transform;
+}
+
+.avatar-editor__ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 70%;
+    aspect-ratio: 1 / 1;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 0 999px rgba(2, 8, 20, 0.5);
+    pointer-events: none;
+}
+
+.avatar-editor__hint {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.avatar-editor__controls {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.avatar-editor__row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.82rem;
+    color: #cbd5e1;
+}
+
+.avatar-editor__row span {
+    min-width: 4.5rem;
+}
+
+.avatar-editor__row input[type='range'] {
+    flex: 1;
+    accent-color: var(--turquoise, #2dd4bf);
+}
+
+.avatar-editor__row--btns {
+    justify-content: flex-start;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.avatar-editor__error {
+    color: #fecaca;
+    font-size: 0.82rem;
+}
+
+.avatar-editor__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 0.25rem;
+}

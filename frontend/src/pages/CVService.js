@@ -23,7 +23,10 @@ const CVService = () => {
         if (!file) return;
         setCvName(file.name);
         setMessage('');
-        if (!user) return;
+        if (!user) {
+            setMessage(isArabic ? 'سجّل الدخول أولًا لرفع سيرتك.' : 'Sign in first to upload your CV.');
+            return;
+        }
         setUploading(true);
         try {
             const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
@@ -31,7 +34,7 @@ const CVService = () => {
             const path = `${user.id}/cv_${Date.now()}_${safeName}.${ext}`;
             const { error: storageError } = await supabase.storage
                 .from('cvs')
-                .upload(path, file, { contentType: file.type, upsert: false });
+                .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: true });
             if (storageError) throw storageError;
             const { error: updateError } = await supabase.auth.updateUser({
                 data: { cvPath: path, cvName: file.name },
@@ -39,7 +42,14 @@ const CVService = () => {
             if (updateError) throw updateError;
             setMessage(isArabic ? 'تم حفظ سيرتك - سيبني عليها المستشار بدقة.' : 'Your CV is saved - the consultant will build on it.');
         } catch (err) {
-            setMessage(err.message || t('uploadFailed'));
+            // Never show the raw browser/network error (e.g. "Failed to fetch").
+            // Always show a friendly localized message instead.
+            console.error('CV upload failed:', err);
+            setMessage(
+                isArabic
+                    ? 'تعذّر رفع السيرة. تحقق من اتصالك وحاول مرة أخرى.'
+                    : 'Could not upload your CV. Check your connection and try again.'
+            );
         } finally {
             setUploading(false);
         }

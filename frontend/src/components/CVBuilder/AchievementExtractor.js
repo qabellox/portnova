@@ -16,6 +16,10 @@ const AchievementExtractor = ({ role, onAccept, onDone }) => {
     const [suggestion, setSuggestion] = useState(null);
     const [edited, setEdited] = useState('');
     const [error, setError] = useState('');
+    // 'achievement' = polished bullet (editable). 'chat'/'clarify' = Nova
+    // replied conversationally (question answered / more info needed) - shown
+    // as a plain message, NOT as an editable suggestion.
+    const [replyType, setReplyType] = useState('achievement');
 
     const isDoneWord = DONE_WORDS.includes(String(raw || '').trim().toLowerCase());
 
@@ -34,10 +38,14 @@ const AchievementExtractor = ({ role, onAccept, onDone }) => {
         setError('');
         setSuggestion(null);
         try {
-            const { improved } = await improveAchievement(text, role, isArabic ? 'ar' : 'en');
+            const res = await improveAchievement(text, role, isArabic ? 'ar' : 'en');
+            const type = res?.type || 'achievement';
+            const improved = res?.improved || '';
+            setReplyType(type);
             setSuggestion(improved);
             setEdited(improved);
         } catch (err) {
+            setReplyType('achievement');
             setError(
                 isArabic
                     ? 'تعذّر وصول الذكاء الاصطناعي الآن، لكن يمكنك إضافة إنجازك مباشرة وسنحسّنه لاحقًا.'
@@ -93,25 +101,36 @@ const AchievementExtractor = ({ role, onAccept, onDone }) => {
             ) : null}
 
             {suggestion ? (
-                <div className="cv-achievement__result">
-                    <div className="cv-achievement__label">
-                        {isArabic ? 'نسخة نوفا المقترحة:' : 'Nova’s polished version:'}
+                replyType === 'achievement' ? (
+                    <div className="cv-achievement__result">
+                        <div className="cv-achievement__label">
+                            {isArabic ? 'نسخة نوفا المقترحة:' : 'Nova’s polished version:'}
+                        </div>
+                        <textarea
+                            className="textarea"
+                            rows={3}
+                            value={edited}
+                            onChange={(event) => setEdited(event.target.value)}
+                        />
+                        <div className="inline-actions">
+                            <PremiumButton type="button" variant="primary" onClick={() => accept(edited)}>
+                                {isArabic ? 'استخدم هذه النسخة' : 'Use this version'}
+                            </PremiumButton>
+                            <PremiumButton type="button" variant="ghost" onClick={() => accept(raw)}>
+                                {isArabic ? 'احتفظ بنصّي الأصلي' : 'Keep my original'}
+                            </PremiumButton>
+                        </div>
                     </div>
-                    <textarea
-                        className="textarea"
-                        rows={3}
-                        value={edited}
-                        onChange={(event) => setEdited(event.target.value)}
-                    />
-                    <div className="inline-actions">
-                        <PremiumButton type="button" variant="primary" onClick={() => accept(edited)}>
-                            {isArabic ? 'استخدم هذه النسخة' : 'Use this version'}
-                        </PremiumButton>
-                        <PremiumButton type="button" variant="ghost" onClick={() => accept(raw)}>
-                            {isArabic ? 'احتفظ بنصّي الأصلي' : 'Keep my original'}
-                        </PremiumButton>
+                ) : (
+                    <div className="cv-achievement__result">
+                        <p className="cv-achievement__chat">{suggestion}</p>
+                        <div className="inline-actions">
+                            <PremiumButton type="button" variant="primary" onClick={() => { setSuggestion(null); setRaw(''); }}>
+                                {isArabic ? 'حسنًا' : 'OK'}
+                            </PremiumButton>
+                        </div>
                     </div>
-                </div>
+                )
             ) : null}
         </div>
     );

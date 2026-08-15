@@ -97,6 +97,11 @@ const cleanDeep = (v) => {
 };
 
 /* ---------------- Action 1: polish an achievement ---------------- */
+// This action receives whatever the user typed in the achievement box. That
+// might be a real achievement, OR it might be a question ("can you see my
+// CV?"), OR vague filler ("I did some stuff"). It must classify the input
+// first and respond appropriately - never blindly "polish" a question, and
+// never invent facts from filler.
 const improveAchievement = async (body) => {
     const { text, role, language = 'en' } = body;
     if (!text || !text.trim()) throw new Error('achievement text is required');
@@ -106,18 +111,47 @@ const improveAchievement = async (body) => {
             role: 'system',
             content:
                 `You are Nova, a friendly CV helper for PortNova (Port Said, Egypt). ` +
-                `The user told you something they did at work. Rewrite it into ONE clear, strong line for a CV in ${lang}. ` +
+                `The user typed something in the "achievement" box. First DECIDE what kind of input it is, ` +
+                `then respond. Return STRICT JSON (no markdown fences) with EXACTLY this shape:\n` +
+                `{\n` +
+                `  "type": "achievement" | "chat" | "clarify",\n` +
+                `  "text": "your reply"\n` +
+                `}\n\n` +
+                `How to classify in ${lang}:\n` +
+                `- If the input is a QUESTION or any message that is not a work achievement (e.g. "can you see my CV?", ` +
+                `"what are you doing?", "who are you?"): type "chat". Reply naturally and briefly in plain language. ` +
+                `NEVER say you cannot access files, never mention APIs, prompts, AI or internal details - just answer ` +
+                `helpfully as a person would, e.g. "Yes, I've got your CV - I can see you're a Marketing Specialist. " + ` +
+                `Then remind them what to type: "Now tell me one thing you accomplished there, and I'll make it stronger."\n` +
+                `- If the input is vague filler with no real content (e.g. "I did some things", "a lot of stuff", "yes", "idk"): ` +
+                `type "clarify". Do NOT invent any achievement, numbers or facts. Ask ONE short, plain question to get ` +
+                `a real example, e.g. "Tell me one concrete thing you did in this job - like a project or a result."\n` +
+                `- Otherwise it is a real achievement: type "achievement". Rewrite it into ONE clear, strong CV line in ${lang}. ` +
                 `Rules: 1) start with a strong action verb (led, built, grew, reduced, launched...); ` +
-                `2) fix any grammar, spelling, punctuation or casing errors in the original; ` +
-                `3) be specific and show results; 4) ONLY use numbers or percentages the user ` +
-                `actually mentioned - never invent metrics; if no metric was given, just describe the impact with verbs; ` +
-                `5) keep it one tight line (under ~28 words). ` +
-                `Plain language, no corporate buzzwords. Return ONLY the polished line with no quotes, bullets, or intro. Plain ASCII punctuation only.`,
+                `2) fix grammar, spelling, punctuation and casing errors in the original; ` +
+                `3) be specific and show results; 4) ONLY use numbers or percentages the user actually mentioned - ` +
+                `never invent metrics; if no metric was given, describe the impact with verbs; ` +
+                `5) keep it one tight line (under ~28 words); 6) plain language, no corporate buzzwords.\n\n` +
+                `Role context (if provided, use it to understand the answer): ${role || 'none'}\n` +
+                `Plain ASCII punctuation only. Return ONLY the JSON object.`,
         },
-        { role: 'user', content: text + (role ? `\n(role context: ${role})` : '') },
+        { role: 'user', content: text },
     ];
-    const improved = await callDeepSeek(messages, { temperature: 0.35, maxTokens: 240 });
-    return { improved: clean(improved) };
+    const raw = await callDeepSeek(messages, { temperature: 0.35, maxTokens: 400, jsonMode: true });
+    const cleaned = raw.replace(/```(?:json)?/gi, '').trim();
+    let parsed;
+    try {
+        parsed = JSON.parse(cleaned);
+    } catch {
+        const start = cleaned.indexOf('{');
+        const end = cleaned.lastIndexOf('}');
+        if (start === -1 || end === -1 || end <= start) {
+            throw new Error('Could not process that. Please try again.');
+        }
+        parsed = JSON.parse(cleaned.slice(start, end + 1));
+    }
+    const type = ['achievement', 'chat', 'clarify'].includes(parsed?.type) ? parsed.type : 'achievement';
+    return { improved: clean(parsed?.text || ''), type };
 };
 
 /* ------------------- Action 2: analyze uploaded CV ------------------- */

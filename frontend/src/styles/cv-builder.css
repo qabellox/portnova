@@ -270,6 +270,16 @@
     letter-spacing: 0.02em;
 }
 
+/* Nova's conversational reply (answer to a question / clarification prompt):
+   shown as a plain chat-style message, not an editable suggestion. */
+.cv-achievement__chat {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    white-space: pre-line;
+}
+
 /* ----------------------------- templates ----------------------------- */
 .cv-templates {
     display: grid;

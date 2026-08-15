@@ -56,7 +56,11 @@ const UserMenu = () => {
     return (
         <div className="user-menu">
             <button className="nav-link user-menu__trigger" type="button" onClick={() => setOpen((current) => !current)}>
-                <span className="avatar">{getInitials(user.email)}</span>
+                {user.user_metadata?.avatarUrl ? (
+                    <img className="avatar avatar--img" src={user.user_metadata.avatarUrl} alt={user.email || ''} />
+                ) : (
+                    <span className="avatar">{getInitials(user.email)}</span>
+                )}
                 <span>
                     <span style={{ display: 'block', fontWeight: 700, color: '#fff', textAlign: 'inherit' }}>{isArabic ? 'الحساب' : 'Account'}</span>
                     <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--muted)', textAlign: 'inherit' }}>{isArabic ? 'وصول مميز' : 'Premium access'}</span>

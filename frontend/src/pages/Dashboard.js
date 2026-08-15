@@ -50,12 +50,25 @@ const Dashboard = () => {
         };
     }, [isProvider]);
 
-    const onPickImage = (event) => {
+    const onPickImage = async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => setAvatar(String(reader.result || ''));
-        reader.readAsDataURL(file);
+        // Upload to Supabase Storage (public avatars bucket) so the photo keeps
+        // full quality and PERSISTS - storing base64 in user_metadata truncates
+        // in the auth JWT (pixelated + lost on refresh).
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const ext = (safeName.split('.').pop() || 'jpg').toLowerCase();
+        const path = `${user.id}/avatar_${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+            .from('avatars')
+            .upload(path, file, { contentType: file.type || 'image/jpeg', upsert: true });
+        if (upErr) {
+            setError(upErr.message || (isArabic ? 'فشل رفع الصورة.' : 'Failed to upload photo.'));
+            return;
+        }
+        const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
+        setAvatar(pub.publicUrl || '');
+        if (fileRef.current) fileRef.current.value = '';
     };
 
     const handleSave = async (event) => {

@@ -472,6 +472,13 @@ img {
     animation: pulseRing 4.5s ease-in-out infinite;
 }
 
+.avatar--img {
+    object-fit: cover;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    animation: none;
+}
+
 .user-menu__panel {
     position: absolute;
     right: 0;
@@ -2583,7 +2590,7 @@ body[dir='rtl'] .filter-search__icon {
     height: 5rem;
     display: grid;
     place-items: center;
-    border-radius: 1.4rem;
+    border-radius: 999px;
     background: linear-gradient(135deg, rgba(14, 165, 233, 0.4), rgba(212, 175, 55, 0.3));
     color: white;
     font-size: 1.6rem;
@@ -2595,7 +2602,7 @@ body[dir='rtl'] .filter-search__icon {
 
 .profile-avatar--img {
     object-fit: cover;
-    border-radius: 1.4rem;
+    border-radius: 999px;
     background: transparent;
     animation: none;
 }

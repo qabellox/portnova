@@ -54,8 +54,8 @@ const Home = () => {
                         <span className="nautical-tile" aria-hidden="true">🧭</span>
                         {t('homeKicker')}
                     </div>
-                    <h1 className="hero__title">
-                        <span className="gradient-text">PortNova</span>: {t('homeTitle')}
+                    <h1 className="hero__title gradient-text">
+                        PortNova: {t('homeTitle')}
                     </h1>
                     <BilingualLine
                         as="p"

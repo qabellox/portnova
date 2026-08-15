@@ -342,7 +342,7 @@ const Register = () => {
                         <div className="brand__tag">{isArabic ? 'انضم إلى شباب بورسعيد' : 'Join Port Said youth'}</div>
                     </div>
                 </div>
-                <h1 className="hero__title" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>
+                <h1 className="hero__title gradient-text" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>
                     {isArabic ? 'انضم إلى المنصة.' : 'Join the platform.'}
                 </h1>
                 <BilingualLine

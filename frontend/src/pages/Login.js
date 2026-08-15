@@ -60,7 +60,7 @@ const Login = () => {
                         <div className="brand__tag">{isArabic ? 'بوابة شباب بورسعيد' : 'Port Said youth portal'}</div>
                     </div>
                 </div>
-                <h1 className="hero__title" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>
+                <h1 className="hero__title gradient-text" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>
                     {isArabic ? 'أهلًا بعودتك.' : 'Welcome back.'}
                 </h1>
                 <BilingualLine

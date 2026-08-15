@@ -54,7 +54,7 @@ const CVService = () => {
                     <div className="hero__kicker">
                         <span className="nautical-tile" aria-hidden="true">🧭</span> {t('cvKicker')}
                     </div>
-                    <h1 className="hero__title">
+                    <h1 className="hero__title gradient-text">
                         {t('cvTitle')}
                     </h1>
                     <BilingualLine

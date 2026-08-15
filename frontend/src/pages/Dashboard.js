@@ -121,8 +121,8 @@ const Dashboard = () => {
                 <div className="hero__grid">
                     <div>
                         <div className="hero__kicker">{isArabic ? 'لوحة التحكم' : 'Dashboard'}</div>
-                        <h1 className="hero__title">
-                            {isArabic ? 'أهلًا' : 'Welcome'}, <span className="gradient-text">{fullName || email}</span>.
+                        <h1 className="hero__title gradient-text">
+                            {isArabic ? 'أهلًا' : 'Welcome'}, {fullName || email}.
                         </h1>
                         <p className="hero__lead">{t('dashRoleHint')}</p>
                         <div className="status-strip">

@@ -59,7 +59,11 @@ const AvatarEditor = ({ file, userId, onClose, onSaved }) => {
     const onPointerMove = (e) => {
         if (!dragRef.current) return;
         const { sx, sy, ox, oy } = dragRef.current;
-        setPan({ x: ox + (e.clientX - sx), y: oy + (e.clientY - sy) });
+        const m = getMaxPan();
+        setPan({
+            x: clamp(ox + (e.clientX - sx), -m.x, m.x),
+            y: clamp(oy + (e.clientY - sy), -m.y, m.y),
+        });
     };
 
     const onPointerUp = () => {
@@ -82,6 +86,26 @@ const AvatarEditor = ({ file, userId, onClose, onSaved }) => {
     };
 
     const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+    // Maximum pan distance so the photo still covers the stage, accounting for
+    // rotation (90deg steps). Used to bound the Position X / Y sliders.
+    const getMaxPan = () => {
+        const img = imgRef.current;
+        const box = wrapRef.current?.getBoundingClientRect();
+        if (!img || !box) return { x: 0, y: 0 };
+        const dispW = img.naturalWidth * zoom;
+        const dispH = img.naturalHeight * zoom;
+        const rad = ((rotation % 360) * Math.PI) / 180;
+        const cosA = Math.abs(Math.cos(rad));
+        const sinA = Math.abs(Math.sin(rad));
+        const boxW = dispW * cosA + dispH * sinA; // rotated bounding width
+        const boxH = dispW * sinA + dispH * cosA; // rotated bounding height
+        return {
+            x: Math.max(0, (boxW - box.width) / 2),
+            y: Math.max(0, (boxH - box.height) / 2),
+        };
+    };
+    const maxPan = getMaxPan();
 
     const save = async () => {
         const img = imgRefState.current || imgRef.current;
@@ -194,6 +218,16 @@ const AvatarEditor = ({ file, userId, onClose, onSaved }) => {
                         <span>{isArabic ? 'التكبير' : 'Zoom'}</span>
                         <input type="range" min="0.2" max="3" step="0.01" value={zoom}
                             onChange={(e) => setZoom(parseFloat(e.target.value))} />
+                    </label>
+                    <label className="avatar-editor__row">
+                        <span>{isArabic ? 'الموضع أفقيًا' : 'Position X'}</span>
+                        <input type="range" min={-maxPan.x} max={maxPan.x} step="1" value={pan.x}
+                            onChange={(e) => setPan((p) => ({ ...p, x: parseInt(e.target.value, 10) }))} />
+                    </label>
+                    <label className="avatar-editor__row">
+                        <span>{isArabic ? 'الموضع رأسيًا' : 'Position Y'}</span>
+                        <input type="range" min={-maxPan.y} max={maxPan.y} step="1" value={pan.y}
+                            onChange={(e) => setPan((p) => ({ ...p, y: parseInt(e.target.value, 10) }))} />
                     </label>
                     <label className="avatar-editor__row">
                         <span>{isArabic ? 'السطوع' : 'Brightness'}</span>

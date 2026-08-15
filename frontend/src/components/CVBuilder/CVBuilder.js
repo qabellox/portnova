@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
-import { writeSummary, generateCV, buildLocalCV } from '../../services/cvBuilder';
+import { supabase } from '../../services/supabase';
+import { analyzeCV, writeSummary, generateCV, buildLocalCV } from '../../services/cvBuilder';
+import { extractCVText } from '../../services/cvText';
 import OnboardingQuestions from './OnboardingQuestions';
 import AchievementExtractor from './AchievementExtractor';
 import CVPreview from './CVPreview';
@@ -122,6 +124,11 @@ const CVBuilder = () => {
     // waiting for a missing company name after a job was logged.
     const [clarify, setClarify] = useState(null);
     const [askCompanyFor, setAskCompanyFor] = useState(null);
+    // Uploaded-CV state: gap-based questions the agent asks ONLY about missing
+    // or weak sections, so the user never repeats what is already in their CV.
+    const [gapQueue, setGapQueue] = useState([]);
+    const [gapIndex, setGapIndex] = useState(0);
+    const [cvAnalyzed, setCvAnalyzed] = useState(false);
 
     const pushBot = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text }]);
     const pushUser = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'user', text }]);
@@ -135,6 +142,7 @@ const CVBuilder = () => {
         if (phase === 'summary') return 88;
         if (phase === 'achievements') return 76;
         if (phase === 'experience') return 66;
+        if (phase === 'cvgaps') return 55;
         if (phase === 'questions') return 12 + Math.round((flowIndex / FLOW.length) * 52);
         return 4;
     }, [phase, flowIndex]);
@@ -144,7 +152,8 @@ const CVBuilder = () => {
             : phase === 'summary' ? say('كتابة الملخص الاحترافي…', 'Writing your professional summary…')
                 : phase === 'achievements' ? say('استخراج الإنجازات المميّزة', 'Extracting standout achievements')
                     : phase === 'experience' ? say('الخبرة العملية', 'Work experience')
-                        : say('أسئلة التهيئة', 'Onboarding questions');
+                        : phase === 'cvgaps' ? say('تحسين سيرتك المرفوعة', 'Enhancing your uploaded CV')
+                            : say('أسئلة التهيئة', 'Onboarding questions');
 
     /* ------------------------- kick-off on mount ------------------------- */
     useEffect(() => {
@@ -165,6 +174,115 @@ const CVBuilder = () => {
 
         setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: welcome }]);
         setFlowIndex(startIndex);
+
+        // If an existing CV was uploaded (cvPath saved on the CV service page),
+        // extract + analyze it FIRST so the agent builds on it and only asks
+        // about missing/weak sections. The user never repeats what is in the CV.
+        const cvPath = data.cvPath;
+        if (cvPath) {
+            let cancelled = false;
+            setTyping(true);
+            (async () => {
+                try {
+                    const { data: file, error: dlErr } = await supabase.storage.from('cvs').download(cvPath);
+                    if (cancelled) return;
+                    if (dlErr || !file) throw dlErr || new Error('no file');
+                    const text = await extractCVText(file);
+                    if (cancelled) return;
+                    if (!text.trim()) {
+                        // Couldn't read the file - fall back to the normal flow.
+                        if (startIndex >= FLOW.length) {
+                            setPhase('experience');
+                        } else {
+                            setPhase('questions');
+                            const first = FLOW[startIndex];
+                            setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: arabic ? first.askAr : first.askEn }]);
+                        }
+                        setTyping(false);
+                        return;
+                    }
+                    // Analyze with AI: extract structured data + gaps.
+                    const analysis = await analyzeCV(text, arabic ? 'ar' : 'en', {
+                        name: data.name,
+                        email: data.email,
+                        phone: data.phone,
+                        location: data.location,
+                        title: data.title,
+                    });
+                    if (cancelled) return;
+                    const ex = analysis?.extracted || {};
+                    const gapList = Array.isArray(analysis?.gaps) ? analysis.gaps : [];
+
+                    // Seed data from the CV (only fields actually found).
+                    setData((prev) => ({
+                        ...prev,
+                        name: ex.name || prev.name,
+                        email: ex.email || prev.email,
+                        phone: ex.phone || prev.phone,
+                        location: ex.location || prev.location,
+                        title: ex.title || prev.title,
+                        education: ex.education || prev.education,
+                        fieldOfStudy: ex.fieldOfStudy || prev.fieldOfStudy,
+                        technicalSkills: Array.isArray(ex.technicalSkills) && ex.technicalSkills.length ? ex.technicalSkills : prev.technicalSkills,
+                        softSkills: Array.isArray(ex.softSkills) && ex.softSkills.length ? ex.softSkills : prev.softSkills,
+                        certifications: Array.isArray(ex.certifications) && ex.certifications.length ? ex.certifications : prev.certifications,
+                        languages: Array.isArray(ex.languages) && ex.languages.length ? ex.languages : prev.languages,
+                        experience: Array.isArray(ex.experience) && ex.experience.length ? ex.experience : prev.experience,
+                    }));
+
+                    // Acknowledge what the agent found, then ask only about gaps.
+                    const found = analysis?.summary
+                        ? analysis.summary
+                        : arabic
+                            ? 'حلّلت سيرتك المرفوعة ✅ سأبني عليها لنحقق أفضل نسخة منها.'
+                            : 'I’ve analyzed your uploaded CV ✅ I’ll build on it to make it the best version possible.';
+                    setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: found }]);
+                    setCvAnalyzed(true);
+
+                    if (gapList.length) {
+                        setGapQueue(gapList);
+                        setGapIndex(0);
+                        setPhase('cvgaps');
+                        setTyping(true);
+                        window.setTimeout(() => {
+                            setTyping(false);
+                            setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: gapList[0].question }]);
+                        }, 900);
+                    } else {
+                        // No gaps - the CV is complete; go straight to experience.
+                        setPhase('experience');
+                        setTyping(true);
+                        window.setTimeout(() => {
+                            setTyping(false);
+                            setMessages((prev) => [
+                                ...prev,
+                                {
+                                    id: nextId(),
+                                    from: 'bot',
+                                    text: arabic
+                                        ? 'ملفك مكتمل تقريبًا 🎉 لنستعرض مسارك المهني سويًا.\nأخبرني بأي دور إضافي أو تفصيل تريد إضافته، أو اكتب "انتهيت" لنتابع.'
+                                        : 'Your profile looks fairly complete 🎉 Let’s review your career path together.\nTell me about any extra role or detail you’d like to add, or type "done" to continue.',
+                                },
+                            ]);
+                        }, 900);
+                    }
+                } catch (err) {
+                    if (cancelled) return;
+                    // Analysis failed - never block the user; fall back gracefully.
+                    console.error('CV analyze failed:', err);
+                    if (startIndex >= FLOW.length) {
+                        setPhase('experience');
+                    } else {
+                        setPhase('questions');
+                        const first = FLOW[startIndex];
+                        setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: arabic ? first.askAr : first.askEn }]);
+                    }
+                } finally {
+                    if (!cancelled) setTyping(false);
+                }
+            })();
+            return () => { cancelled = true; };
+        }
 
         const timer = window.setTimeout(() => {
             if (startIndex >= FLOW.length) {
@@ -298,6 +416,71 @@ const CVBuilder = () => {
     const handleSend = (raw) => {
         pushUser(raw);
         setInput(''); // clear the reply box so it's ready for the next answer
+
+        /* phase: cv gaps (built on the uploaded CV - only missing/weak items) */
+        if (phase === 'cvgaps') {
+            const gap = gapQueue[gapIndex];
+            if (!gap) {
+                // All gaps addressed - move to career progression.
+                setPhase('experience');
+                setTyping(true);
+                setTimeout(() => {
+                    setTyping(false);
+                    pushBot(
+                        say(
+                            'ممتاز - سأدمج كل هذا في سيرتك. 🎉 لننتقل الآن إلى مسارك المهني.\nأخبرني بأي دور إضافي تريد إضافته (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت" لنكمل.',
+                            'Excellent - I’ll fold all of that into your CV. 🎉 Now let’s cover your career path.\nTell me about any extra role to add (role @ company (dates)) or type "done" to continue.'
+                        )
+                    );
+                }, 600);
+                return;
+            }
+
+            // Map the gap key to a data field so the answer actually lands.
+            const key = gap.key;
+            if (isFiller(raw) || isDone(raw)) {
+                pushBot(say('لا مشكلة - نكمل بما هو موجود. 👍', 'No problem - we’ll go with what’s there. 👍'));
+            } else if (key === 'achievements' || key === 'experience') {
+                // User described an achievement/role - append to experience if
+                // possible, otherwise store it in summary context for the AI.
+                const job = { _id: `${Date.now()}`, ...parseJob(raw), bullets: [] };
+                setData((prev) => ({
+                    ...prev,
+                    experience: key === 'experience' && job.role ? [...prev.experience, job] : prev.experience,
+                }));
+                pushBot(say('ممتاز - سأدمج هذا في سيرتك. 👍', 'Great - I’ll weave that into your CV. 👍'));
+            } else if (key === 'summary' || key === 'targetRole' || key === 'targetIndustry') {
+                setData((prev) => ({ ...prev, [key]: cleanString(raw) }));
+                pushBot(say('واضح - سأستخدمه لصياغة سيرتك. 👍', 'Got it - I’ll use that in crafting your CV. 👍'));
+            } else {
+                storeValue(key, raw);
+                pushBot(say('شكرًا - أصبحت سيرتك أكثر اكتمالًا. 👍', 'Thanks - your CV is more complete now. 👍'));
+            }
+
+            const nextGap = gapIndex + 1;
+            if (nextGap < gapQueue.length) {
+                setGapIndex(nextGap);
+                setTyping(true);
+                setTimeout(() => {
+                    setTyping(false);
+                    pushBot(gapQueue[nextGap].question);
+                }, 700);
+            } else {
+                setGapIndex(nextGap);
+                setPhase('experience');
+                setTyping(true);
+                setTimeout(() => {
+                    setTyping(false);
+                    pushBot(
+                        say(
+                            'ممتاز - سأدمج كل هذا في سيرتك. 🎉 لننتقل الآن إلى مسارك المهني.\nأخبرني بأي دور إضافي تريد إضافته (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت" لنكمل.',
+                            'Excellent - I’ll fold all of that into your CV. 🎉 Now let’s cover your career path.\nTell me about any extra role to add (role @ company (dates)) or type "done" to continue.'
+                        )
+                    );
+                }, 700);
+            }
+            return;
+        }
 
         /* phase: questions */
         if (phase === 'questions') {

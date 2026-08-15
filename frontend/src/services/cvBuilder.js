@@ -47,6 +47,12 @@ const invoke = async (action, payload) => {
 export const improveAchievement = (text, role, language = 'en') =>
     invoke('improve', { text, role, language });
 
+/** Analyze an uploaded CV: extract structured data, identify gaps, and get
+ *  gap-based follow-up questions so the agent builds on the CV instead of
+ *  asking the user to repeat what is already there. */
+export const analyzeCV = (cvText, language = 'en', existing = {}) =>
+    invoke('analyze', { cvText, language, existing });
+
 /** Write a tailored 2-3 sentence professional summary. */
 export const writeSummary = (data, language = 'en') =>
     invoke('summary', { data, language });

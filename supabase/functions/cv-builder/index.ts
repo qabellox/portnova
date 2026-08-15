@@ -121,8 +121,81 @@ const improveAchievement = async (body) => {
     return { improved: clean(improved) };
 };
 
-/* ------------------- Action 2: write a summary ------------------- */
-const writeSummary = async (body) => {
+/* ------------------- Action 2: analyze uploaded CV ------------------- */
+// Parse an uploaded CV's extracted text: pull out structured data, identify
+// missing/weak sections (gaps), and generate ONLY gap-based follow-up
+// questions. The user uploaded a CV to SAVE TIME, never to repeat themselves.
+const analyzeCV = async (body) => {
+    const { cvText = '', language = 'en', existing = {} } = body;
+    const lang = language === 'ar' ? 'Arabic (modern standard, professional)' : 'English';
+
+    if (!cvText || !cvText.trim()) {
+        throw new Error('cvText is required - upload a CV first.');
+    }
+
+    const messages = [
+        {
+            role: 'system',
+            content:
+                `You are Nova, a senior CV consultant for PortNova (Port Said, Egypt). ` +
+                `The user uploaded their existing CV and the raw extracted text is below. ` +
+                `Your job: extract everything you can, then tell us only what is MISSING or WEAK. ` +
+                `The user did the work already - NEVER ask them to repeat what is in the CV. ` +
+                `Return STRICT JSON (no markdown fences) with EXACTLY this shape:\n` +
+                `{\n` +
+                `  "summary": "2-3 sentence friendly analysis: what you found (name, role, years of experience, key skills, education) and a warm tone",\n` +
+                `  "extracted": {\n` +
+                `    "name": "string",\n` +
+                `    "email": "string",\n` +
+                `    "phone": "string",\n` +
+                `    "location": "string",\n` +
+                `    "title": "current job title",\n` +
+                `    "technicalSkills": ["string"],\n` +
+                `    "softSkills": ["string"],\n` +
+                `    "education": "highest degree, e.g. Bachelor in CS, Cairo University",\n` +
+                `    "fieldOfStudy": "string",\n` +
+                `    "languages": [{"name":"string","level":"string"}],\n` +
+                `    "certifications": [{"name":"string","issuer":"string","year":"string"}],\n` +
+                `    "experience": [{"role":"string","company":"string","dates":"string","bullets":["string"]}]\n` +
+                `  },\n` +
+                `  "gaps": [{"key":"string","question":"string"}]\n` +
+                `}\n` +
+                `For "gaps", only include sections that are genuinely missing, empty, or too weak to build a strong CV. ` +
+                `Rules for gaps (ask ONLY about missing/weak items, in ${lang}):\n` +
+                `- if there is NO professional summary (or it is a single line): gap "summary" -> "I noticed your CV doesn't have a professional summary. Let me draft one for you - what's your career goal and what makes you unique?"\n` +
+                `- if experience is missing or has no achievements/bullets: gap "achievements" -> "I see you mentioned [role]. Can you tell me about your biggest achievement there, and ideally the measurable impact?"\n` +
+                `- if fewer than 3 technical skills: gap "technicalSkills" -> "What technical skills do you actually use in your role?"\n` +
+                `- if education is missing: gap "education" -> "I see the education section is missing. Can you add your degree and institution?"\n` +
+                `- if targetRole/targetIndustry is missing: gap "targetRole" -> "What role are you targeting in your next move, and in which industry?"\n` +
+                `- never invent facts; only use what is in the CV. Keep every array (use [] when empty).\n` +
+                `- fill "extracted" with ONLY data actually found in the CV (empty string / [] when absent).\n` +
+                `Keep "summary" friendly and specific, referencing what is actually in the CV. Plain ASCII punctuation only.`,
+        },
+        { role: 'user', content: cvText.slice(0, 12000) + (existing && Object.keys(existing).length ? `\n\n(already known from profile: ${JSON.stringify(existing)})` : '') },
+    ];
+
+    const raw = await callDeepSeek(messages, { temperature: 0.4, maxTokens: 1800, jsonMode: true });
+    const cleaned = raw.replace(/```(?:json)?/gi, '').trim();
+    let parsed;
+    try {
+        parsed = JSON.parse(cleaned);
+    } catch {
+        const start = cleaned.indexOf('{');
+        const end = cleaned.lastIndexOf('}');
+        if (start === -1 || end === -1 || end <= start) {
+            throw new Error('Could not analyze the uploaded CV. Please try again.');
+        }
+        parsed = JSON.parse(cleaned.slice(start, end + 1));
+    }
+    const p = cleanDeep(parsed);
+    return {
+        summary: typeof p.summary === 'string' ? p.summary : '',
+        extracted: p.extracted || {},
+        gaps: Array.isArray(p.gaps) ? p.gaps : [],
+    };
+};
+
+/* ------------------- Action 2: write a summary ------------------- */const writeSummary = async (body) => {
     const { data = {}, language = 'en' } = body;
     const lang = language === 'ar' ? 'Arabic' : 'English';
     const profile = [
@@ -276,6 +349,9 @@ serve(async (req) => {
         switch (action) {
             case 'improve':
                 result = await improveAchievement(payload);
+                break;
+            case 'analyze':
+                result = await analyzeCV(payload);
                 break;
             case 'summary':
                 result = await writeSummary(payload);

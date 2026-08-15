@@ -90,36 +90,50 @@ const AvatarEditor = ({ file, userId, onClose, onSaved }) => {
         setSaving(true);
         setError('');
         try {
-            // Crop rect in image pixel space from the visible square region.
-            const boxW = box.width;
-            const boxH = box.height;
-            const dispW = img.naturalWidth * zoom;
-            const dispH = img.naturalHeight * zoom;
-            const sx = (-pan.x + (boxW - dispW) / 2) / zoom;
-            const sy = (-pan.y + (boxH - dispH) / 2) / zoom;
-            const s = Math.min(dispW, dispH); // the largest centred square we can read
-            const srcX = clamp(sx, 0, img.naturalWidth - Math.min(s, img.naturalWidth));
-            const srcY = clamp(sy, 0, img.naturalHeight - Math.min(s, img.naturalHeight));
-            const srcSize = Math.min(s, img.naturalWidth, img.naturalHeight);
+            // WYSIWYG export: render the FULL image onto an offscreen canvas
+            // using the exact same transform as the preview (pan -> rotate ->
+            // scale, centered), then copy out the stage square and upscale it
+            // to the export size. This guarantees the saved photo looks exactly
+            // like what the user framed in the editor.
+            const W = box.width;
+            const H = box.height;
+            const nw = img.naturalWidth;
+            const nh = img.naturalHeight;
+            const rad = ((rotation % 360) + 360) % 360;
+            const radians = (rad * Math.PI) / 180;
+            const cosA = Math.abs(Math.cos(radians));
+            const sinA = Math.abs(Math.sin(radians));
+
+            // Bounding box of the rotated + scaled image.
+            const bbW = nw * zoom * cosA + nh * zoom * sinA;
+            const bbH = nw * zoom * sinA + nh * zoom * cosA;
+
+            const off = document.createElement('canvas');
+            off.width = Math.max(1, Math.ceil(bbW));
+            off.height = Math.max(1, Math.ceil(bbH));
+            const octx = off.getContext('2d');
+            octx.imageSmoothingEnabled = true;
+            octx.imageSmoothingQuality = 'high';
+            // Image centre is placed at the canvas centre, then rotated/scaled,
+            // matching the preview transform-origin: center.
+            octx.translate(off.width / 2, off.height / 2);
+            octx.rotate(radians);
+            octx.scale(zoom, zoom);
+            octx.drawImage(img, -nw / 2, -nh / 2);
+
+            // The stage square relative to the image centre (preview centring:
+            // image centre sits at stage centre + pan).
+            const offX = off.width / 2 - W / 2 - pan.x;
+            const offY = off.height / 2 - H / 2 - pan.y;
 
             const canvas = document.createElement('canvas');
-            const rot = ((rotation % 360) + 360) % 360;
-            const side = rot % 180 === 0 ? EXPORT_SIZE : EXPORT_SIZE;
-            canvas.width = side;
-            canvas.height = side;
+            canvas.width = EXPORT_SIZE;
+            canvas.height = EXPORT_SIZE;
             const ctx = canvas.getContext('2d');
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-
-            if (rot === 0 || rot === 180) {
-                ctx.drawImage(img, srcX, srcY, srcSize, srcSize, 0, 0, side, side);
-            } else {
-                // For 90/270: rotate the square crop onto the canvas.
-                ctx.translate(side / 2, side / 2);
-                ctx.rotate((rot * Math.PI) / 180);
-                ctx.drawImage(img, srcX, srcY, srcSize, srcSize, -side / 2, -side / 2, side, side);
-            }
+            ctx.drawImage(off, offX, offY, W, H, 0, 0, EXPORT_SIZE, EXPORT_SIZE);
 
             const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
             if (!blob) throw new Error('export_failed');
@@ -166,7 +180,7 @@ const AvatarEditor = ({ file, userId, onClose, onSaved }) => {
                             draggable={false}
                             onLoad={onImgLoad}
                             style={{
-                                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                                transform: `translate(calc(-50% + ${pan.x}px), calc(-50% + ${pan.y}px)) rotate(${rotation}deg) scale(${zoom})`,
                                 filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`,
                             }}
                         />

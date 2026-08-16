@@ -181,99 +181,30 @@ const CVBuilder = () => {
         // If an existing CV was uploaded (cvPath saved on the CV service page),
         // extract + analyze it FIRST so the agent builds on it and only asks
         // about missing/weak sections. The user never repeats what is in the CV.
-        const cvPath = data.cvPath;
-        if (cvPath) {
-            let cancelled = false;
+        // NOTE: fetch FRESH metadata - the user object in context may be stale
+        // right after the upload (updateUser from the CV page), which is why
+        // the agent used to claim it had no CV even after uploading.
+        let cancelled = false;
+        let cvFound = false; // set true when a CV is being processed (stops the normal timer)
+        (async () => {
+            let cvPath = data.cvPath;
+            try {
+                const { data: fresh } = await supabase.auth.getUser();
+                const freshPath = fresh?.user?.user_metadata?.cvPath;
+                if (freshPath) cvPath = freshPath;
+            } catch { /* keep existing */ }
+            if (!cvPath) return; // no CV uploaded - normal flow continues below
+            cvFound = true;
+
             setTyping(true);
-            (async () => {
-                try {
-                    const { data: file, error: dlErr } = await supabase.storage.from('cvs').download(cvPath);
-                    if (cancelled) return;
-                    if (dlErr || !file) throw dlErr || new Error('no file');
-                    const text = await extractCVText(file);
-                    if (cancelled) return;
-                    if (!text.trim()) {
-                        // Couldn't read the file - fall back to the normal flow.
-                        if (startIndex >= FLOW.length) {
-                            setPhase('experience');
-                        } else {
-                            setPhase('questions');
-                            const first = FLOW[startIndex];
-                            setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: arabic ? first.askAr : first.askEn }]);
-                        }
-                        setTyping(false);
-                        return;
-                    }
-                    setCvText(text); // keep the CV text for the whole conversation
-                    // Analyze with AI: extract structured data + gaps.
-                    const analysis = await analyzeCV(text, arabic ? 'ar' : 'en', {
-                        name: data.name,
-                        email: data.email,
-                        phone: data.phone,
-                        location: data.location,
-                        title: data.title,
-                    });
-                    if (cancelled) return;
-                    const ex = analysis?.extracted || {};
-                    const gapList = Array.isArray(analysis?.gaps) ? analysis.gaps : [];
-
-                    // Seed data from the CV (only fields actually found).
-                    setData((prev) => ({
-                        ...prev,
-                        name: ex.name || prev.name,
-                        email: ex.email || prev.email,
-                        phone: ex.phone || prev.phone,
-                        location: ex.location || prev.location,
-                        title: ex.title || prev.title,
-                        education: ex.education || prev.education,
-                        fieldOfStudy: ex.fieldOfStudy || prev.fieldOfStudy,
-                        technicalSkills: Array.isArray(ex.technicalSkills) && ex.technicalSkills.length ? ex.technicalSkills : prev.technicalSkills,
-                        softSkills: Array.isArray(ex.softSkills) && ex.softSkills.length ? ex.softSkills : prev.softSkills,
-                        certifications: Array.isArray(ex.certifications) && ex.certifications.length ? ex.certifications : prev.certifications,
-                        languages: Array.isArray(ex.languages) && ex.languages.length ? ex.languages : prev.languages,
-                        experience: Array.isArray(ex.experience) && ex.experience.length ? ex.experience : prev.experience,
-                    }));
-
-                    // Acknowledge what the agent found, then ask only about gaps.
-                    const found = analysis?.summary
-                        ? analysis.summary
-                        : arabic
-                            ? 'حلّلت سيرتك المرفوعة ✅ سأبني عليها لنحقق أفضل نسخة منها.'
-                            : 'I’ve analyzed your uploaded CV ✅ I’ll build on it to make it the best version possible.';
-                    setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: found }]);
-                    setCvAnalyzed(true);
-
-                    if (gapList.length) {
-                        setGapQueue(gapList);
-                        setGapIndex(0);
-                        setPhase('cvgaps');
-                        setTyping(true);
-                        window.setTimeout(() => {
-                            setTyping(false);
-                            setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: gapList[0].question }]);
-                        }, 900);
-                    } else {
-                        // No gaps - the CV is complete; go straight to experience.
-                        setPhase('experience');
-                        setTyping(true);
-                        window.setTimeout(() => {
-                            setTyping(false);
-                            setMessages((prev) => [
-                                ...prev,
-                                {
-                                    id: nextId(),
-                                    from: 'bot',
-                                    text: arabic
-                                        ? 'ملفك مكتمل تقريبًا 🎉 لنستعرض مسارك المهني سويًا.\nأخبرني بأي دور إضافي أو تفصيل تريد إضافته، أو اكتب "انتهيت" لنتابع.'
-                                        : 'Your profile looks fairly complete 🎉 Let’s review your career path together.\nTell me about any extra role or detail you’d like to add, or type "done" to continue.',
-                                },
-                            ]);
-                        }, 900);
-                    }
-                } catch (err) {
-                    if (cancelled) return;
-                    // Analysis failed - never block the user; fall back gracefully.
-                    console.error('CV analyze failed:', err);
+            try {
+                const { data: file, error: dlErr } = await supabase.storage.from('cvs').download(cvPath);
+                if (cancelled) return;
+                if (dlErr || !file) throw dlErr || new Error('no file');
+                const text = await extractCVText(file);
+                if (cancelled) return;
+                if (!text.trim()) {
+                    // Couldn't read the file - fall back to the normal flow.
                     if (startIndex >= FLOW.length) {
                         setPhase('experience');
                     } else {
@@ -281,14 +212,93 @@ const CVBuilder = () => {
                         const first = FLOW[startIndex];
                         setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: arabic ? first.askAr : first.askEn }]);
                     }
-                } finally {
-                    if (!cancelled) setTyping(false);
+                    setTyping(false);
+                    return;
                 }
-            })();
-            return () => { cancelled = true; };
-        }
+                setCvText(text); // keep the CV text for the whole conversation
+                // Analyze with AI: extract structured data + gaps.
+                const analysis = await analyzeCV(text, arabic ? 'ar' : 'en', {
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    location: data.location,
+                    title: data.title,
+                });
+                if (cancelled) return;
+                const ex = analysis?.extracted || {};
+                const gapList = Array.isArray(analysis?.gaps) ? analysis.gaps : [];
+
+                // Seed data from the CV (only fields actually found).
+                setData((prev) => ({
+                    ...prev,
+                    name: ex.name || prev.name,
+                    email: ex.email || prev.email,
+                    phone: ex.phone || prev.phone,
+                    location: ex.location || prev.location,
+                    title: ex.title || prev.title,
+                    education: ex.education || prev.education,
+                    fieldOfStudy: ex.fieldOfStudy || prev.fieldOfStudy,
+                    technicalSkills: Array.isArray(ex.technicalSkills) && ex.technicalSkills.length ? ex.technicalSkills : prev.technicalSkills,
+                    softSkills: Array.isArray(ex.softSkills) && ex.softSkills.length ? ex.softSkills : prev.softSkills,
+                    certifications: Array.isArray(ex.certifications) && ex.certifications.length ? ex.certifications : prev.certifications,
+                    languages: Array.isArray(ex.languages) && ex.languages.length ? ex.languages : prev.languages,
+                    experience: Array.isArray(ex.experience) && ex.experience.length ? ex.experience : prev.experience,
+                }));
+
+                // Acknowledge what the agent found, then ask only about gaps.
+                const found = analysis?.summary
+                    ? analysis.summary
+                    : arabic
+                        ? 'حلّلت سيرتك المرفوعة ✅ سأبني عليها لنحقق أفضل نسخة منها.'
+                        : 'I’ve analyzed your uploaded CV ✅ I’ll build on it to make it the best version possible.';
+                setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: found }]);
+                setCvAnalyzed(true);
+
+                if (gapList.length) {
+                    setGapQueue(gapList);
+                    setGapIndex(0);
+                    setPhase('cvgaps');
+                    setTyping(true);
+                    window.setTimeout(() => {
+                        setTyping(false);
+                        setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: gapList[0].question }]);
+                    }, 900);
+                } else {
+                    // No gaps - the CV is complete; go straight to experience.
+                    setPhase('experience');
+                    setTyping(true);
+                    window.setTimeout(() => {
+                        setTyping(false);
+                        setMessages((prev) => [
+                            ...prev,
+                            {
+                                id: nextId(),
+                                from: 'bot',
+                                text: arabic
+                                    ? 'ملفك مكتمل تقريبًا 🎉 لنستعرض مسارك المهني سويًا.\nأخبرني بأي دور إضافي أو تفصيل تريد إضافته، أو اكتب "انتهيت" لنتابع.'
+                                    : 'Your profile looks fairly complete 🎉 Let’s review your career path together.\nTell me about any extra role or detail you’d like to add, or type "done" to continue.',
+                            },
+                        ]);
+                    }, 900);
+                }
+            } catch (err) {
+                if (cancelled) return;
+                // Analysis failed - never block the user; fall back gracefully.
+                console.error('CV analyze failed:', err);
+                if (startIndex >= FLOW.length) {
+                    setPhase('experience');
+                } else {
+                    setPhase('questions');
+                    const first = FLOW[startIndex];
+                    setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text: arabic ? first.askAr : first.askEn }]);
+                }
+            } finally {
+                if (!cancelled) setTyping(false);
+            }
+        })();
 
         const timer = window.setTimeout(() => {
+            if (cvFound) return; // CV analysis owns the flow - don't override it
             if (startIndex >= FLOW.length) {
                 // Everything is already known from the profile - straight to experience.
                 setPhase('experience');
@@ -308,7 +318,10 @@ const CVBuilder = () => {
                 setPhase('questions');
             }
         }, 900);
-        return () => window.clearTimeout(timer);
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timer);
+        };
     }, []);
 
     /* ------------------------- store + advance flow ------------------------- */
@@ -444,13 +457,15 @@ const CVBuilder = () => {
                 return;
             }
 
-            // Comprehension-first for gap answers too: send the conversation +
-            // CV text so questions ("do you see my CV?") and off-topic inputs
-            // are understood instead of force-stored as answers.
+            // Comprehension-first for gap answers too: send the conversation
+            // INCLUDING the current user message + CV text so questions ("do
+            // you see my CV?") and off-topic inputs are understood instead of
+            // force-stored as answers.
             const known = [data.name, data.title, data.location].filter(Boolean).join(', ');
+            const history = [...messages, { from: 'user', text: raw }];
             setTyping(true);
             chatTurn({
-                messages,
+                messages: history,
                 cvText,
                 known,
                 currentQuestion: gap.question,
@@ -542,14 +557,18 @@ const CVBuilder = () => {
         if (phase === 'questions') {
             const q = FLOW[flowIndex];
 
-            // Comprehension-first: send the full conversation + CV text to the
-            // agent so it actually UNDERSTANDS what the user said (answer /
-            // question / clarify / filler / done) instead of blindly treating
-            // every input as an answer to the current question.
+            // Comprehension-first: send the full conversation + the CURRENT
+            // user message + CV text to the agent so it actually UNDERSTANDS
+            // what the user said (answer / question / clarify / filler / done)
+            // instead of blindly treating every input as an answer.
+            // NOTE: `pushUser` updates state async, so we must build the
+            // history INCLUDING this message ourselves - otherwise the agent
+            // only ever sees the bot's last question and gets confused.
             const known = [data.name, data.title, data.location].filter(Boolean).join(', ');
+            const history = [...messages, { from: 'user', text: raw }];
             setTyping(true);
             chatTurn({
-                messages,
+                messages: history,
                 cvText,
                 known,
                 currentQuestion: isArabic ? q.askAr : q.askEn,

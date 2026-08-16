@@ -16,9 +16,13 @@
 
 const EXTRACT_TIMEOUT_MS = 15000;
 
-// Pinned CDN copies of pdfjs 6.2.108 (the exact version installed in the
-// frontend), served un-processed so private fields / workers work correctly.
-const PDF_LIB_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.2.108/build/pdf.min.mjs';
+// Pinned CDN copy of the pdfjs WORKER (same version as the installed lib).
+// We MUST use this instead of the webpack-emitted worker: Terser mangles the
+// ESM worker's private class fields in the CRA production build, so the
+// bundled worker throws "Private field '#T' must be declared in an enclosing
+// class" and extraction hangs. The CDN worker is served un-processed and is
+// verified working. (It is a plain string assignment - not an import - so it
+// never triggers a webpack build warning.)
 const PDF_WORKER_CDN = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.2.108/build/pdf.worker.min.mjs';
 
 // Promise.race wrapper: if the extraction takes longer than the timeout, we
@@ -30,17 +34,9 @@ const withTimeout = (promise, ms) =>
         new Promise((resolve) => setTimeout(() => resolve(''), ms)),
     ]);
 
-// Load the pdfjs library. Prefer the pinned CDN copy FIRST - it is served
-// un-processed (no webpack/Terser mangling), which is the exact path verified
-// working end-to-end in the browser. Fall back to the bundled copy only if the
-// CDN is unreachable.
-const loadPdfJs = async () => {
-    try {
-        return await import(PDF_LIB_CDN);
-    } catch {
-        return await import('pdfjs-dist');
-    }
-};
+// Load the pdfjs library from the bundled copy (bundled by webpack - small and
+// first-party, and it executes fine in production; only the WORKER was broken).
+const loadPdfJs = () => import('pdfjs-dist');
 
 // The bytes of a PDF always start with "%PDF". Sniff them so a PDF is
 // recognised even when the blob has no useful name (e.g. a file downloaded

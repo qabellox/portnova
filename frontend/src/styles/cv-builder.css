@@ -37,6 +37,33 @@
     background: linear-gradient(120deg, rgba(12, 74, 110, 0.35), rgba(13, 148, 136, 0.12));
 }
 
+.cv-builder__attach {
+    margin-inline-start: auto;
+    display: flex;
+    align-items: center;
+}
+
+.cv-builder__attach button {
+    font-size: 1.1rem;
+    line-height: 1;
+    min-width: 2.6rem;
+    min-height: 2.6rem;
+    display: grid;
+    place-items: center;
+    padding: 0;
+}
+
+.cv-builder__cvbadge {
+    margin: 0.8rem 1.3rem 0;
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.9rem;
+    background: rgba(20, 184, 166, 0.12);
+    border: 1px solid rgba(20, 184, 166, 0.35);
+    color: #a7f3d0;
+    font-size: 0.78rem;
+    display: inline-block;
+}
+
 .cv-builder__avatar {
     width: 3rem;
     height: 3rem;

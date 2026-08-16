@@ -10,6 +10,7 @@ const CVService = () => {
     const { t, isArabic } = useLanguage();
     const cvInputRef = useRef(null);
     const [cvName, setCvName] = useState(user?.user_metadata?.cvName || '');
+    const [cvPath, setCvPath] = useState(user?.user_metadata?.cvPath || '');
     const [started, setStarted] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState('');
@@ -40,6 +41,7 @@ const CVService = () => {
                 data: { cvPath: path, cvName: file.name },
             });
             if (updateError) throw updateError;
+            setCvPath(path);
             setMessage(isArabic ? 'تم حفظ سيرتك - سيبني عليها المستشار بدقة.' : 'Your CV is saved - the consultant will build on it.');
         } catch (err) {
             // Never show the raw browser/network error (e.g. "Failed to fetch").
@@ -50,6 +52,29 @@ const CVService = () => {
                     ? 'تعذّر رفع السيرة. تحقق من اتصالك وحاول مرة أخرى.'
                     : 'Could not upload your CV. Check your connection and try again.'
             );
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    // Remove the uploaded CV: clear metadata + delete the stored file.
+    const onRemoveCv = async () => {
+        setMessage('');
+        setUploading(true);
+        try {
+            if (cvPath) {
+                await supabase.storage.from('cvs').remove([cvPath]);
+            }
+            const { error: updateError } = await supabase.auth.updateUser({
+                data: { cvPath: '', cvName: '' },
+            });
+            if (updateError) throw updateError;
+            setCvPath('');
+            setCvName('');
+            setMessage(isArabic ? 'تمت إزالة السيرة المرفوعة.' : 'Uploaded CV removed.');
+        } catch (err) {
+            console.error('CV remove failed:', err);
+            setMessage(isArabic ? 'تعذّرت إزالة السيرة.' : 'Could not remove the CV.');
         } finally {
             setUploading(false);
         }
@@ -97,6 +122,11 @@ const CVService = () => {
                                     ? (isArabic ? 'تغيير السيرة المرفوعة' : 'Change uploaded CV')
                                     : (isArabic ? 'ارفع سيرتك الحالية (اختياري)' : 'Upload your existing CV (optional)'))}
                         </PremiumButton>
+                        {cvName ? (
+                            <PremiumButton variant="danger" onClick={onRemoveCv} disabled={uploading}>
+                                {isArabic ? 'حذف السيرة' : 'Delete CV'}
+                            </PremiumButton>
+                        ) : null}
                         <PremiumButton variant="gold" onClick={start}>
                             {isArabic ? 'ابدأ المحادثة 🦉' : 'Start the conversation 🦉'}
                         </PremiumButton>
@@ -107,7 +137,7 @@ const CVService = () => {
                     {message ? <p className="muted" style={{ marginTop: '0.5rem' }}>{message}</p> : null}
                 </GlassCard>
             ) : (
-                <CVBuilder />
+                <CVBuilder key={cvPath || 'no-cv'} initialCvPath={cvPath || ''} initialCvName={cvName} />
             )}
         </div>
     );

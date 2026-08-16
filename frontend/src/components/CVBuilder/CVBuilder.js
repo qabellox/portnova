@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../services/supabase';
@@ -95,7 +95,7 @@ let messageSeq = 1;
 const nextId = () => `cv-msg-${messageSeq++}`;
 
 /* ------------------------------ component ------------------------------ */
-const CVBuilder = () => {
+const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
     const { isArabic } = useLanguage();
     const { user } = useAuth();
     const [messages, setMessages] = useState([]);
@@ -112,7 +112,7 @@ const CVBuilder = () => {
             email: user?.email || '',
             phone: meta.phone || '',
             location: meta.location || '',
-            cvPath: meta.cvPath || '',
+            cvPath: initialCvPath || meta.cvPath || '',
         };
     });
     const [flowIndex, setFlowIndex] = useState(0);
@@ -132,6 +132,9 @@ const CVBuilder = () => {
     // Extracted text from the uploaded CV - passed to the chat action so the
     // agent can truthfully answer "do you see my CV?" and never hallucinate.
     const [cvText, setCvText] = useState('');
+    // Mid-conversation CV upload (user can attach a CV they forgot earlier).
+    const [attachUploading, setAttachUploading] = useState(false);
+    const attachInputRef = useRef(null);
 
     const pushBot = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text }]);
     const pushUser = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'user', text }]);
@@ -323,6 +326,57 @@ const CVBuilder = () => {
             window.clearTimeout(timer);
         };
     }, []);
+
+    /* ------------------- mid-conversation CV upload ------------------- */
+    // Let the user attach a CV in the middle of the chat if they forgot to
+    // upload it before starting. Uploads to the `cvs` bucket, extracts the
+    // text so the agent can read it immediately, and acknowledges in chat.
+    const onAttachCv = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file || !user) return;
+        setAttachUploading(true);
+        try {
+            const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
+            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const path = `${user.id}/cv_${Date.now()}_${safeName}.${ext}`;
+            const { error: upErr } = await supabase.storage
+                .from('cvs')
+                .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: true });
+            if (upErr) throw upErr;
+            await supabase.auth.updateUser({ data: { cvPath: path, cvName: file.name } });
+
+            // Extract the text so the agent can actually read it.
+            const text = await extractCVText(file);
+            if (text.trim()) {
+                setCvText(text);
+                setData((prev) => ({ ...prev, cvPath: path }));
+            }
+
+            setMessages((prev) => [
+                ...prev,
+                {
+                    id: nextId(),
+                    from: 'user',
+                    text: isArabic ? `أرفقت سيرتي: ${file.name} 📄` : `Attached my CV: ${file.name} 📄`,
+                },
+            ]);
+            pushBot(
+                text.trim()
+                    ? (isArabic
+                        ? 'استلمت سيرتك! قرأتها وسأبني عليها. ✅'
+                        : 'Got your CV! I’ve read it and I’ll build on it. ✅')
+                    : (isArabic
+                        ? 'استلمت الملف، لكن لم أستطع قراءة نصّه. يمكنك إخباري بمعلوماتك وسأبني سيرتك منها.'
+                        : 'I got the file, but couldn’t read its text. Tell me your details and I’ll build your CV from them.')
+            );
+        } catch (err) {
+            console.error('Attach CV failed:', err);
+            pushBot(isArabic ? 'تعذّرت قراءة الملف. حاول مرة أخرى.' : 'Could not read that file. Please try again.');
+        } finally {
+            setAttachUploading(false);
+            if (attachInputRef.current) attachInputRef.current.value = '';
+        }
+    };
 
     /* ------------------------- store + advance flow ------------------------- */
     const storeValue = (key, raw, append = false) => {
@@ -798,11 +852,30 @@ const CVBuilder = () => {
                             <span className="cv-builder__pulse" /> {say('متصل · يتحدّث العربية والإنجليزية', 'Online · speaks AR & EN')}
                         </span>
                     </div>
+                    <div className="cv-builder__attach">
+                        <input ref={attachInputRef} type="file" accept=".pdf,.doc,.docx" hidden onChange={onAttachCv} />
+                        <button
+                            type="button"
+                            className="premium-button premium-button--ghost"
+                            onClick={() => attachInputRef.current?.click()}
+                            disabled={attachUploading || busy}
+                            title={isArabic ? 'ارفع سيرة ذاتية' : 'Attach a CV'}
+                            aria-label={isArabic ? 'ارفع سيرة ذاتية' : 'Attach a CV'}
+                        >
+                            {attachUploading ? '…' : '📎'}
+                        </button>
+                    </div>
                 </div>
 
                 <ProgressBar value={progress} label={phaseLabel} />
 
                 {error ? <p className="cv-builder__error">{error}</p> : null}
+
+                {cvText.trim() ? (
+                    <div className="cv-builder__cvbadge">
+                        📄 {say('سيرتك مرفوعة ويمكن للمستشار قراءتها', 'CV attached - the consultant can read it')}
+                    </div>
+                ) : null}
 
                 <OnboardingQuestions
                     messages={messages}

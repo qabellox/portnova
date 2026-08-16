@@ -29,10 +29,22 @@ const cleanDeep = (v) => {
     return v;
 };
 
+// Every AI call races against this timeout so the chat can NEVER load forever:
+// if the edge function (DeepSeek) is slow or hangs, we throw and the caller's
+// fallback kicks in gracefully (store plainly / continue) instead of spinning.
+const INVOKE_TIMEOUT_MS = 20000;
+
 const invoke = async (action, payload) => {
-    const { data, error } = await supabase.functions.invoke('cv-builder', {
-        body: { action, ...payload },
-    });
+    const result = await Promise.race([
+        supabase.functions.invoke('cv-builder', {
+            body: { action, ...payload },
+        }),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('AI service timed out - please try again.')), INVOKE_TIMEOUT_MS)
+        ),
+    ]);
+
+    const { data, error } = result;
 
     if (error) {
         throw new Error(error.message || 'AI service is unavailable right now.');

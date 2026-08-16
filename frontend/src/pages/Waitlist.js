@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getClientIp, getWaitlistStatus, joinWaitlist, referralLink, REFERRAL_LEVELS, progressForCount, sessionsForCount } from '../services/waitlist';
 import { GlassCard, LanguageToggle, LoaderButton, PremiumButton, SectionHeading } from '../components/PremiumUI';
@@ -49,6 +49,23 @@ const TrustFooter = () => {
                     : '© 2026 PortNova - All rights reserved. Privacy Policy · Terms of Service · Contact'}
             </p>
         </footer>
+    );
+};
+
+// Reusable brand header shown on every waitlist state. Includes a discreet
+// "Sign in" link so the site owner (admin) can log in and reach the real app
+// instead of being stuck on the account-free waitlist teaser.
+const WaitlistBrand = () => {
+    const { isArabic } = useLanguage();
+    return (
+        <header className="waitlist-brand">
+            <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
+            <span className="brand__name">PortNova</span>
+            <Link className="premium-button premium-button--ghost waitlist-signin" to="/login">
+                {isArabic ? 'تسجيل الدخول' : 'Sign in'}
+            </Link>
+            <LanguageToggle className="waitlist-lang" />
+        </header>
     );
 };
 
@@ -192,11 +209,7 @@ const Waitlist = () => {
     if (checking) {
         return (
             <div className="page-shell page-shell--narrow waitlist-page">
-                <header className="waitlist-brand">
-                    <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
-                    <span className="brand__name">PortNova</span>
-                    <LanguageToggle className="waitlist-lang" />
-                </header>
+                <WaitlistBrand />
                 <GlassCard className="waitlist-card">
                     <div className="empty-state">{isArabic ? 'جارٍ التحقق…' : 'Checking…'}</div>
                 </GlassCard>
@@ -209,11 +222,7 @@ const Waitlist = () => {
     if (joined) {
         return (
             <div className="page-shell page-shell--narrow waitlist-page">
-                <header className="waitlist-brand">
-                    <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
-                    <span className="brand__name">PortNova</span>
-                    <LanguageToggle className="waitlist-lang" />
-                </header>
+                <WaitlistBrand />
                 <GlassCard className="waitlist-card">
                     <div className="waitlist-celebrate">🎉</div>
                     <SectionHeading
@@ -254,11 +263,7 @@ const Waitlist = () => {
     if (status?.on_list) {
         return (
             <div className="page-shell page-shell--narrow waitlist-page">
-                <header className="waitlist-brand">
-                    <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
-                    <span className="brand__name">PortNova</span>
-                    <LanguageToggle className="waitlist-lang" />
-                </header>
+                <WaitlistBrand />
                 <GlassCard className="waitlist-card">
                     <SectionHeading
                         kicker={isArabic ? 'أنت على القائمة ✅' : "You're on the list ✅"}
@@ -320,11 +325,7 @@ const Waitlist = () => {
     /* ------------------------------ join form ------------------------------ */
     return (
         <div className="page-shell page-shell--narrow waitlist-page">
-            <header className="waitlist-brand">
-                <img className="brand__logo" src="/images/logo.png" alt="PortNova" />
-                <span className="brand__name">PortNova</span>
-                <LanguageToggle className="waitlist-lang" />
-            </header>
+            <WaitlistBrand />
             <GlassCard className="waitlist-card">
                 <SectionHeading
                     kicker={isArabic ? 'قائمة الانتظار' : 'The waitlist'}

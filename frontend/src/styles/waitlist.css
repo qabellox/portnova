@@ -21,8 +21,15 @@
 }
 
 .waitlist-lang {
-    margin-inline-start: auto;
+    margin-inline-start: 0.5rem;
     white-space: nowrap;
+}
+
+/* discreet Sign in link so the owner/admin can leave the waitlist and log in */
+.waitlist-signin {
+    margin-inline-start: auto;
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.82rem !important;
 }
 
 .waitlist-brand .brand__logo {

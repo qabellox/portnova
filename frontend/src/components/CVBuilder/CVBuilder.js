@@ -204,7 +204,9 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
                 const { data: file, error: dlErr } = await supabase.storage.from('cvs').download(cvPath);
                 if (cancelled) return;
                 if (dlErr || !file) throw dlErr || new Error('no file');
-                const text = await extractCVText(file);
+                // NOTE: the downloaded blob has no `.name`, so pass the storage
+                // path as a hint so PDF detection works (cvPath ends in .pdf).
+                const text = await extractCVText(file, cvPath);
                 if (cancelled) return;
                 if (!text.trim()) {
                     // Couldn't read the file - fall back to the normal flow.

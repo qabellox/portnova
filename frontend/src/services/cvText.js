@@ -115,6 +115,24 @@ const nextToken = (s, from) => {
     return { token: s.slice(start, i), next: i };
 };
 
+// parse a PDF hex string starting at '<' (bytes as hex pairs -> chars)
+const parseHexString = (s, from) => {
+    let i = from + 1;
+    let out = '';
+    while (i < s.length) {
+        const c = s[i];
+        if (c === '>') return { text: out, next: i + 1 };
+        const a = parseInt(s[i], 16);
+        const b = parseInt(s[i + 1] || '', 16);
+        if (!isNaN(a)) {
+            const byte = !isNaN(b) ? a * 16 + b : a * 16;
+            out += String.fromCharCode(byte);
+            i += 2;
+        } else i++;
+    }
+    return { text: out, next: i };
+};
+
 // parse a PDF literal string starting at '(' (handles escapes/octals)
 const parsePdfString = (s, from) => {
     let i = from + 1;
@@ -168,12 +186,26 @@ const extractContentText = (s) => {
             } else {
                 i = r.next; // not a shown string - skip
             }
+        } else if (c === '<') {
+            const r = parseHexString(s, i);
+            const t = nextToken(s, r.next);
+            if (t.token === 'Tj' || t.token === "'" || t.token === '"') {
+                out += r.text;
+                if (t.token === "'" || t.token === '"') out += '\n';
+                i = t.next;
+            } else {
+                i = r.next;
+            }
         } else if (c === '[') {
             let j = i + 1, depth = 1;
             const parts = [];
             while (j < n && depth > 0) {
                 if (s[j] === '(') {
                     const r = parsePdfString(s, j);
+                    parts.push(r.text);
+                    j = r.next;
+                } else if (s[j] === '<') {
+                    const r = parseHexString(s, j);
                     parts.push(r.text);
                     j = r.next;
                 } else if (s[j] === '[') { depth++; j++; }
@@ -211,34 +243,9 @@ const extractPdfText = (u8) => {
     // '' so the flow falls back gracefully instead of sending junk to the AI.
     if (cleaned) {
         const printable = (cleaned.match(/[A-Za-z0-9\u00C0-\u024F\u0600-\u06FF.,!?;:'"()@#&%+\-/\x5C_=*$]/g) || []).length;
-        if (printable / cleaned.length < 0.4) return '';
+        if (printable / cleaned.length < 0.25) return '';
     }
     return cleaned;
-};
-
-/* ============ primary: full pdfjs (bundled lib + verbatim worker) ============ */
-// The robust full pdfjs library handles all PDF structures + font encodings.
-// The worker is served VERBATIM from /pdf.worker.min.mjs (copied into public/
-// from node_modules - CRA copies it unprocessed, so it is NOT corrupted like
-// the webpack-emitted worker was, and it is same-origin so no CDN is needed).
-// Falls back to '' (caller then tries the self-contained extractor).
-const tryPdfJs = async (u8) => {
-    try {
-        const pdfjs = await import('pdfjs-dist');
-        pdfjs.GlobalWorkerOptions.workerSrc = (process.env.PUBLIC_URL || '') + '/pdf.worker.min.mjs';
-        const doc = await pdfjs.getDocument({ data: u8 }).promise;
-        let text = '';
-        for (let i = 1; i <= doc.numPages; i += 1) {
-            const page = await doc.getPage(i);
-            const content = await page.getTextContent();
-            text += content.items.map((it) => it.str || '').join(' ') + '\n';
-        }
-        try { await doc.destroy(); } catch { /* ignore */ }
-        return text.trim();
-    } catch (err) {
-        console.error('pdfjs extraction failed, using fallback:', err);
-        return '';
-    }
 };
 
 /* ================= public API ================= */
@@ -254,12 +261,11 @@ export const extractCVText = async (file, nameHint = '') => {
             const u8 = new Uint8Array(buf);
             // magic bytes must be "%PDF"
             if (u8.length < 5 || u8[0] !== 0x25 || u8[1] !== 0x50 || u8[2] !== 0x44 || u8[3] !== 0x46) return '';
-            // 1) full pdfjs (robust - handles encodings/object streams)
-            let text = await withTimeout(tryPdfJs(u8), EXTRACT_TIMEOUT_MS);
-            // 2) fallback: self-contained extractor (works offline, no worker)
-            if (!text || !text.trim()) {
-                text = await withTimeout(Promise.resolve().then(() => extractPdfText(u8)), EXTRACT_TIMEOUT_MS);
-            }
+            // self-contained extractor (works fully offline, no worker, no CDN).
+            // NOTE: pdfjs-dist@6.2.108 is unusable here (its worker throws
+            // 'Private field #T must be declared' in the fake-worker path on real
+            // PDFs), so we rely on this bundled parser + pako.
+            const text = await withTimeout(Promise.resolve().then(() => extractPdfText(u8)), EXTRACT_TIMEOUT_MS);
             return String(text || '').trim();
         }
 

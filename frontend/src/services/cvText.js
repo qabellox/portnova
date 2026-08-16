@@ -216,6 +216,31 @@ const extractPdfText = (u8) => {
     return cleaned;
 };
 
+/* ============ primary: full pdfjs (bundled lib + verbatim worker) ============ */
+// The robust full pdfjs library handles all PDF structures + font encodings.
+// The worker is served VERBATIM from /pdf.worker.min.mjs (copied into public/
+// from node_modules - CRA copies it unprocessed, so it is NOT corrupted like
+// the webpack-emitted worker was, and it is same-origin so no CDN is needed).
+// Falls back to '' (caller then tries the self-contained extractor).
+const tryPdfJs = async (u8) => {
+    try {
+        const pdfjs = await import('pdfjs-dist');
+        pdfjs.GlobalWorkerOptions.workerSrc = (process.env.PUBLIC_URL || '') + '/pdf.worker.min.mjs';
+        const doc = await pdfjs.getDocument({ data: u8 }).promise;
+        let text = '';
+        for (let i = 1; i <= doc.numPages; i += 1) {
+            const page = await doc.getPage(i);
+            const content = await page.getTextContent();
+            text += content.items.map((it) => it.str || '').join(' ') + '\n';
+        }
+        try { await doc.destroy(); } catch { /* ignore */ }
+        return text.trim();
+    } catch (err) {
+        console.error('pdfjs extraction failed, using fallback:', err);
+        return '';
+    }
+};
+
 /* ================= public API ================= */
 
 export const extractCVText = async (file, nameHint = '') => {
@@ -229,7 +254,12 @@ export const extractCVText = async (file, nameHint = '') => {
             const u8 = new Uint8Array(buf);
             // magic bytes must be "%PDF"
             if (u8.length < 5 || u8[0] !== 0x25 || u8[1] !== 0x50 || u8[2] !== 0x44 || u8[3] !== 0x46) return '';
-            const text = await withTimeout(Promise.resolve().then(() => extractPdfText(u8)), EXTRACT_TIMEOUT_MS);
+            // 1) full pdfjs (robust - handles encodings/object streams)
+            let text = await withTimeout(tryPdfJs(u8), EXTRACT_TIMEOUT_MS);
+            // 2) fallback: self-contained extractor (works offline, no worker)
+            if (!text || !text.trim()) {
+                text = await withTimeout(Promise.resolve().then(() => extractPdfText(u8)), EXTRACT_TIMEOUT_MS);
+            }
             return String(text || '').trim();
         }
 

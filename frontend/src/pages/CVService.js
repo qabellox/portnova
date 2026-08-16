@@ -20,7 +20,7 @@ const CVService = () => {
     // private `cvs` bucket + saved to user_metadata (cvPath/cvName) which the
     // CV builder already reads to seed the conversation.
     const ALLOWED_CV_EXT = ['pdf', 'doc', 'docx', 'txt'];
-    const MAX_CV_MB = 10;
+    const MAX_CV_MB = 30;
     const validateCvFile = (file) => {
         const ext = (file.name.split('.').pop() || '').toLowerCase();
         if (!ALLOWED_CV_EXT.includes(ext)) {

@@ -353,8 +353,8 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
             if (attachInputRef.current) attachInputRef.current.value = '';
             return;
         }
-        if (file.size > 10 * 1024 * 1024) {
-            pushBot(isArabic ? 'الملف كبير جدًا. الحد الأقصى 10 ميجابايت.' : 'File is too large. Maximum is 10MB.');
+        if (file.size > 30 * 1024 * 1024) {
+            pushBot(isArabic ? 'الملف كبير جدًا. الحد الأقصى 30 ميجابايت.' : 'File is too large. Maximum is 30MB.');
             if (attachInputRef.current) attachInputRef.current.value = '';
             return;
         }

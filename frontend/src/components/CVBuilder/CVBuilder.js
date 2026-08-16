@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../services/supabase';
-import { analyzeCV, writeSummary, generateCV, buildLocalCV } from '../../services/cvBuilder';
+import { analyzeCV, chatTurn, writeSummary, generateCV, buildLocalCV } from '../../services/cvBuilder';
 import { extractCVText } from '../../services/cvText';
 import OnboardingQuestions from './OnboardingQuestions';
 import AchievementExtractor from './AchievementExtractor';
@@ -129,6 +129,9 @@ const CVBuilder = () => {
     const [gapQueue, setGapQueue] = useState([]);
     const [gapIndex, setGapIndex] = useState(0);
     const [cvAnalyzed, setCvAnalyzed] = useState(false);
+    // Extracted text from the uploaded CV - passed to the chat action so the
+    // agent can truthfully answer "do you see my CV?" and never hallucinate.
+    const [cvText, setCvText] = useState('');
 
     const pushBot = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text }]);
     const pushUser = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'user', text }]);
@@ -201,6 +204,7 @@ const CVBuilder = () => {
                         setTyping(false);
                         return;
                     }
+                    setCvText(text); // keep the CV text for the whole conversation
                     // Analyze with AI: extract structured data + gaps.
                     const analysis = await analyzeCV(text, arabic ? 'ar' : 'en', {
                         name: data.name,
@@ -440,49 +444,97 @@ const CVBuilder = () => {
                 return;
             }
 
-            // Map the gap key to a data field so the answer actually lands.
-            const key = gap.key;
-            if (isFiller(raw) || isDone(raw)) {
-                pushBot(say('تمام، نكمل بما هو موجود. 👍', 'OK, we’ll go with what’s there. 👍'));
-            } else if (key === 'achievements' || key === 'experience') {
-                // User described an achievement/role - append to experience if
-                // possible, otherwise store it in summary context for the AI.
-                const job = { _id: `${Date.now()}`, ...parseJob(raw), bullets: [] };
-                setData((prev) => ({
-                    ...prev,
-                    experience: key === 'experience' && job.role ? [...prev.experience, job] : prev.experience,
-                }));
-                pushBot(say('ممتاز. 👍', 'Great. 👍'));
-            } else if (key === 'summary' || key === 'targetRole' || key === 'targetIndustry') {
-                setData((prev) => ({ ...prev, [key]: cleanString(raw) }));
-                pushBot(say('واضح. 👍', 'Got it. 👍'));
-            } else {
-                storeValue(key, raw);
-                pushBot(say('شكرًا. 👍', 'Thanks. 👍'));
-            }
+            // Comprehension-first for gap answers too: send the conversation +
+            // CV text so questions ("do you see my CV?") and off-topic inputs
+            // are understood instead of force-stored as answers.
+            const known = [data.name, data.title, data.location].filter(Boolean).join(', ');
+            setTyping(true);
+            chatTurn({
+                messages,
+                cvText,
+                known,
+                currentQuestion: gap.question,
+                language: isArabic ? 'ar' : 'en',
+            })
+                .then((res) => {
+                    setTyping(false);
+                    const intent = res?.intent || 'filler';
+                    const reply = res?.reply || '';
+                    const answerText = res?.answerText || '';
+                    const key = gap.key;
 
-            const nextGap = gapIndex + 1;
-            if (nextGap < gapQueue.length) {
-                setGapIndex(nextGap);
-                setTyping(true);
-                setTimeout(() => {
+                    const storeGapAnswer = () => {
+                        const value = answerText || raw;
+                        if (isFiller(value) || isDone(value)) return;
+                        if (key === 'achievements' || key === 'experience') {
+                            const job = { _id: `${Date.now()}`, ...parseJob(value), bullets: [] };
+                            setData((prev) => ({
+                                ...prev,
+                                experience: key === 'experience' && job.role ? [...prev.experience, job] : prev.experience,
+                            }));
+                        } else if (key === 'summary' || key === 'targetRole' || key === 'targetIndustry') {
+                            setData((prev) => ({ ...prev, [key]: cleanString(value) }));
+                        } else {
+                            storeValue(key, value);
+                        }
+                    };
+
+                    if (intent === 'answer') {
+                        storeGapAnswer();
+                        if (reply) pushBot(reply);
+                    } else if (intent === 'done') {
+                        if (reply) pushBot(reply);
+                    } else {
+                        // question / clarify / filler: don't advance, just reply.
+                        if (reply) pushBot(reply);
+                        else pushBot(isArabic ? 'لم أفهم تمامًا - هل يمكنك توضيح ذلك؟' : 'Sorry - could you clarify that?');
+                        return; // stay on this gap
+                    }
+
+                    const nextGap = gapIndex + 1;
+                    if (nextGap < gapQueue.length) {
+                        setGapIndex(nextGap);
+                        setTyping(true);
+                        setTimeout(() => {
+                            setTyping(false);
+                            pushBot(gapQueue[nextGap].question);
+                        }, 700);
+                    } else {
+                        setGapIndex(nextGap);
+                        setPhase('experience');
+                        setTyping(true);
+                        setTimeout(() => {
+                            setTyping(false);
+                            pushBot(
+                                say(
+                                    'ممتاز - سأدمج كل هذا في سيرتك. 🎉 لننتقل الآن إلى مسارك المهني.\nأخبرني بأي دور إضافي تريد إضافته (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت" لنكمل.',
+                                    'Excellent - I’ll fold all of that into your CV. 🎉 Now let’s cover your career path.\nTell me about any extra role to add (role @ company (dates)) or type "done" to continue.'
+                                )
+                            );
+                        }, 700);
+                    }
+                })
+                .catch(() => {
                     setTyping(false);
-                    pushBot(gapQueue[nextGap].question);
-                }, 700);
-            } else {
-                setGapIndex(nextGap);
-                setPhase('experience');
-                setTyping(true);
-                setTimeout(() => {
-                    setTyping(false);
-                    pushBot(
-                        say(
-                            'ممتاز - سأدمج كل هذا في سيرتك. 🎉 لننتقل الآن إلى مسارك المهني.\nأخبرني بأي دور إضافي تريد إضافته (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت" لنكمل.',
-                            'Excellent - I’ll fold all of that into your CV. 🎉 Now let’s cover your career path.\nTell me about any extra role to add (role @ company (dates)) or type "done" to continue.'
-                        )
-                    );
-                }, 700);
-            }
+                    // Fallback: store plainly and move on so the flow never blocks.
+                    const key = gap.key;
+                    if (key === 'achievements' || key === 'experience') {
+                        const job = { _id: `${Date.now()}`, ...parseJob(raw), bullets: [] };
+                        setData((prev) => ({ ...prev, experience: key === 'experience' && job.role ? [...prev.experience, job] : prev.experience }));
+                    } else if (key === 'summary' || key === 'targetRole' || key === 'targetIndustry') {
+                        setData((prev) => ({ ...prev, [key]: cleanString(raw) }));
+                    } else {
+                        storeValue(key, raw);
+                    }
+                    const nextGap = gapIndex + 1;
+                    if (nextGap < gapQueue.length) {
+                        setGapIndex(nextGap);
+                        setTimeout(() => pushBot(gapQueue[nextGap].question), 600);
+                    } else {
+                        setGapIndex(nextGap);
+                        setPhase('experience');
+                    }
+                });
             return;
         }
 
@@ -490,70 +542,58 @@ const CVBuilder = () => {
         if (phase === 'questions') {
             const q = FLOW[flowIndex];
 
-            // A follow-up answer was expected (thin summary / too-few skills).
-            // If the user declines or gives a non-answer, keep what we have and
-            // move on - never merge "N/A" or "a lot" into the CV.
-            if (clarify) {
-                if (isDone(raw) || isFiller(raw)) {
-                    setClarify(null);
-                    pushBot(say('لا مشكلة، نكمل بما لدينا. 👍', 'No problem - we’ll go with what we have. 👍'));
-                } else {
-                    storeValue(clarify, raw, true);
-                    setClarify(null);
-                    pushBot(say('شكرًا - أصبحت المعلومات أكثر دقة الآن. 👍', 'Thanks - that sharpens it. 👍'));
-                }
-                nextQuestion();
-                return;
-            }
+            // Comprehension-first: send the full conversation + CV text to the
+            // agent so it actually UNDERSTANDS what the user said (answer /
+            // question / clarify / filler / done) instead of blindly treating
+            // every input as an answer to the current question.
+            const known = [data.name, data.title, data.location].filter(Boolean).join(', ');
+            setTyping(true);
+            chatTurn({
+                messages,
+                cvText,
+                known,
+                currentQuestion: isArabic ? q.askAr : q.askEn,
+                language: isArabic ? 'ar' : 'en',
+            })
+                .then((res) => {
+                    setTyping(false);
+                    const intent = res?.intent || 'filler';
+                    const reply = res?.reply || '';
+                    const answerText = res?.answerText || '';
 
-            // If the user pushes back ("is it necessary?", "do I need this?"),
-            // reassure them and let them skip - never make them feel judged.
-            if (PUSHBACK.test(raw)) {
-                pushBot(
-                    say(
-                        'سؤال وجيه. هذه المعلومة تساعدني على إبراز نقاط قوتك بدقة بدل التخمين - وإن أردت، اكتب "لا" للتخطي ونكمل. 😊',
-                        'Fair question. This detail lets me highlight your strengths precisely instead of guessing - and if you prefer, type "none" to skip and we’ll move on. 😊'
-                    )
-                );
-                nextQuestion();
-                return;
-            }
-
-            storeValue(q.key, raw);
-
-            // A non-answer ("a lot", "N/A", "idk"...) is never stored or used
-            // to interrogate the user - acknowledge gently and keep moving.
-            if (isFiller(raw)) {
-                pushBot(say('لا مشكلة - يمكنك إضافتها لاحقًا إن أردت. 👍', 'No problem - you can add it later if you like. 👍'));
-                nextQuestion();
-                return;
-            }
-
-            // Friendly, response-aware acknowledgments (no API call - instant).
-            // They reference the user's actual answer so it feels understood.
-            const ack = {
-                name: say(`أهلًا ${raw.split(' ')[0]}!`, `Nice to meet you, ${raw.split(' ')[0]}!`),
-                title: /طالب|student|متدرب|intern/i.test(raw)
-                    ? say('ممتاز. 🎓', 'Great. 🎓')
-                    : say(`ممتاز، ${titleCase(raw)}.`, `Excellent, ${titleCase(raw)}.`),
-                summary: say('شكرًا لك.', 'Thank you.'),
-                technicalSkills: say(`ممتاز - ${splitList(raw).length} مهارات. 👌`, `Great - ${splitList(raw).length} skills. 👌`),
-                softSkills: say('ممتاز.', 'Good.'),
-                education: say('تمام.', 'Perfect.'),
-                location: say('تمام.', 'Got it.'),
-                targetRole: say(`واضح - ${titleCase(raw)}.`, `Understood - ${titleCase(raw)}.`),
-                targetIndustry: say('ممتاز.', 'Excellent.'),
-            }[q.key];
-            if (ack) pushBot(ack);
-
-            // If the answer was too thin, ask one smart follow-up instead of
-            // blindly moving on.
-            if (needsClarify(q.key, raw)) {
-                setClarify(q.key);
-                pushBot(clarifyMsg(q.key));
-            } else {
-                nextQuestion();
-            }
+                    if (intent === 'answer') {
+                        // Real answer - store it, ack, and move on.
+                        if (answerText || raw.trim()) {
+                            storeValue(q.key, answerText || raw);
+                        }
+                        if (reply) pushBot(reply);
+                        if (needsClarify(q.key, raw)) {
+                            setClarify(q.key);
+                            pushBot(clarifyMsg(q.key));
+                        } else {
+                            nextQuestion();
+                        }
+                    } else if (intent === 'done') {
+                        // User wants to skip this item.
+                        if (reply) pushBot(reply);
+                        nextQuestion();
+                    } else {
+                        // question / clarify / filler: do NOT store, do NOT
+                        // advance - the agent answered or re-asked. Just show it.
+                        if (reply) pushBot(reply);
+                        else {
+                            // No reply came back - re-ask politely.
+                            pushBot(isArabic ? 'لم أفهم تمامًا - هل يمكنك توضيح ذلك؟' : 'Sorry - could you clarify that?');
+                        }
+                    }
+                })
+                .catch(() => {
+                    setTyping(false);
+                    // Fallback if the AI is unreachable - store it plainly and
+                    // move on so the flow never dead-ends.
+                    storeValue(q.key, raw);
+                    nextQuestion();
+                });
             return;
         }
 

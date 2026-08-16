@@ -50,6 +50,13 @@ const invoke = async (action, payload) => {
 export const improveAchievement = (text, role, language = 'en', context = '') =>
     invoke('improve', { text, role, language, context });
 
+/** Comprehend a turn in the main conversation. Sends the FULL message history
+ *  + the extracted CV text so the agent actually understands what the user
+ *  said (answer / question / clarify / filler / done) instead of blindly
+ *  treating every input as an answer. */
+export const chatTurn = ({ messages, cvText = '', known = '', currentQuestion = '', language = 'en' }) =>
+    invoke('chat', { messages, cvText, known, currentQuestion, language });
+
 /** Analyze an uploaded CV: extract structured data, identify gaps, and get
  *  gap-based follow-up questions so the agent builds on the CV instead of
  *  asking the user to repeat what is already there. */

@@ -96,8 +96,7 @@ const cleanDeep = (v) => {
     return v;
 };
 
-/* ---------------- Action 1: polish an achievement ---------------- */
-// This action receives whatever the user typed in the achievement box, plus an
+/* ---------------- Action 1: polish an achievement ---------------- */// This action receives whatever the user typed in the achievement box, plus an
 // optional `context` string = what the agent ACTUALLY knows about the user
 // (extracted from their CV/profile, e.g. name + job title). It must classify
 // the input first, NEVER invent facts, NEVER claim to have information it was
@@ -162,6 +161,92 @@ const improveAchievement = async (body) => {
     }
     const type = ['achievement', 'chat', 'clarify'].includes(parsed?.type) ? parsed.type : 'achievement';
     return { improved: clean(parsed?.text || ''), type };
+};
+
+/* ---------------- Action 1b: comprehend a chat turn ---------------- */
+// THE main-conversation fix. The CV builder's main chat used to be a dumb
+// state machine: it force-stored every input as "the answer" with a canned
+// acknowledgment, so "shoot"/"damn you"/"do you see my CV?" all got echoed
+// back as if they were real answers. This action gives the model the FULL
+// conversation history + the extracted CV text so it can actually understand
+// what the user said, answer questions truthfully, and tell the frontend how
+// to handle the turn.
+const chatTurn = async (body) => {
+    const {
+        messages = [],       // full conversation: [{from:'user'|'bot', text}]
+        cvText = '',         // extracted text from the uploaded CV (may be '')
+        known = '',          // name/title we know about the user
+        currentQuestion = '',// the question currently being asked
+        language = 'en',
+    } = body;
+    const lang = language === 'ar' ? 'Arabic (modern standard, professional)' : 'English';
+
+    if (!messages.length) throw new Error('messages are required');
+
+    // Last user message is what we must comprehend.
+    const transcript = messages
+        .map((m) => `${m.from === 'user' ? 'User' : 'Nova'}: ${typeof m.text === 'string' ? m.text : '(message)'}`)
+        .join('\n');
+
+    const sys = [
+        {
+            role: 'system',
+            content:
+                `You are Nova, a friendly CV helper for PortNova (Port Said, Egypt). You are talking to the user ` +
+                `while building their CV. You have the FULL conversation below, and optionally the text extracted ` +
+                `from their uploaded CV (cvText). Your job is to comprehend the user's LAST message in context and ` +
+                `respond like a real person - never parrot their words back, never say "we'll build on that" to ` +
+                `something that was not an answer, never mention AI/APIs/prompts.` +
+                `\n\n` +
+                `FACTS YOU KNOW ABOUT THE USER: ${known || '(none yet)'}\n` +
+                (cvText && cvText.trim() ? `CV TEXT (uploaded by user):\n${cvText.slice(0, 8000)}\n` : `CV TEXT: (none uploaded)\n`) +
+                `CURRENT QUESTION BEING ASKED: ${currentQuestion || '(none)'}\n\n` +
+                `Return STRICT JSON (no markdown fences) with EXACTLY this shape:\n` +
+                `{\n` +
+                `  "intent": "answer" | "question" | "clarify" | "filler" | "done",\n` +
+                `  "reply": "your short, plain response in ${lang}",\n` +
+                `  "answerText": "if intent is answer, the clean answer text to store for the current question; else empty string"\n` +
+                `}\n\n` +
+                `Decide the intent of the user's LAST message:\n` +
+                `- "answer": they actually answered the current question with real info. Store their answer ` +
+                `(cleaned) in answerText. Reply with a 1-line acknowledgment in plain language - do NOT repeat ` +
+                `their words back.\n` +
+                `- "question": they asked YOU something (e.g. "do you see my CV?", "what is this?", "why ask?"). ` +
+                `Reply truthfully. If cvText exists, say you have their CV and reference a real fact from it; if ` +
+                `not, say you don't have their CV yet. Then gently return to the current question. answerText = "".\n` +
+                `- "clarify": their message is unclear, partial, or needs a follow-up. Ask ONE short plain question ` +
+                `to get what you need. answerText = "".\n` +
+                `- "filler": vague or non-answer (e.g. "a lot", "I did some stuff", "yes", "no", "ok", "shoot", ` +
+                `"damn", random gibberish). Do NOT treat it as an answer. Reply briefly and re-ask the current ` +
+                `question (or move on if they clearly want to skip - use "done" for "skip"/"done"/"none"/"لا"). ` +
+                `answerText = "".\n` +
+                `- "done": they said done/skip/none for this item. answerText = "" and reply tells them we're moving on.\n\n` +
+                `Rules: never invent facts; never mention internals; keep replies short (1-2 sentences); ` +
+                `plain language, no corporate buzzwords; do not parrot their words. Plain ASCII punctuation only. ` +
+                `Return ONLY the JSON object.`,
+        },
+        { role: 'user', content: transcript },
+    ];
+
+    const raw = await callDeepSeek(sys, { temperature: 0.4, maxTokens: 500, jsonMode: true });
+    const cleaned = raw.replace(/```(?:json)?/gi, '').trim();
+    let parsed;
+    try {
+        parsed = JSON.parse(cleaned);
+    } catch {
+        const start = cleaned.indexOf('{');
+        const end = cleaned.lastIndexOf('}');
+        if (start === -1 || end === -1 || end <= start) {
+            throw new Error('Could not process that. Please try again.');
+        }
+        parsed = JSON.parse(cleaned.slice(start, end + 1));
+    }
+    const validIntents = ['answer', 'question', 'clarify', 'filler', 'done'];
+    return {
+        intent: validIntents.includes(parsed?.intent) ? parsed.intent : 'filler',
+        reply: clean(parsed?.reply || ''),
+        answerText: clean(parsed?.answerText || ''),
+    };
 };
 
 /* ------------------- Action 2: analyze uploaded CV ------------------- */
@@ -392,6 +477,9 @@ serve(async (req) => {
         switch (action) {
             case 'improve':
                 result = await improveAchievement(payload);
+                break;
+            case 'chat':
+                result = await chatTurn(payload);
                 break;
             case 'analyze':
                 result = await analyzeCV(payload);

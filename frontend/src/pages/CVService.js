@@ -19,16 +19,37 @@ const CVService = () => {
     // one) so the agent can build on it with more accurate data. Stored in the
     // private `cvs` bucket + saved to user_metadata (cvPath/cvName) which the
     // CV builder already reads to seed the conversation.
+    const ALLOWED_CV_EXT = ['pdf', 'doc', 'docx', 'txt'];
+    const MAX_CV_MB = 10;
+    const validateCvFile = (file) => {
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (!ALLOWED_CV_EXT.includes(ext)) {
+            return { ok: false, msg: isArabic ? 'يُسمح بملفات PDF أو DOCX أو TXT فقط.' : 'Only PDF, DOCX or TXT files are allowed.' };
+        }
+        if (file.size > MAX_CV_MB * 1024 * 1024) {
+            return { ok: false, msg: isArabic ? `الملف كبير جدًا. الحد الأقصى ${MAX_CV_MB} ميجابايت.` : `File is too large. Maximum is ${MAX_CV_MB}MB.` };
+        }
+        return { ok: true };
+    };
+
     const onPickCv = async (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
         setCvName(file.name);
         setMessage('');
+        const check = validateCvFile(file);
+        if (!check.ok) {
+            setCvName('');
+            setMessage(check.msg);
+            return;
+        }
         if (!user) {
             setMessage(isArabic ? 'سجّل الدخول أولًا لرفع سيرتك.' : 'Sign in first to upload your CV.');
             return;
         }
         setUploading(true);
+        // Safety net: never let the loading state stick forever.
+        const safety = window.setTimeout(() => setUploading(false), 30000);
         try {
             const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
             const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -44,15 +65,15 @@ const CVService = () => {
             setCvPath(path);
             setMessage(isArabic ? 'تم حفظ سيرتك - سيبني عليها المستشار بدقة.' : 'Your CV is saved - the consultant will build on it.');
         } catch (err) {
-            // Never show the raw browser/network error (e.g. "Failed to fetch").
-            // Always show a friendly localized message instead.
+            // Surface the REAL error so failures are diagnosable instead of vague.
             console.error('CV upload failed:', err);
             setMessage(
                 isArabic
-                    ? 'تعذّر رفع السيرة. تحقق من اتصالك وحاول مرة أخرى.'
-                    : 'Could not upload your CV. Check your connection and try again.'
+                    ? `تعذّر رفع السيرة: ${err?.message || 'خطأ غير معروف'}`
+                    : `Could not upload your CV: ${err?.message || 'unknown error'}`
             );
         } finally {
+            window.clearTimeout(safety);
             setUploading(false);
         }
     };
@@ -113,7 +134,7 @@ const CVService = () => {
                             ? 'قبل أن نبدأ، هل لديك سيرة ذاتية سابقة؟ ارفعها ليبني عليها المستشار ببيانات أكثر دقة - أو ابدأ مباشرة.'
                             : 'Before we start, do you have an existing CV? Upload it so the consultant builds on it with accurate data - or start right away.'}
                     />
-                    <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" hidden onChange={onPickCv} />
+                    <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx,.txt" hidden onChange={onPickCv} />
                     <div className="inline-actions" style={{ marginTop: '0.75rem' }}>
                         <PremiumButton variant="ghost" onClick={() => cvInputRef.current?.click()} disabled={uploading}>
                             {uploading

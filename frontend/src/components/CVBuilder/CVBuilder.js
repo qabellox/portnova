@@ -209,7 +209,18 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
                 const text = await extractCVText(file, cvPath);
                 if (cancelled) return;
                 if (!text.trim()) {
-                    // Couldn't read the file - fall back to the normal flow.
+                    // Couldn't read the file - tell the user honestly, then fall
+                    // back to the normal flow so they are never blocked.
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            id: nextId(),
+                            from: 'bot',
+                            text: arabic
+                                ? 'استلمت ملف سيرتك، لكن لم أجد نصًا قابلًا للقراءة فيه - قد يكون نسخة ممسوحة ضوئيًا بلا طبقة نصية. لا مشكلة، سأسألك خطوة بخطوة وأبني سيرتك من إجاباتك.'
+                                : 'I got your uploaded CV, but couldn’t find readable text in it - it may be a scanned image with no text layer. No problem, I’ll ask you step by step and build your CV from your answers.',
+                        },
+                    ]);
                     if (startIndex >= FLOW.length) {
                         setPhase('experience');
                     } else {
@@ -336,9 +347,21 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
     const onAttachCv = async (event) => {
         const file = event.target.files?.[0];
         if (!file || !user) return;
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        if (!['pdf', 'doc', 'docx', 'txt'].includes(ext)) {
+            pushBot(isArabic ? 'يُسمح بملفات PDF أو DOCX أو TXT فقط.' : 'Only PDF, DOCX or TXT files are allowed.');
+            if (attachInputRef.current) attachInputRef.current.value = '';
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            pushBot(isArabic ? 'الملف كبير جدًا. الحد الأقصى 10 ميجابايت.' : 'File is too large. Maximum is 10MB.');
+            if (attachInputRef.current) attachInputRef.current.value = '';
+            return;
+        }
         setAttachUploading(true);
+        // Safety net: never let the loading state stick forever.
+        const safety = window.setTimeout(() => setAttachUploading(false), 30000);
         try {
-            const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
             const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
             const path = `${user.id}/cv_${Date.now()}_${safeName}.${ext}`;
             const { error: upErr } = await supabase.storage
@@ -368,13 +391,19 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
                         ? 'استلمت سيرتك! قرأتها وسأبني عليها. ✅'
                         : 'Got your CV! I’ve read it and I’ll build on it. ✅')
                     : (isArabic
-                        ? 'استلمت الملف، لكن لم أستطع قراءة نصّه. يمكنك إخباري بمعلوماتك وسأبني سيرتك منها.'
-                        : 'I got the file, but couldn’t read its text. Tell me your details and I’ll build your CV from them.')
+                        ? 'استلمت الملف، لكن لم أجد نصًا قابلًا للقراءة فيه - قد يكون نسخة ممسوحة ضوئيًا بلا طبقة نصية. أخبرني ببياناتك وسأبني سيرتك منها.'
+                        : 'I received the file, but couldn’t find readable text in it - it may be a scanned image with no text layer. Tell me your details and I’ll build your CV from them.')
             );
         } catch (err) {
             console.error('Attach CV failed:', err);
-            pushBot(isArabic ? 'تعذّرت قراءة الملف. حاول مرة أخرى.' : 'Could not read that file. Please try again.');
+            // Surface the REAL error so failures are diagnosable.
+            pushBot(
+                isArabic
+                    ? `تعذّر معالجة الملف: ${err?.message || 'خطأ غير معروف'}`
+                    : `Could not process that file: ${err?.message || 'unknown error'}`
+            );
         } finally {
+            window.clearTimeout(safety);
             setAttachUploading(false);
             if (attachInputRef.current) attachInputRef.current.value = '';
         }
@@ -855,7 +884,7 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
                         </span>
                     </div>
                     <div className="cv-builder__attach">
-                        <input ref={attachInputRef} type="file" accept=".pdf,.doc,.docx" hidden onChange={onAttachCv} />
+                        <input ref={attachInputRef} type="file" accept=".pdf,.doc,.docx,.txt" hidden onChange={onAttachCv} />
                         <button
                             type="button"
                             className="premium-button premium-button--ghost"

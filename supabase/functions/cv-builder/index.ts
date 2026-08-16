@@ -205,12 +205,18 @@ const chatTurn = async (body) => {
                 `{\n` +
                 `  "intent": "answer" | "question" | "clarify" | "filler" | "done",\n` +
                 `  "reply": "your short, plain response in ${lang}",\n` +
-                `  "answerText": "if intent is answer, the clean answer text to store for the current question; else empty string"\n` +
+                `  "answerText": "if intent is answer, the clean answer text to store for the current question; else empty string",\n` +
+                `  "probe": "OPTIONAL - one precise follow-up question (string), or empty string \"\""\n` +
                 `}\n\n` +
                 `Decide the intent of the user's LAST message:\n` +
                 `- "answer": they actually answered the current question with real info. Store their answer ` +
-                `(cleaned) in answerText. Reply with a 1-line acknowledgment in plain language - do NOT repeat ` +
-                `their words back.\n` +
+                `(cleaned) in answerText. Reply with a short acknowledgment that REFERENCES a specific detail they ` +
+                `said (proves you understood - never just \"great!\"). Then decide if ONE precise follow-up (probe) ` +
+                `would extract a genuinely valuable specific (a number, result, concrete example, or context) that ` +
+                `would strengthen the CV. If yes, set probe to ONE short, precise question in ${lang} aimed at that ` +
+                `specific. If not, probe = \"\". Rules for probe: NEVER probe for simple facts (name, email, phone, ` +
+                `location, linkedin, languages); NEVER probe more than once per item; keep probe to ONE short ` +
+                `question; prefer asking for concrete outcomes, numbers, or examples over vague details.\n` +
                 `- "question": they asked YOU something (e.g. "do you see my CV?", "what is this?", "why ask?"). ` +
                 `Reply truthfully. If cvText exists, say you have their CV and reference a real fact from it; if ` +
                 `not, say you don't have their CV yet. Then gently return to the current question. answerText = "".\n` +
@@ -246,6 +252,7 @@ const chatTurn = async (body) => {
         intent: validIntents.includes(parsed?.intent) ? parsed.intent : 'filler',
         reply: clean(parsed?.reply || ''),
         answerText: clean(parsed?.answerText || ''),
+        probe: clean(parsed?.probe || ''),
     };
 };
 

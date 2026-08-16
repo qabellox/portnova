@@ -21,14 +21,14 @@ const FLOW = [
     { key: 'location', askAr: 'أين تسكن؟ (المدينة والمحافظة)', askEn: 'Where do you live? (City and area)' },
     { key: 'title', askAr: 'ماذا تعمل حاليًا؟', askEn: 'What do you currently do?' },
     { key: 'summary', askAr: 'أخبرني عن نفسك بجملة أو جملتين - ماذا تعمل، وما أكثر شيء تفخر به؟', askEn: 'Tell me about yourself in a line or two - what do you do, and what are you most proud of?' },
-    { key: 'education', askAr: 'ما أعلى مؤهل دراسي حصلت عليه؟', askEn: 'What is your highest level of education?' },
+    { key: 'education', askAr: 'ما أعلى مؤهل دراسي لديك، ومن أين حصلت عليه؟', askEn: 'What is your highest qualification, and where did you get it?' },
     { key: 'fieldOfStudy', askAr: 'ماذا درست؟', askEn: 'What did you study?' },
-    { key: 'technicalSkills', askAr: 'ما المهارات التي تستخدمها في عملك؟', askEn: 'What skills do you use in your work?' },
-    { key: 'softSkills', askAr: 'وما نقاط قوتك الشخصية؟ (مثل القيادة، التواصل، حل المشكلات)', askEn: 'And what are your personal strengths? (e.g. leadership, communication, problem-solving)' },
+    { key: 'technicalSkills', askAr: 'ما الأدوات أو التقنيات التي تستخدمها فعلًا أكثر في عملك أو دراستك؟ اذكر 3 إلى 5.', askEn: 'Which 3-5 tools or technologies do you actually use most in your work or study?' },
+    { key: 'softSkills', askAr: 'ما نقطة القوة الشخصية التي تساعدك أكثر؟ اذكر مثالًا قصيرًا.', askEn: 'Which one personal strength helps you most? Give a short example.' },
     { key: 'certifications', askAr: 'هل لديك شهادات أو دورات؟ اذكرها، أو اكتب "لا".', askEn: 'Do you have any certifications or courses? List them, or type "none".' },
     { key: 'languages', askAr: 'ما اللغات التي تتحدثها، وبأي مستوى؟ (أو "لا")', askEn: 'Which languages do you speak, and at what level? (or "none")' },
     { key: 'linkedin', askAr: 'هل لديك حساب لينكدإن؟ (اختياري)', askEn: 'Do you have a LinkedIn profile? (optional)' },
-    { key: 'targetRole', askAr: 'ما الوظيفة التي تبحث عنها؟', askEn: 'What job are you looking for?' },
+    { key: 'targetRole', askAr: 'ما المسمى الوظيفي المحدد الذي تستهدفه؟', askEn: 'What specific job title are you aiming for next?' },
     { key: 'targetIndustry', askAr: 'في أي مجال أو قطاع؟', askEn: 'In what field or industry?' },
 ];
 
@@ -135,6 +135,10 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
     // Mid-conversation CV upload (user can attach a CV they forgot earlier).
     const [attachUploading, setAttachUploading] = useState(false);
     const attachInputRef = useRef(null);
+    // Precise follow-up probe from the AI: after a substantial answer it asks ONE
+    // targeted question to extract valuable specifics, then returns to the core
+    // flow. { key, question }
+    const [probe, setProbe] = useState(null);
 
     const pushBot = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'bot', text }]);
     const pushUser = (text) => setMessages((prev) => [...prev, { id: nextId(), from: 'user', text }]);
@@ -519,9 +523,96 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
     };
 
     /* ------------------------- main answer handler ------------------------- */
+    // Enrich a stored field with the probe answer (merges lists, appends to
+    // summary, adds an experience row for achievements).
+    const appendToField = (key, value) => {
+        const v = cleanString(value);
+        if (!v || isFiller(v) || isDone(v)) return;
+        if (key === 'technicalSkills' || key === 'softSkills') {
+            setData((prev) => ({ ...prev, [key]: [...new Set([...(prev[key] || []), ...splitList(v)])] }));
+        } else if (key === 'certifications' || key === 'languages') {
+            setData((prev) => ({ ...prev, [key]: [...(prev[key] || []), ...splitList(v).map((n) => (key === 'certifications' ? { name: n, issuer: '', year: '' } : { name: n, level: '' }))] }));
+        } else if (key === 'summary') {
+            setData((prev) => ({ ...prev, summary: prev.summary ? `${prev.summary} ${v}` : v }));
+        } else if (key === 'achievements' || key === 'experience') {
+            const job = { _id: `${Date.now()}`, ...parseJob(v), bullets: [] };
+            setData((prev) => ({ ...prev, experience: job.role ? [...prev.experience, job] : prev.experience }));
+        } else {
+            setData((prev) => ({ ...prev, [key]: prev[key] ? `${prev[key]} ${v}` : v }));
+        }
+    };
+
+    // Move to the next gap question (or into the career phase) after a probe.
+    const advanceGap = () => {
+        const nextGap = gapIndex + 1;
+        if (nextGap < gapQueue.length) {
+            setGapIndex(nextGap);
+            setTyping(true);
+            setTimeout(() => {
+                setTyping(false);
+                pushBot(gapQueue[nextGap].question);
+            }, 700);
+        } else {
+            setGapIndex(nextGap);
+            setPhase('experience');
+            setTyping(true);
+            setTimeout(() => {
+                setTyping(false);
+                pushBot(
+                    say(
+                        'ممتاز - سأدمج كل هذا في سيرتك. 🎉 لننتقل الآن إلى مسارك المهني.\nأخبرني بأي دور إضافي تريد إضافته (الدور @ الشركة (التواريخ)) أو اكتب "انتهيت" لنكمل.',
+                        'Excellent - I’ll fold all of that into your CV. 🎉 Now let’s cover your career path.\nTell me about any extra role to add (role @ company (dates)) or type "done" to continue.'
+                    )
+                );
+            }, 700);
+        }
+    };
+
     const handleSend = (raw) => {
         pushUser(raw);
         setInput(''); // clear the reply box so it's ready for the next answer
+
+        // If a precise follow-up (probe) is pending, this message answers it:
+        // enrich the field, then return to the core flow.
+        if (probe) {
+            const probeKey = probe.key;
+            const probeQuestion = probe.question;
+            setProbe(null);
+            const known = [data.name, data.title, data.location].filter(Boolean).join(', ');
+            const history = [...messages, { from: 'user', text: raw }];
+            setTyping(true);
+            chatTurn({
+                messages: history,
+                cvText,
+                known,
+                currentQuestion: probeQuestion,
+                language: isArabic ? 'ar' : 'en',
+            })
+                .then((res) => {
+                    setTyping(false);
+                    const intent = res?.intent || 'filler';
+                    const reply = res?.reply || '';
+                    const answerText = res?.answerText || '';
+                    if (intent === 'answer' && (answerText || raw.trim()) && !isFiller(raw) && !isDone(raw)) {
+                        appendToField(probeKey, answerText || raw);
+                        if (reply) pushBot(reply);
+                    } else if (intent === 'done') {
+                        if (reply) pushBot(reply);
+                    } else {
+                        if (reply) pushBot(reply);
+                        else pushBot(isArabic ? 'فهمتك - لنكمل.' : 'Got it - let’s keep going.');
+                    }
+                    // Return to the core flow.
+                    if (phase === 'cvgaps') advanceGap();
+                    else nextQuestion();
+                })
+                .catch(() => {
+                    setTyping(false);
+                    if (phase === 'cvgaps') advanceGap();
+                    else nextQuestion();
+                });
+            return;
+        }
 
         /* phase: cv gaps (built on the uploaded CV - only missing/weak items) */
         if (phase === 'cvgaps') {
@@ -582,6 +673,12 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
                     if (intent === 'answer') {
                         storeGapAnswer();
                         if (reply) pushBot(reply);
+                        // Precise follow-up to enrich the gap answer before moving on.
+                        if (res?.probe) {
+                            setProbe({ key, question: res.probe });
+                            pushBot(res.probe);
+                            return; // wait for the probe answer, then advance
+                        }
                     } else if (intent === 'done') {
                         if (reply) pushBot(reply);
                     } else {
@@ -671,7 +768,11 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
                             storeValue(q.key, answerText || raw);
                         }
                         if (reply) pushBot(reply);
-                        if (needsClarify(q.key, raw)) {
+                        if (res?.probe) {
+                            // Ask the AI's precise follow-up, then return to the core flow.
+                            setProbe({ key: q.key, question: res.probe });
+                            pushBot(res.probe);
+                        } else if (needsClarify(q.key, raw)) {
                             setClarify(q.key);
                             pushBot(clarifyMsg(q.key));
                         } else {

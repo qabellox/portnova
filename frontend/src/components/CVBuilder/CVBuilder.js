@@ -861,10 +861,12 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
                             className="premium-button premium-button--ghost"
                             onClick={() => attachInputRef.current?.click()}
                             disabled={attachUploading || busy}
-                            title={isArabic ? 'ارفع سيرة ذاتية' : 'Attach a CV'}
-                            aria-label={isArabic ? 'ارفع سيرة ذاتية' : 'Attach a CV'}
+                            title={isArabic ? 'ارفع سيرتك الذاتية هنا' : 'Upload your CV here'}
+                            aria-label={isArabic ? 'ارفع سيرتك الذاتية هنا' : 'Upload your CV here'}
                         >
-                            {attachUploading ? '…' : '📎'}
+                            {attachUploading
+                                ? (isArabic ? 'جارٍ الرفع…' : 'Uploading…')
+                                : `📎 ${isArabic ? 'ارفع سيرتك' : 'Attach CV'}`}
                         </button>
                     </div>
                 </div>

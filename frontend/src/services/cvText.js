@@ -34,9 +34,20 @@ const withTimeout = (promise, ms) =>
         new Promise((resolve) => setTimeout(() => resolve(''), ms)),
     ]);
 
-// Load the pdfjs library from the bundled copy (bundled by webpack - small and
-// first-party, and it executes fine in production; only the WORKER was broken).
-const loadPdfJs = () => import('pdfjs-dist');
+// Load the pdfjs library. We PREFER the pinned CDN copy: it is served
+// un-processed (no webpack/Terser mangling) and is the exact lib + worker
+// combo verified working end-to-end in a real browser. The bundled copy is
+// only a fallback if the CDN is unreachable.
+// `webpackIgnore` makes webpack leave this import as a native runtime
+// import() instead of trying to resolve/bundle the URL - so it does NOT
+// trigger the "Critical dependency" warning that fails CI builds.
+const loadPdfJs = async () => {
+    try {
+        return await import(/* webpackIgnore: true */ 'https://cdn.jsdelivr.net/npm/pdfjs-dist@6.2.108/build/pdf.min.mjs');
+    } catch {
+        return await import('pdfjs-dist');
+    }
+};
 
 // The bytes of a PDF always start with "%PDF". Sniff them so a PDF is
 // recognised even when the blob has no useful name (e.g. a file downloaded

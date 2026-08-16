@@ -44,13 +44,43 @@
 }
 
 .cv-builder__attach button {
-    font-size: 1.1rem;
-    line-height: 1;
-    min-width: 2.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1rem;
     min-height: 2.6rem;
-    display: grid;
-    place-items: center;
-    padding: 0;
+    border: 1px solid rgba(20, 184, 166, 0.55);
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.28), rgba(212, 175, 55, 0.18));
+    border-radius: 999px;
+    color: #ecfeff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(6, 16, 30, 0.25);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.cv-builder__attach button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(6, 16, 30, 0.35);
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.45), rgba(212, 175, 55, 0.3));
+}
+
+.cv-builder__attach button:active {
+    transform: translateY(0);
+}
+
+.cv-builder__attach button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.cv-builder__attach .attach-icon {
+    font-size: 1rem;
+    line-height: 1;
+    filter: drop-shadow(0 1px 2px rgba(6, 16, 30, 0.4));
 }
 
 .cv-builder__cvbadge {

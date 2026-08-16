@@ -996,7 +996,10 @@ const CVBuilder = ({ initialCvPath = '', initialCvName = '' }) => {
                         >
                             {attachUploading
                                 ? (isArabic ? 'جارٍ الرفع…' : 'Uploading…')
-                                : `📎 ${isArabic ? 'ارفع سيرتك' : 'Attach CV'}`}
+                                : (<>
+                                    <span className="attach-icon">🗎</span>
+                                    <span>{isArabic ? 'ارفع سيرتك' : 'Attach CV'}</span>
+                                </>)}
                         </button>
                     </div>
                 </div>

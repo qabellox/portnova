@@ -43,9 +43,12 @@ const invoke = async (action, payload) => {
     return cleanDeep(data.data);
 };
 
-/** Rewrite a raw achievement into a quantified, ATS-friendly bullet. */
-export const improveAchievement = (text, role, language = 'en') =>
-    invoke('improve', { text, role, language });
+/** Rewrite a raw achievement into a quantified, ATS-friendly bullet. The
+ *  optional `context` is what we ACTUALLY know about the user (name/title from
+ *  their CV or profile) so the agent never hallucinates or pretends to have
+ *  the CV when it doesn't. */
+export const improveAchievement = (text, role, language = 'en', context = '') =>
+    invoke('improve', { text, role, language, context });
 
 /** Analyze an uploaded CV: extract structured data, identify gaps, and get
  *  gap-based follow-up questions so the agent builds on the CV instead of

@@ -97,15 +97,16 @@ const cleanDeep = (v) => {
 };
 
 /* ---------------- Action 1: polish an achievement ---------------- */
-// This action receives whatever the user typed in the achievement box. That
-// might be a real achievement, OR it might be a question ("can you see my
-// CV?"), OR vague filler ("I did some stuff"). It must classify the input
-// first and respond appropriately - never blindly "polish" a question, and
-// never invent facts from filler.
+// This action receives whatever the user typed in the achievement box, plus an
+// optional `context` string = what the agent ACTUALLY knows about the user
+// (extracted from their CV/profile, e.g. name + job title). It must classify
+// the input first, NEVER invent facts, NEVER claim to have information it was
+// not given, and NEVER expose internals.
 const improveAchievement = async (body) => {
-    const { text, role, language = 'en' } = body;
+    const { text, role, context = '', language = 'en' } = body;
     if (!text || !text.trim()) throw new Error('achievement text is required');
     const lang = language === 'ar' ? 'Arabic (modern standard, professional)' : 'English';
+    const known = [role, context].filter(Boolean).join(' | ');
     const messages = [
         {
             role: 'system',
@@ -117,22 +118,31 @@ const improveAchievement = async (body) => {
                 `  "type": "achievement" | "chat" | "clarify",\n` +
                 `  "text": "your reply"\n` +
                 `}\n\n` +
+                `What you ACTUALLY know about this user (from their CV/profile) is in "known context". ` +
+                `CRITICAL HONESTY RULE: you may ONLY reference facts that appear in that context. ` +
+                `If the context is empty or lacks a job title, NEVER say you can see their CV or guess ` +
+                `their job. Never invent names, roles, companies, numbers or achievements. ` +
+                `Never say "I've got your CV" unless you were actually given CV data.\n\n` +
                 `How to classify in ${lang}:\n` +
-                `- If the input is a QUESTION or any message that is not a work achievement (e.g. "can you see my CV?", ` +
-                `"what are you doing?", "who are you?"): type "chat". Reply naturally and briefly in plain language. ` +
-                `NEVER say you cannot access files, never mention APIs, prompts, AI or internal details - just answer ` +
-                `helpfully as a person would, e.g. "Yes, I've got your CV - I can see you're a Marketing Specialist. " + ` +
-                `Then remind them what to type: "Now tell me one thing you accomplished there, and I'll make it stronger."\n` +
-                `- If the input is vague filler with no real content (e.g. "I did some things", "a lot of stuff", "yes", "idk"): ` +
-                `type "clarify". Do NOT invent any achievement, numbers or facts. Ask ONE short, plain question to get ` +
-                `a real example, e.g. "Tell me one concrete thing you did in this job - like a project or a result."\n` +
+                `- If the input is a QUESTION or any non-achievement message (e.g. "can you see my CV?", ` +
+                `"what do you do?", "who are you?", "thanks", "hello"): type "chat". Reply naturally and ` +
+                `briefly in plain language. If you DO have real context, reference it ("I can see you work ` +
+                `as [title]"). If you have NO context, be honest but still helpful: "I don't have your CV " + ` +
+                `"details loaded yet - tell me one thing you accomplished in your job and I'll make it " + ` +
+                `"stronger." NEVER mention APIs, prompts, AI or internal implementation.\n` +
+                `- If the input is vague filler with no real content (e.g. "I did some things", "a lot of " + ` +
+                `"stuff", "yes", "no", "idk", "nothing", gibberish): type "clarify". Do NOT invent any ` +
+                `achievement, numbers or facts. Ask ONE short, plain question to get a real example.\n` +
+                `- If the input asks to polish but gives no text (e.g. "polish it", "now improve it", ` +
+                `"ok do it"): type "clarify" and ask them to paste the actual text: "Paste the line you " + ` +
+                `"want improved and I'll make it stronger."\n` +
                 `- Otherwise it is a real achievement: type "achievement". Rewrite it into ONE clear, strong CV line in ${lang}. ` +
                 `Rules: 1) start with a strong action verb (led, built, grew, reduced, launched...); ` +
                 `2) fix grammar, spelling, punctuation and casing errors in the original; ` +
                 `3) be specific and show results; 4) ONLY use numbers or percentages the user actually mentioned - ` +
                 `never invent metrics; if no metric was given, describe the impact with verbs; ` +
                 `5) keep it one tight line (under ~28 words); 6) plain language, no corporate buzzwords.\n\n` +
-                `Role context (if provided, use it to understand the answer): ${role || 'none'}\n` +
+                `Known context: ${known || '(none - do NOT pretend to know anything)'}\n` +
                 `Plain ASCII punctuation only. Return ONLY the JSON object.`,
         },
         { role: 'user', content: text },

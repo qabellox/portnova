@@ -389,9 +389,13 @@ const CVBuilder = () => {
     };
 
     const askNextAchievement = (job) => {
+        // Pass what we ACTUALLY know (name + this role) so Nova never
+        // hallucinates the user's job or pretends to have info it lacks.
+        const knownContext = [data.name, job?.role, data.title].filter(Boolean).join(', ');
         pushNode(
             <AchievementExtractor
                 role={job?.role}
+                context={knownContext}
                 onAccept={(bullet) => {
                     const next = { ...data };
                     const jobs = next.experience.map((j) => (j._id === job._id ? { ...j, bullets: [...(j.bullets || []), bullet] } : j));

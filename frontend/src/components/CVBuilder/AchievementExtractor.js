@@ -9,7 +9,7 @@ import { PremiumButton } from '../PremiumUI';
  *  can accept the AI version, edit it, or keep their original. */
 const DONE_WORDS = ['done', 'تم', 'انتهيت', 'لا', 'لا يوجد', 'none', 'no', 'n/a'];
 
-const AchievementExtractor = ({ role, onAccept, onDone }) => {
+const AchievementExtractor = ({ role, context = '', onAccept, onDone }) => {
     const { isArabic } = useLanguage();
     const [raw, setRaw] = useState('');
     const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ const AchievementExtractor = ({ role, onAccept, onDone }) => {
         setError('');
         setSuggestion(null);
         try {
-            const res = await improveAchievement(text, role, isArabic ? 'ar' : 'en');
+            const res = await improveAchievement(text, role, isArabic ? 'ar' : 'en', context);
             const type = res?.type || 'achievement';
             const improved = res?.improved || '';
             setReplyType(type);

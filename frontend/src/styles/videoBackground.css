@@ -9,6 +9,9 @@
     height: 100vh;
     min-height: 560px;
     overflow: hidden;
+    /* Navy fallback: shown before the video arrives, and on reduced-motion or
+       slow connections where the video is never mounted at all. */
+    background: linear-gradient(180deg, #020a14 0%, #08243c 55%, #020a14 100%);
 }
 
 .video-background {

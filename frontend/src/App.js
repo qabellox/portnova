@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ClickWaves, LanguageToggle, PremiumButton } from './components/PremiumUI';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Home from './pages/Home';
-import { RequireProfile } from './components/ProfileGate';
+import { PublicPage, RequireProfile } from './components/ProfileGate';
 import WaitlistGate from './components/WaitlistGate';
 import { useEffect } from 'react';
 
@@ -19,6 +19,7 @@ const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Admin = lazy(() => import('./pages/Admin'));
 const About = lazy(() => import('./pages/About'));
+const Waitlist = lazy(() => import('./pages/Waitlist'));
 
 // Shown while a route chunk is in flight. Uses the existing skeleton shimmer.
 const RouteFallback = () => (
@@ -217,9 +218,9 @@ function Shell() {
                 <main className="app-main">
                     <Suspense fallback={<RouteFallback />}>
                     <Routes>
-                    <Route path="/" element={<RequireProfile><div key={location.pathname}><Home /></div></RequireProfile>} />
-                    <Route path="/jobs" element={<RequireProfile><div key={location.pathname}><Jobs /></div></RequireProfile>} />
-                    <Route path="/courses" element={<RequireProfile><div key={location.pathname}><Courses /></div></RequireProfile>} />
+                    <Route path="/" element={<PublicPage><div key={location.pathname}><Home /></div></PublicPage>} />
+                    <Route path="/jobs" element={<PublicPage><div key={location.pathname}><Jobs /></div></PublicPage>} />
+                    <Route path="/courses" element={<PublicPage><div key={location.pathname}><Courses /></div></PublicPage>} />
                     <Route
                         path="/cv-service"
                         element={
@@ -231,6 +232,8 @@ function Shell() {
                     <Route path="/cv-builder" element={<Navigate to="/cv-service" replace />} />
                     <Route path="/login" element={<div key={location.pathname}><Login /></div>} />
                     <Route path="/register" element={<div key={location.pathname}><Register /></div>} />
+                    {/* The waitlist page stays reachable while the gate is off. */}
+                    <Route path="/waitlist" element={<div key={location.pathname}><Waitlist /></div>} />
                     <Route
                         path="/dashboard"
                         element={
@@ -242,9 +245,9 @@ function Shell() {
                     <Route
                         path="/about"
                         element={
-                            <RequireProfile>
+                            <PublicPage>
                                 <div key={location.pathname}><About /></div>
-                            </RequireProfile>
+                            </PublicPage>
                         }
                     />
                     <Route

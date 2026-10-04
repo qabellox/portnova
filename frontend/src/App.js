@@ -1,20 +1,34 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { BrowserRouter as Router, NavLink, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ClickWaves, LanguageToggle, PremiumButton } from './components/PremiumUI';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import Home from './pages/Home';
-import Jobs from './pages/Jobs';
-import Courses from './pages/Courses';
-import CVService from './pages/CVService';
-import { RequireProfile } from './components/ProfileGate';
+import { PublicPage, RequireProfile } from './components/ProfileGate';
 import WaitlistGate from './components/WaitlistGate';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Admin from './pages/Admin';
-import About from './pages/About';
 import { useEffect } from 'react';
+
+// Only the landing page ships in the initial bundle. Every other route is
+// fetched on demand so a visitor landing on `/` doesn't download the CV builder,
+// the PDF/Word exporters or the admin console before they need them.
+const Jobs = lazy(() => import('./pages/Jobs'));
+const Courses = lazy(() => import('./pages/Courses'));
+const CVService = lazy(() => import('./pages/CVService'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Admin = lazy(() => import('./pages/Admin'));
+const About = lazy(() => import('./pages/About'));
+const Waitlist = lazy(() => import('./pages/Waitlist'));
+
+// Shown while a route chunk is in flight. Uses the existing skeleton shimmer.
+const RouteFallback = () => (
+    <div className="route-fallback" role="status" aria-live="polite">
+        <div className="skeleton route-fallback__bar" />
+        <div className="skeleton route-fallback__bar" />
+        <div className="skeleton route-fallback__bar" />
+    </div>
+);
 
 // `RequireProfile` (imported from ProfileGate) is the site-wide gate: every
 // visitor must sign in AND complete their saved profile credentials once
@@ -202,10 +216,11 @@ function Shell() {
             <WaitlistGate>
                 <ShellNav />
                 <main className="app-main">
+                    <Suspense fallback={<RouteFallback />}>
                     <Routes>
-                    <Route path="/" element={<RequireProfile><div key={location.pathname}><Home /></div></RequireProfile>} />
-                    <Route path="/jobs" element={<RequireProfile><div key={location.pathname}><Jobs /></div></RequireProfile>} />
-                    <Route path="/courses" element={<RequireProfile><div key={location.pathname}><Courses /></div></RequireProfile>} />
+                    <Route path="/" element={<PublicPage><div key={location.pathname}><Home /></div></PublicPage>} />
+                    <Route path="/jobs" element={<PublicPage><div key={location.pathname}><Jobs /></div></PublicPage>} />
+                    <Route path="/courses" element={<PublicPage><div key={location.pathname}><Courses /></div></PublicPage>} />
                     <Route
                         path="/cv-service"
                         element={
@@ -217,6 +232,8 @@ function Shell() {
                     <Route path="/cv-builder" element={<Navigate to="/cv-service" replace />} />
                     <Route path="/login" element={<div key={location.pathname}><Login /></div>} />
                     <Route path="/register" element={<div key={location.pathname}><Register /></div>} />
+                    {/* The waitlist page stays reachable while the gate is off. */}
+                    <Route path="/waitlist" element={<div key={location.pathname}><Waitlist /></div>} />
                     <Route
                         path="/dashboard"
                         element={
@@ -228,9 +245,9 @@ function Shell() {
                     <Route
                         path="/about"
                         element={
-                            <RequireProfile>
+                            <PublicPage>
                                 <div key={location.pathname}><About /></div>
-                            </RequireProfile>
+                            </PublicPage>
                         }
                     />
                     <Route
@@ -242,6 +259,7 @@ function Shell() {
                         }
                     />
                 </Routes>
+                    </Suspense>
                 </main>
             </WaitlistGate>
         </div>

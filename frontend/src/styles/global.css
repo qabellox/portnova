@@ -2657,3 +2657,23 @@ body[dir='rtl'] .filter-search__icon {
         grid-template-columns: 1fr;
     }
 }
+/* ---- Route-level code splitting fallback ---- */
+.route-fallback {
+    display: grid;
+    gap: 1rem;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+}
+
+.route-fallback__bar {
+    height: 1.1rem;
+}
+
+.route-fallback__bar:nth-child(2) {
+    width: 85%;
+}
+
+.route-fallback__bar:nth-child(3) {
+    width: 60%;
+}

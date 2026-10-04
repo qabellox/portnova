@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { useLanguage } from '../../context/LanguageContext';
 import { LoaderButton } from '../PremiumUI';
 
@@ -88,6 +86,12 @@ const CVDownload = ({ cv, fileName = 'PortNova-CV' }) => {
         if (!area) return;
         setBusy('pdf');
         try {
+            // Loaded on demand - these two are ~70kB gzipped combined and are
+            // only needed once the user actually asks for a PDF.
+            const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
+                import('jspdf'),
+                import('html2canvas'),
+            ]);
             const canvas = await html2canvas(area, { scale: 2, useCORS: true, backgroundColor: null });
             const img = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');

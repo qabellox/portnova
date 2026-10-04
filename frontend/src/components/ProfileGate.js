@@ -25,6 +25,20 @@ const isAdmin = (user) => {
     return meta.role === 'admin' || ADMIN_EMAILS.includes(String(user.email || '').trim().toLowerCase());
 };
 
+// Master switch for signed-out browsing.
+//   true  -> anyone with the link can open the public pages (home, jobs,
+//            courses, about). Postgres already grants anonymous reads on
+//            jobs/courses ("public read" RLS policies), so no data is exposed
+//            that wasn't already public. /cv-service, /dashboard and /admin
+//            still demand an account because they read and write the visitor's
+//            own records and make AI calls.
+//   false -> every page requires an account, as before.
+const PUBLIC_BROWSING = true;
+
+/** Gate for pages that are safe to read without an account. */
+export const PublicPage = ({ children }) =>
+    PUBLIC_BROWSING ? children : <RequireProfile>{children}</RequireProfile>;
+
 /** Site-wide gate: requires sign-in AND the persisted credentials before any
  *  page is usable. This is the "persistent identity" wall - no AI calls, no
  *  extra APIs - every visitor fills their details once, then the whole

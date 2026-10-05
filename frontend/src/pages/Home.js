@@ -1,7 +1,7 @@
 import React from 'react';
 import MarineScene from '../components/MarineScene';
 import VideoBackground from '../components/VideoBackground';
-import { BilingualLine, GlassCard, PremiumButton, SectionHeading, StatCounter } from '../components/PremiumUI';
+import { BilingualLine, GlassCard, PremiumButton, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
 // ⚓ Marine scene master switch.
@@ -10,26 +10,66 @@ import { useLanguage } from '../context/LanguageContext';
 // rendered at all, so it takes up zero space. All the scene code stays intact.
 const SHOW_MARINE_SCENE = false;
 
+// One monochrome line-icon language across all three pillars, instead of mixing
+// emoji into the glassmorphism design.
+const FeatureIcon = ({ name }) => {
+    const props = {
+        width: 26,
+        height: 26,
+        viewBox: '0 0 24 24',
+        fill: 'none',
+        stroke: 'currentColor',
+        strokeWidth: 1.7,
+        strokeLinecap: 'round',
+        strokeLinejoin: 'round',
+        'aria-hidden': true,
+    };
+    if (name === 'anchor') {
+        return (
+            <svg {...props}>
+                <circle cx="12" cy="5" r="2.4" />
+                <path d="M12 7.4V21" />
+                <path d="M5 12H2.5a9.5 9.5 0 0 0 19 0H19" />
+            </svg>
+        );
+    }
+    if (name === 'compass') {
+        return (
+            <svg {...props}>
+                <circle cx="12" cy="12" r="9" />
+                <path d="m15.5 8.5-2 5-5 2 2-5z" />
+            </svg>
+        );
+    }
+    return (
+        <svg {...props}>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+            <path d="M9 13h6M9 17h4" />
+        </svg>
+    );
+};
+
 const featureCards = [
     {
-        icon: '⚓',
+        icon: 'anchor',
         titleKey: 'featureJobs',
-        copyAr: 'ابحث عن وظيفة تناسبك وقدّم عليها مباشرة.',
-        copyEn: 'Find a job that fits you and apply directly.',
+        copyAr: 'وظائف حقيقية من شركات موثّقة في بورسعيد — لا وظائف وهمية.',
+        copyEn: 'Real jobs from verified employers in Port Said — no fake listings.',
         tone: 'blue',
     },
     {
-        icon: '🧭',
+        icon: 'compass',
         titleKey: 'featureCourses',
-        copyAr: 'طوّر مهاراتك بدورات عملية في مجالك.',
-        copyEn: 'Build your skills with practical courses.',
+        copyAr: 'دورات عملية تبني المهارات التي يطلبها سوق العمل.',
+        copyEn: 'Practical courses that build the skills employers actually want.',
         tone: 'gold',
     },
     {
-        icon: '🐟',
+        icon: 'document',
         titleKey: 'featureCv',
-        copyAr: 'ارفع سيرتك الذاتية وتابعها حتى التسليم.',
-        copyEn: 'Upload your CV and track it to delivery.',
+        copyAr: 'سيرتك الذاتية تُحسّن بالذكاء الاصطناعي وتُبرز نقاط قوتك.',
+        copyEn: 'Your CV, AI-optimized to highlight your strengths.',
         tone: 'success',
     },
 ];
@@ -77,11 +117,19 @@ const Home = () => {
                             {t('homeSignIn')}
                         </PremiumButton>
                     </div>
-                    <div className="stats-grid stats-grid--inline">
-                        <StatCounter label={t('statYouth')} value={1200} suffix="+" />
-                        <StatCounter label={t('statJobs')} value={320} suffix="+" />
-                        <StatCounter label={t('statCourses')} value={86} suffix="+" />
-                        <StatCounter label={t('statCvs')} value={540} suffix="+" />
+                    <div className="why-stats">
+                        <div className="why-stat">
+                            <span className="why-stat__value">{t('whyStatValue1')}</span>
+                            <span className="why-stat__label">{t('whyStatLabel1')}</span>
+                        </div>
+                        <div className="why-stat">
+                            <span className="why-stat__value">{t('whyStatValue2')}</span>
+                            <span className="why-stat__label">{t('whyStatLabel2')}</span>
+                        </div>
+                        <div className="why-stat">
+                            <span className="why-stat__value">{t('whyStatValue3')}</span>
+                            <span className="why-stat__label">{t('whyStatLabel3')}</span>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -95,8 +143,8 @@ const Home = () => {
                 <div className="card-grid">
                     {featureCards.map((card) => (
                         <GlassCard key={card.titleKey} interactive>
-                            <div className="nautical-tile" style={{ width: '3rem', height: '3rem', fontSize: '1.6rem', marginBottom: '0.9rem' }} aria-hidden="true">
-                                {card.icon}
+                            <div className="nautical-tile" style={{ width: '3rem', height: '3rem', marginBottom: '0.9rem', display: 'grid', placeItems: 'center' }} aria-hidden="true">
+                                <FeatureIcon name={card.icon} />
                             </div>
                             <h3 className="card-title" style={{ marginTop: '0.4rem' }}>
                                 {t(card.titleKey)}

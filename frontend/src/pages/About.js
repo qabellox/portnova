@@ -2,21 +2,35 @@ import React from 'react';
 import { GlassCard, SectionHeading } from '../components/PremiumUI';
 import { useLanguage } from '../context/LanguageContext';
 
-/* About Us: placeholder page. Content to be filled together later. */
 const About = () => {
     const { t } = useLanguage();
 
     return (
         <div className="page-shell">
-            <SectionHeading
-                kicker={t('aboutKicker')}
-                title={t('aboutTitle')}
-            />
+            <SectionHeading kicker={t('aboutKicker')} title={t('aboutTitle')} />
+
             <GlassCard>
-                <div className="empty-state">
-                    {t('aboutEmpty')}
-                </div>
+                <p className="about-lead">{t('aboutMission')}</p>
             </GlassCard>
+
+            <div className="about-grid">
+                <GlassCard>
+                    <h3 className="card-title">{t('aboutProblemTitle')}</h3>
+                    <p className="card-copy">{t('aboutProblem')}</p>
+                </GlassCard>
+                <GlassCard>
+                    <h3 className="card-title">{t('aboutWhatTitle')}</h3>
+                    <p className="card-copy">{t('aboutWhat')}</p>
+                </GlassCard>
+                <GlassCard>
+                    <h3 className="card-title">{t('aboutVisionTitle')}</h3>
+                    <p className="card-copy">{t('aboutVision')}</p>
+                </GlassCard>
+                <GlassCard>
+                    <h3 className="card-title">{t('aboutCommunityTitle')}</h3>
+                    <p className="card-copy">{t('aboutCommunity')}</p>
+                </GlassCard>
+            </div>
         </div>
     );
 };

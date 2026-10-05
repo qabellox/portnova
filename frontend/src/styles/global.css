@@ -2677,3 +2677,68 @@ body[dir='rtl'] .filter-search__icon {
 .route-fallback__bar:nth-child(3) {
     width: 60%;
 }
+
+/* ---- Why Port Said (real public statistic) ---- */
+.why-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    width: 100%;
+    max-width: 720px;
+}
+
+.why-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 1.1rem 1rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(125, 211, 252, 0.16);
+    border-radius: var(--radius-md, 14px);
+}
+
+.why-stat__value {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 800;
+    line-height: 1;
+    color: #5eead4;
+}
+
+.why-stat__label {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: var(--muted, #94a3b8);
+}
+
+@media (max-width: 640px) {
+    .why-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---- About page ---- */
+.about-lead {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #e2e8f0;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem;
+    margin-top: 1.1rem;
+}
+
+.about-grid .card-title {
+    margin-top: 0;
+}
+
+@media (max-width: 720px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+}
